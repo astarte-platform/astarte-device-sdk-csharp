@@ -13,16 +13,16 @@ namespace AstarteDeviceSDKCSharp
     public class Device
     {
 
-        string DeviceId;
-        string Realm;
-        string CredentialSecret;
-        string PairingBaseUrl;
-        string PersistencyDir;
-        bool IgnoreSSLErrors;
+        readonly string DeviceId;
+        readonly string Realm;
+        readonly string CredentialSecret;
+        readonly string PairingBaseUrl;
+        readonly string PersistencyDir;
+        readonly bool IgnoreSSLErrors;
         bool IsConnected = false;
         IMqttClient? mqttClient;
         MqttFactory? mqttFactory;
-        PairingHandler pairingHandler = new();
+        readonly PairingHandler pairingHandler = new();
         MqttClientOptionsBuilderTlsParameters? tlsOptions;
 
         /// <summary>
@@ -203,10 +203,10 @@ namespace AstarteDeviceSDKCSharp
         /// <returns></returns>
         public async Task Send (string interfaceName, string interfacePath, object payload, DateTime? timeStamp)
         {
-            ObjectPayload objectPayload = new() { v = payload };
+            ObjectPayload objectPayload = new() { Value = payload };
             if (timeStamp.HasValue)
             {
-                objectPayload.t = timeStamp.Value;
+                objectPayload.Timestamp = timeStamp.Value;
             }
 
             await SendGeneric($"{GetBaseTopic()}/{interfaceName}{interfacePath}", objectPayload);
@@ -267,8 +267,10 @@ namespace AstarteDeviceSDKCSharp
     }
     internal class ObjectPayload
     {
-        public object v { get; set; } = new object();
-        public DateTime t { get; set; }
+        [JsonProperty("v")]
+        public object Value { get; set; } = new object();
+        [JsonProperty("t")]
+        public DateTime Timestamp { get; set; }
     }
 }
 
