@@ -5,8 +5,6 @@ VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstarteDeviceSDKCSharp", "AstarteDeviceSDKCSharp.csproj", "{A0B12F6C-B29C-4811-B2AC-F977DB90A2B9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstarteDeviceSDKExample", "AstarteDeviceSDKExample\AstarteDeviceSDKExample.csproj", "{66916332-7462-4FA4-8AA2-513C2D760D67}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{A0B12F6C-B29C-4811-B2AC-F977DB90A2B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0B12F6C-B29C-4811-B2AC-F977DB90A2B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0B12F6C-B29C-4811-B2AC-F977DB90A2B9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{66916332-7462-4FA4-8AA2-513C2D760D67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{66916332-7462-4FA4-8AA2-513C2D760D67}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{66916332-7462-4FA4-8AA2-513C2D760D67}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{66916332-7462-4FA4-8AA2-513C2D760D67}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
