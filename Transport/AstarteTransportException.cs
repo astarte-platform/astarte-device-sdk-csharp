@@ -1,5 +1,4 @@
-﻿
-namespace AstarteDeviceSDKCSharp.Transport
+﻿namespace AstarteDeviceSDKCSharp.Transport
 {
     public class AstarteTransportException : Exception
     {

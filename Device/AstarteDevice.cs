@@ -67,7 +67,6 @@ namespace AstarteDeviceSDKCSharp.Device
             return _astarteInterfaces.Values.ToList();
         }
 
-
         public void Connect()
         {
 
@@ -83,12 +82,9 @@ namespace AstarteDeviceSDKCSharp.Device
                 }
                 _initialized = true;
             }
-
       
             _astarteTransport.Connect();
           
-
-
         }
 
         public void AddInterface(string astarteInterfaceObject)
@@ -119,7 +115,6 @@ namespace AstarteDeviceSDKCSharp.Device
             }
             return null;
         }
-
    
         public void SetAstarteTransport(AstarteTransport astarteTransport)
         {
@@ -128,7 +123,4 @@ namespace AstarteDeviceSDKCSharp.Device
         }
 
     }
-
-
-    
 }
