@@ -62,7 +62,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 throw new Exception(ex.StackTrace);
             }
 
-
         }
 
         public void Disconnect()

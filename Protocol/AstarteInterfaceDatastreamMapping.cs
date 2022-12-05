@@ -50,7 +50,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
             {
                 if(astarteMappingObject.Reliability == "unreliable"){
                     astarteInterfaceDatastreamMapping.reliability = MappingReliability.UNRELIABLE;
-                }else if(astarteMappingObject.Reliability == "unreliable"){
+                }else if(astarteMappingObject.Reliability == "guaranteed"){
                     astarteInterfaceDatastreamMapping.reliability = MappingReliability.GUARANTEED;
                 }else if(astarteMappingObject.Reliability == "unique"){
                     astarteInterfaceDatastreamMapping.reliability = MappingReliability.UNIQUE;

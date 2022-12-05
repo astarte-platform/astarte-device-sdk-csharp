@@ -50,6 +50,7 @@ namespace AstarteDeviceSDKCSharp.Device
             }
             ConfigureTransport();
         }
+
         private void ConfigureTransport()
         {
             _astarteTransport.SetDevice(this);
@@ -94,9 +95,9 @@ namespace AstarteDeviceSDKCSharp.Device
             AstarteInterface formerInterface = GetInterface(astarteInterface.GetInterfaceName());
             if (formerInterface != null && formerInterface.GetMajorVersion() == astarteInterface.GetMajorVersion())
             {
-                if (formerInterface.GetMajorVersion() == astarteInterface.GetMajorVersion())
+                if (formerInterface.GetMinorVersion() == astarteInterface.GetMinorVersion())
                 {
-                    throw new Exception("Interface already present in mapping");
+                    throw new AstarteInterfaceAlreadyPresentException("Interface already present in mapping");
                 }
                 if (formerInterface.GetMinorVersion() > astarteInterface.GetMinorVersion())
                 {

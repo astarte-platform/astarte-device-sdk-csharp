@@ -5,7 +5,6 @@ namespace AstarteDeviceSDK.Protocol
     public class AstarteInterfaceMapping
     {
         public string? Path { get; set; }
-
         public Type MapType { get; set; } 
         public Type PrimitiveArrayType { get; set; }
 
@@ -19,8 +18,8 @@ namespace AstarteDeviceSDK.Protocol
         protected void ParseMappingFromAstarteInterface(Mapping astarteMappingObject)
         {
             Path = astarteMappingObject.Endpoint;
-            MapType = StringToJavaType(astarteMappingObject.Type);
-            PrimitiveArrayType = StringToPrimitiveArrayJavaType(astarteMappingObject.Type);
+            MapType = StringToCSharpType(astarteMappingObject.Type);
+            PrimitiveArrayType = StringToPrimitiveArrayCSharpType(astarteMappingObject.Type);
         }
 
         protected bool IsTypeCompatible(Type otherType)
@@ -66,7 +65,7 @@ namespace AstarteDeviceSDK.Protocol
             return !(Double.IsInfinity(value) || Double.IsNaN(value));
         }
 
-        private static Type StringToJavaType(String typeString)
+        private static Type StringToCSharpType(String typeString)
         {
             switch (typeString)
             {
@@ -103,7 +102,7 @@ namespace AstarteDeviceSDK.Protocol
             }
         }
 
-        private static Type StringToPrimitiveArrayJavaType(string typeString)
+        private static Type StringToPrimitiveArrayCSharpType(string typeString)
         {
             switch (typeString)
             {

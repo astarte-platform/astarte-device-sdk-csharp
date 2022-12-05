@@ -18,10 +18,12 @@ namespace AstarteDeviceSDK.Protocol
         {
             return _astarteTransport;
         }
+
         public string GetInterfaceName()
         {
             return InterfaceName;
         }
+
         public int GetMajorVersion()
         {
             return MajorVersion;

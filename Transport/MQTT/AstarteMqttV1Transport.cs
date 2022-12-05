@@ -16,8 +16,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         {
             _baseTopic = connectionInfo.GetClientId();
 
-            // Add callbacks here
-            //setCallback(this);
         }
 
         public override async Task SendIndividualValue(AstarteInterface astarteInterface, string path, object value, DateTime timestamp)
@@ -58,8 +56,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 }
             }
         }
-
-      
 
         private async Task DoSendMqttMessage(string topic, byte[] payload, int qos) 
         {
