@@ -42,7 +42,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         public override async Task SendIndividualValue(AstarteInterface astarteInterface,
         string path, object value, DateTime? timestamp)
         {
-            int qos;
             AstarteInterfaceDatastreamMapping mapping;
 
             if (astarteInterface.GetType() == (typeof(AstarteDeviceDatastreamInterface)))
@@ -57,7 +56,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 {
                     throw new AstarteTransportException("Mapping not found", e);
                 }
-                qos = 0;
+                int qos = QosFromReliability(mapping);
 
                 string topic = _baseTopic + "/" + astarteInterface.InterfaceName + path;
                 byte[] payload = AstartePayload.Serialize(value, timestamp);
@@ -142,5 +141,20 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         {
             await SendIndividualValue(astarteInterface, path, value, null);
         }
+        private int QosFromReliability(AstarteInterfaceDatastreamMapping mapping)
+        {
+            switch (mapping.GetReliability())
+            {
+                case AstarteInterfaceDatastreamMapping.MappingReliability.UNIQUE:
+                    return 2;
+                case AstarteInterfaceDatastreamMapping.MappingReliability.GUARANTEED:
+                    return 1;
+                case AstarteInterfaceDatastreamMapping.MappingReliability.UNRELIABLE:
+                    return 0;
+                default:
+                    return 0;
+            }
+        }
+
     }
 }
