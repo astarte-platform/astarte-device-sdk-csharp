@@ -57,13 +57,15 @@ namespace AstarteDeviceSDKCSharp.Protocol
 
 
 
-        internal static AstarteInterfaceDatastreamMapping FromAstarteInterfaceMappingMaps(Mapping astarteMappingObject)
+        internal static AstarteInterfaceDatastreamMapping
+        FromAstarteInterfaceMappingMaps(Mapping astarteMappingObject)
         {
             AstarteInterfaceDatastreamMapping astarteInterfaceDatastreamMapping = new();
 
             if (astarteMappingObject.ExplicitTimestamp != null)
             {
-                astarteInterfaceDatastreamMapping.explicitTimestamp = (bool)astarteMappingObject.ExplicitTimestamp;
+                astarteInterfaceDatastreamMapping.explicitTimestamp =
+                (bool)astarteMappingObject.ExplicitTimestamp;
             }
 
             if (astarteMappingObject.Reliability != null)

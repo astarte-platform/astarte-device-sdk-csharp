@@ -41,7 +41,12 @@ namespace AstarteDeviceSDKCSharp.Device
             string cryptoStoreDirectory)
         {
 
-            _pairingHandler = new AstartePairingHandler(pairingBaseUrl, astarteRealm, deviceId, credentialSecret, new AstarteCryptoStore($@"{cryptoStoreDirectory}\{deviceId}\crypto\"));
+            _pairingHandler = new AstartePairingHandler(
+             pairingBaseUrl,
+             astarteRealm,
+             deviceId,
+             credentialSecret,
+             new AstarteCryptoStore($@"{cryptoStoreDirectory}\{deviceId}\crypto\"));
 
             List<string> allInterfaces = astarteInterfaceProvider.LoadAllInterfaces();
 
@@ -113,15 +118,18 @@ namespace AstarteDeviceSDKCSharp.Device
             AstarteInterface astarteInterface = AstarteInterface.FromString(astarteInterfaceObject);
 
             AstarteInterface formerInterface = GetInterface(astarteInterface.GetInterfaceName());
-            if (formerInterface != null && formerInterface.GetMajorVersion() == astarteInterface.GetMajorVersion())
+            if (formerInterface != null &&
+            formerInterface.GetMajorVersion() == astarteInterface.GetMajorVersion())
             {
                 if (formerInterface.GetMinorVersion() == astarteInterface.GetMinorVersion())
                 {
-                    throw new AstarteInterfaceAlreadyPresentException("Interface already present in mapping");
+                    throw new AstarteInterfaceAlreadyPresentException
+                    ("Interface already present in mapping");
                 }
                 if (formerInterface.GetMinorVersion() > astarteInterface.GetMinorVersion())
                 {
-                    throw new AstarteInvalidInterfaceException("Can't downgrade an interface at runtime");
+                    throw new AstarteInvalidInterfaceException
+                    ("Can't downgrade an interface at runtime");
                 }
             }
 

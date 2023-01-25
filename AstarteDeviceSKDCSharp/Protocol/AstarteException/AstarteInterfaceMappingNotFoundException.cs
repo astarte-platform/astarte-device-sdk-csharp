@@ -27,7 +27,8 @@ namespace AstarteDeviceSDKCSharp.Protocol.AstarteExeption
 
         }
 
-        public AstarteInterfaceMappingNotFoundException(String message, Exception cause) : base(message, cause)
+        public AstarteInterfaceMappingNotFoundException(String message, Exception cause)
+        : base(message, cause)
         {
 
         }

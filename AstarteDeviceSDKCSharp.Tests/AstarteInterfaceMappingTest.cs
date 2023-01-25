@@ -31,72 +31,84 @@ namespace AstarteDeviceSDKCSharp.Tests
         [Fact]
         public void TypeInt()
         {
-            string interf = "{\n" + "     \"endpoint\": \"/integer\",\n" + "     \"type\": \"integer\",\n" + "   }\n";
+            string interf = "{\n" + "     \"endpoint\": \"/integer\",\n"
+            + "     \"type\": \"integer\",\n" + "   }\n";
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
             Assert.Equal("/integer", mapping.Endpoint);
             Assert.Equal("integer", mapping.Type);
 
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping
+             = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(int)));
         }
 
         [Fact]
         public void TypeBadInt()
         {
-            string interf = "{\n" + "     \"endpoint\": \"/integer\",\n" + "     \"type\": \"integer\",\n" + "   }\n";
+            string interf = "{\n" + "     \"endpoint\": \"/integer\",\n" +
+            "     \"type\": \"integer\",\n" + "   }\n";
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
             Assert.Equal("/integer", mapping.Endpoint);
             Assert.Equal("integer", mapping.Type);
 
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+             AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.False(astarteInterfaceMapping.IsTypeCompatible(typeof(string)));
         }
 
         [Fact]
         public void TypeString()
         {
-            String interf = "{\n" + "     \"endpoint\": \"/string\",\n" + "     \"type\": \"string\",\n" + "   }\n";
+            String interf = "{\n" + "     \"endpoint\": \"/string\",\n" +
+            "     \"type\": \"string\",\n" + "   }\n";
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
             Assert.Equal("/string", mapping.Endpoint);
             Assert.Equal("string", mapping.Type);
 
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(string)));
         }
 
         [Fact]
         public void TypeBadString()
         {
-            String interf = "{\n" + "     \"endpoint\": \"/string\",\n" + "     \"type\": \"string\",\n" + "   }\n";
+            String interf = "{\n" + "     \"endpoint\": \"/string\",\n" +
+             "     \"type\": \"string\",\n" + "   }\n";
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
             Assert.Equal("/string", mapping.Endpoint);
             Assert.Equal("string", mapping.Type);
 
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.False(astarteInterfaceMapping.IsTypeCompatible(typeof(int)));
         }
 
         [Fact]
         public void TypeDouble()
         {
-            string interf = "{\n" + "     \"endpoint\": \"/double\",\n" + "     \"type\": \"double\",\n" + "   }\n";
+            string interf = "{\n" + "     \"endpoint\": \"/double\",\n" +
+            "     \"type\": \"double\",\n" + "   }\n";
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
             Assert.Equal("/double", mapping.Endpoint);
             Assert.Equal("double", mapping.Type);
 
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(double)));
         }
 
         [Fact]
         public void TypeBadDouble()
         {
-            String interf = "{\n" + "     \"endpoint\": \"/double\",\n" + "     \"type\": \"double\",\n" + "   }\n";
+            String interf = "{\n" + "     \"endpoint\": \"/double\",\n" +
+            "     \"type\": \"double\",\n" + "   }\n";
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
             Assert.Equal("/double", mapping.Endpoint);
             Assert.Equal("double", mapping.Type);
 
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.False(astarteInterfaceMapping.IsTypeCompatible(typeof(string)));
         }
 
@@ -110,7 +122,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(long)));
         }
 
@@ -124,17 +137,20 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.False(astarteInterfaceMapping.IsTypeCompatible(typeof(string)));
         }
 
         [Fact]
         public void TypeBool()
         {
-            string interf = "{\n" + "     \"endpoint\": \"/boolean\",\n" + "     \"type\": \"boolean\",\n" + "   }\n";
+            string interf = "{\n" + "     \"endpoint\": \"/boolean\",\n" +
+             "     \"type\": \"boolean\",\n" + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(bool)));
         }
 
@@ -200,7 +216,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             string interf = "{\n" + " \"endpoint\": \"/double\",\n" + " \"type\": \"double\",\n" + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
 
             astarteInterfaceMapping.ValidatePayload((double)3.2);
         }
@@ -211,7 +228,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             string interf = "{\n" + " \"endpoint\": \"/double\",\n" + "     \"type\": \"double\",\n" + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
 
             try
             {
@@ -232,7 +250,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(int[])));
         }
 
@@ -258,7 +277,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(string[])));
         }
 
@@ -271,7 +291,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.False(astarteInterfaceMapping.IsTypeCompatible(typeof(string)));
         }
 
@@ -284,7 +305,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(double[])));
         }
 
@@ -297,7 +319,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.False(astarteInterfaceMapping.IsTypeCompatible(typeof(string)));
         }
 
@@ -310,7 +333,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(long[])));
         }
 
@@ -323,7 +347,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.False(astarteInterfaceMapping.IsTypeCompatible(typeof(string)));
         }
 
@@ -336,7 +361,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(bool[])));
         }
 
@@ -349,7 +375,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.False(astarteInterfaceMapping.IsTypeCompatible(typeof(string)));
         }
 
@@ -362,7 +389,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(byte[][])));
         }
 
@@ -375,7 +403,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.False(astarteInterfaceMapping.IsTypeCompatible(typeof(byte[])));
         }
 
@@ -388,7 +417,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.True(astarteInterfaceMapping.IsTypeCompatible(typeof(DateTime[])));
         }
 
@@ -401,7 +431,8 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             Assert.False(astarteInterfaceMapping.IsTypeCompatible(typeof(DateTime)));
         }
 
@@ -414,7 +445,8 @@ namespace AstarteDeviceSDKCSharp.Tests
                     + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             object payload = new double[] { 3.0, 1.0 };
 
             astarteInterfaceMapping.ValidatePayload(payload);
@@ -429,10 +461,12 @@ namespace AstarteDeviceSDKCSharp.Tests
                     + "   }\n";
 
             Mapping mapping = JsonConvert.DeserializeObject<Mapping>(interf);
-            AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+            AstarteInterfaceMapping astarteInterfaceMapping =
+            AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
             object payload = new double[] { 3.0, double.NaN };
 
-            Assert.Throws<AstarteInvalidValueException>(() => astarteInterfaceMapping.ValidatePayload(payload));
+            Assert.Throws<AstarteInvalidValueException>(() =>
+            astarteInterfaceMapping.ValidatePayload(payload));
 
         }
     }

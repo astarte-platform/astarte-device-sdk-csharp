@@ -61,7 +61,8 @@ namespace AstarteDeviceSDK.Protocol
 
         public static AstarteInterface FromString(string astarteInterfaceObject)
         {
-            AstarteInterfaceModel astarteInterfaceModel = JsonConvert.DeserializeObject<AstarteInterfaceModel>(astarteInterfaceObject);
+            AstarteInterfaceModel astarteInterfaceModel =
+             JsonConvert.DeserializeObject<AstarteInterfaceModel>(astarteInterfaceObject);
             string astarteInterfaceOwnership = astarteInterfaceModel.Ownership;
             string astarteInterfaceType = astarteInterfaceModel.Type;
             string astarteInterfaceAggregation;
@@ -79,8 +80,9 @@ namespace AstarteDeviceSDK.Protocol
 
             if (astarteInterfaceModel.Mappings.Any(x => x.ExplicitTimestamp != null))
             {
-                astarteInterfaceExplicitTimestamp = astarteInterfaceModel.Mappings.Select(x => x.ExplicitTimestamp)
-                                                                            .FirstOrDefault();
+                astarteInterfaceExplicitTimestamp = astarteInterfaceModel
+                .Mappings.Select(x => x.ExplicitTimestamp)
+                .FirstOrDefault();
             }
             else
             {
@@ -104,7 +106,8 @@ namespace AstarteDeviceSDK.Protocol
             if (astarteInterface.MajorVersion == 0 && astarteInterface.MinorVersion == 0)
             {
                 throw new AstarteInvalidInterfaceException(
-                        $"Both Major and Minor version are 0 on interface {astarteInterface.InterfaceName}"
+                        $"Both Major and Minor version are 0 on interface" +
+                        $" {astarteInterface.InterfaceName}"
                         );
             }
 
@@ -120,7 +123,9 @@ namespace AstarteDeviceSDK.Protocol
                 }
                 else
                 {
-                    AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping.FromAstarteInterfaceMapping(mapping);
+                    AstarteInterfaceMapping astarteInterfaceMapping = AstarteInterfaceMapping
+                    .FromAstarteInterfaceMapping(mapping);
+
                     astarteInterface.Mappings.Add(
                         mapping.Endpoint,
                         astarteInterfaceMapping);

@@ -28,7 +28,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
     {
         protected IMqttClient? _client;
         private readonly IMqttConnectionInfo _connectionInfo;
-        protected AstarteMqttTransport(AstarteProtocolType type, IMqttConnectionInfo connectionInfo) : base(type)
+        protected AstarteMqttTransport(AstarteProtocolType type,
+        IMqttConnectionInfo connectionInfo) : base(type)
         {
             _connectionInfo = connectionInfo;
         }
@@ -75,7 +76,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 }
 
 
-                var result = _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(), CancellationToken.None).Result;
+                var result = _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(),
+                CancellationToken.None).Result;
             }
             catch (Exception ex)
             {

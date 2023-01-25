@@ -32,13 +32,15 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
     public class AstarteMqttV1Transport : AstarteMqttTransport
     {
         private readonly string _baseTopic;
-        public AstarteMqttV1Transport(MutualSSLAuthenticationMqttConnectionInfo connectionInfo) : base(AstarteProtocolType.ASTARTE_MQTT_V1, connectionInfo)
+        public AstarteMqttV1Transport(MutualSSLAuthenticationMqttConnectionInfo connectionInfo)
+        : base(AstarteProtocolType.ASTARTE_MQTT_V1, connectionInfo)
         {
             _baseTopic = connectionInfo.GetClientId();
 
         }
 
-        public override async Task SendIndividualValue(AstarteInterface astarteInterface, string path, object value, DateTime? timestamp)
+        public override async Task SendIndividualValue(AstarteInterface astarteInterface,
+        string path, object value, DateTime? timestamp)
         {
             int qos;
             AstarteInterfaceDatastreamMapping mapping;
@@ -48,7 +50,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 try
                 {
                     // Find a matching mapping
-                    mapping = (AstarteInterfaceDatastreamMapping)astarteInterface.FindMappingInInterface(path);
+                    mapping = (AstarteInterfaceDatastreamMapping)astarteInterface
+                    .FindMappingInInterface(path);
                 }
                 catch (AstarteInterfaceMappingNotFoundException e)
                 {
@@ -65,7 +68,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 }
                 catch (Exception ex)
                 {
-                    if (astarteInterface.GetType().IsInstanceOfType(typeof(AstarteDatastreamInterface)))
+                    if (astarteInterface.GetType()
+                    .IsInstanceOfType(typeof(AstarteDatastreamInterface)))
                     {
                         throw new AstarteTransportException("Mapping not found", ex);
                     }
@@ -92,7 +96,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
                 if (result.ReasonCode != MqttClientPublishReasonCode.Success)
                 {
-                    throw new AstarteTransportException($"MQTT raised an exception with a reason code: {result.ReasonCode}");
+                    throw new AstarteTransportException
+                    ($"MQTT raised an exception with a reason code: {result.ReasonCode}");
                 }
             }
             catch (Exception ex)
@@ -106,7 +111,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         {
             StringBuilder introspectionStringBuilder = new();
 
-            foreach (AstarteInterface astarteInterface in AstarteIntrospection.GetAllAstarteInterfaces())
+            foreach (AstarteInterface astarteInterface in
+            AstarteIntrospection.GetAllAstarteInterfaces())
             {
                 introspectionStringBuilder.Append(astarteInterface.InterfaceName);
                 introspectionStringBuilder.Append(':');
@@ -117,7 +123,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
 
             // Remove last ;
-            introspectionStringBuilder = introspectionStringBuilder.Remove(introspectionStringBuilder.Length - 1, 1);
+            introspectionStringBuilder = introspectionStringBuilder
+            .Remove(introspectionStringBuilder.Length - 1, 1);
             string introspection = introspectionStringBuilder.ToString();
 
             try
@@ -130,7 +137,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
         }
 
-        public override async Task SendIndividualValue(AstarteInterface astarteInterface, string path, object value)
+        public override async Task SendIndividualValue(AstarteInterface astarteInterface,
+        string path, object value)
         {
             await SendIndividualValue(astarteInterface, path, value, null);
         }
