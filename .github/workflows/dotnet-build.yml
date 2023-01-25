@@ -1,0 +1,24 @@
+name: Build Dotnet action
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore astarte-device-sdk-csharp/AstarteDeviceSDKCSharp.sln
+    - name: Build
+      run: dotnet build astarte-device-sdk-csharp/AstarteDeviceSDKCSharp.sln --no-restore
+    - name: Test
+      run: dotnet test astarte-device-sdk-csharp/AstarteDeviceSDKCSharp.sln --no-build --verbosity normal
