@@ -1,3 +1,9 @@
+<!-- This file is part of Astarte.
+
+Copyright 2023 SECO Mind Srl
+
+SPDX-License-Identifier: Apache-2.0 -->
+
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
