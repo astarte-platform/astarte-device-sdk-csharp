@@ -52,16 +52,20 @@ namespace AstarteDeviceSDKCSharp
         }
 
 
-        public async Task<List<AstarteTransport>> ReloadTransports(string credentialSecret, AstarteCryptoStore astarteCryptoStore, string deviceId)
+        public async Task<List<AstarteTransport>> ReloadTransports(string credentialSecret,
+        AstarteCryptoStore astarteCryptoStore, string deviceId)
         {
             List<AstarteTransport> transports = new();
             // Prepare the Pairing API request
             HttpClient client = new();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", credentialSecret);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+            credentialSecret);
+
             try
             {
 
-                var response = await client.GetAsync(_pairingUrl + $"/{_astarteRealm}/devices/{deviceId}");
+                var response = await client
+                            .GetAsync(_pairingUrl + $"/{_astarteRealm}/devices/{deviceId}");
 
                 var transportInfo = await response.Content.ReadAsStringAsync();
 
@@ -75,7 +79,8 @@ namespace AstarteDeviceSDKCSharp
                         {
 
                             AstarteProtocolType astarteProtocolType =
-                                (AstarteProtocolType)System.Enum.Parse(typeof(AstarteProtocolType), item.Name.ToUpper());
+                                (AstarteProtocolType)System
+                                .Enum.Parse(typeof(AstarteProtocolType), item.Name.ToUpper());
 
                             try
                             {
@@ -97,7 +102,8 @@ namespace AstarteDeviceSDKCSharp
 
                         if (transports.Count == 0)
                         {
-                            throw new AstartePairingException("Pairing did not return any supported Transport.");
+                            throw new AstartePairingException
+                            ("Pairing did not return any supported Transport.");
                         }
 
                     }
@@ -113,7 +119,8 @@ namespace AstarteDeviceSDKCSharp
 
         }
 
-        public async Task<X509Certificate2> RequestNewCertificate(string credentialSecret, AstarteCryptoStore astarteCryptoStore, string deviceId)
+        public async Task<X509Certificate2> RequestNewCertificate
+        (string credentialSecret, AstarteCryptoStore astarteCryptoStore, string deviceId)
         {
             string csr;
             // Get a CSR
@@ -129,24 +136,31 @@ namespace AstarteDeviceSDKCSharp
 
             // Prepare the Pairing API request
             HttpClient client = new();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", credentialSecret);
+            client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", credentialSecret);
+
             try
             {
 
                 string json;
                 try
                 {
-                    json = JsonConvert.SerializeObject(new Utilities.CertificateRequest() { Data = new CsrData() { Csr = csr } });
+                    json = JsonConvert.SerializeObject
+                    (new Utilities.CertificateRequest() { Data = new CsrData() { Csr = csr } });
 
                 }
                 catch (Exception ex)
                 {
-                    throw new AstartePairingException("Could not generate the JSON Request Payload", ex);
+                    throw new AstartePairingException
+                    ("Could not generate the JSON Request Payload", ex);
                 }
 
                 HttpContent content = new StringContent(json);
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                var response = await client.PostAsync(_pairingUrl + $"/{_astarteRealm}/devices/{deviceId}/protocols/astarte_mqtt_v1/credentials", content);
+
+                var response = await client.PostAsync(_pairingUrl +
+                $"/{_astarteRealm}/devices/{deviceId}/protocols/astarte_mqtt_v1/credentials",
+                content);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -157,11 +171,13 @@ namespace AstarteDeviceSDKCSharp
                                   + response.Content.ToString());
                 }
 
-                var certificate = JsonConvert.DeserializeObject<Certificate>(await response.Content.ReadAsStringAsync());
+                var certificate = JsonConvert
+                .DeserializeObject<Certificate>(await response.Content.ReadAsStringAsync());
 
                 try
                 {
-                    X509Certificate2 newCertificate = new X509Certificate2(Convert.FromBase64String(certificate.Data.ClientCrt
+                    X509Certificate2 newCertificate = new X509Certificate2
+                    (Convert.FromBase64String(certificate.Data.ClientCrt
                      .Replace("-----BEGIN CERTIFICATE-----", "")
                      .Replace("-----END CERTIFICATE-----", "")
                      .Replace("\n", "")));

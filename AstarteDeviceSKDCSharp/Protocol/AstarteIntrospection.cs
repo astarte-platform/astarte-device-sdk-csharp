@@ -40,11 +40,13 @@ namespace AstarteDeviceSDKCSharp.Protocol
             {
                 if (formerInterface.MinorVersion == newInterface.MinorVersion)
                 {
-                    throw new AstarteInterfaceAlreadyPresentException("Interface already present in mapping");
+                    throw new AstarteInterfaceAlreadyPresentException
+                    ("Interface already present in mapping");
                 }
                 if (formerInterface.MinorVersion > newInterface.MinorVersion)
                 {
-                    throw new AstarteInvalidInterfaceException("Can't downgrade an interface at runtime");
+                    throw new AstarteInvalidInterfaceException
+                    ("Can't downgrade an interface at runtime");
                 }
             }
             astarteInterfaces.Add(newInterface.InterfaceName, newInterface);

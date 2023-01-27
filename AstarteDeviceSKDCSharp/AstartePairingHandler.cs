@@ -34,7 +34,8 @@ namespace AstarteDeviceSDKCSharp
         private List<AstarteTransport> _transports;
         private X509Certificate2 _certificate;
 
-        public AstartePairingHandler(string pairingUrl, string astarteRealm, string deviceId, string credentialSecret, AstarteCryptoStore astarteCryptoStore)
+        public AstartePairingHandler(string pairingUrl, string astarteRealm, string deviceId,
+        string credentialSecret, AstarteCryptoStore astarteCryptoStore)
         {
             _astarteRealm = astarteRealm;
             _deviceId = deviceId;
@@ -45,7 +46,8 @@ namespace AstarteDeviceSDKCSharp
             _certificate = _cryptoStore.GetCertificate();
             if (_certificate == null)
             {
-                _ = _AstartePairingService.RequestNewCertificate(credentialSecret, _cryptoStore, deviceId).Result;
+                _ = _AstartePairingService.RequestNewCertificate(credentialSecret,
+                _cryptoStore, deviceId).Result;
             }
 
         }
@@ -57,7 +59,8 @@ namespace AstarteDeviceSDKCSharp
 
         private void ReloadTransports()
         {
-            _transports = _AstartePairingService.ReloadTransports(_credentialSecret, _cryptoStore, _deviceId).Result;
+            _transports = _AstartePairingService.ReloadTransports(_credentialSecret,
+            _cryptoStore, _deviceId).Result;
         }
 
         public List<AstarteTransport> GetTransports()

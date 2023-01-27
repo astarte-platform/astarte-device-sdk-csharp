@@ -28,7 +28,9 @@ namespace AstarteDeviceSDKCSharp.Transport
     internal class AstarteTransportFactory
     {
 
-        public static AstarteTransport? CreateAstarteTransportFromPairing(AstarteProtocolType protocolType, string astarteRealm, string deviceId, dynamic protocolData, AstarteCryptoStore astarteCryptoStore)
+        public static AstarteTransport? CreateAstarteTransportFromPairing
+        (AstarteProtocolType protocolType, string astarteRealm,
+        string deviceId, dynamic protocolData, AstarteCryptoStore astarteCryptoStore)
         {
 
             switch (protocolType)

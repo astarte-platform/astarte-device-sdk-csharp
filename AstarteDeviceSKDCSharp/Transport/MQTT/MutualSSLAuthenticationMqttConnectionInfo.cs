@@ -29,7 +29,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         private readonly IMqttClientOptions _mqttConnectOptions;
         private readonly string _clientId = string.Empty;
 
-        public MutualSSLAuthenticationMqttConnectionInfo(Uri brokerUrl, string astarteRealm, string deviceId, MqttClientOptionsBuilderTlsParameters tlsOptions)
+        public MutualSSLAuthenticationMqttConnectionInfo(Uri brokerUrl, string astarteRealm,
+        string deviceId, MqttClientOptionsBuilderTlsParameters tlsOptions)
         {
             _brokerUrl = brokerUrl;
             _mqttConnectOptions = new MqttClientOptionsBuilder()

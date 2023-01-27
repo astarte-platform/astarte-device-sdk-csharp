@@ -37,8 +37,10 @@ namespace AstarteDeviceSDKCSharp.Transport
         }
 
         public abstract Task SendIntrospection();
-        public abstract Task SendIndividualValue(AstarteInterface astarteInterface, string path, object value, DateTime? timestamp);
-        public abstract Task SendIndividualValue(AstarteInterface astarteInterface, string path, object value);
+        public abstract Task SendIndividualValue(AstarteInterface astarteInterface, string path,
+        object value, DateTime? timestamp);
+        public abstract Task SendIndividualValue(AstarteInterface astarteInterface,
+        string path, object value);
 
 
         public void SetDevice(AstarteDevice astarteDevice)

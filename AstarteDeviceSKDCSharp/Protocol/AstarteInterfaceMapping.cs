@@ -69,7 +69,8 @@ namespace AstarteDeviceSDK.Protocol
             if (!IsTypeCompatible(payload.GetType()))
             {
                 throw new AstarteInvalidValueException(
-                        $"Value incompatible with parameter type for {Path}: {MapType} expected, {payload.GetType()} found");
+                        $"Value incompatible with parameter type for {Path}: {MapType} expected," +
+                        $" {payload.GetType()} found");
             }
             if (payload.GetType() == typeof(Double) && !IsFinite((Double)payload))
             {

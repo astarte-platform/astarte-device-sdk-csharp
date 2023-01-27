@@ -69,7 +69,8 @@ namespace AstarteDeviceSDKCSharp.Crypto
             // Save key if not exist
             if (!File.Exists(Path.Combine(_cryptoStoreDir, fileName)))
             {
-                string newKey = new(PemEncoding.Write("PRIVATE KEY", ecdsa.ExportECPrivateKey()).ToArray());
+                string newKey = new(PemEncoding.Write("PRIVATE KEY", ecdsa.ExportECPrivateKey())
+                .ToArray());
                 File.WriteAllText(Path.Combine(_cryptoStoreDir, fileName), newKey);
             }
             else
@@ -92,7 +93,8 @@ namespace AstarteDeviceSDKCSharp.Crypto
         {
             ECDsa ecdsa = GenerateKey();
 
-            var cert = new CertificateRequest($"O=Devices,CN={commonName}", ecdsa, HashAlgorithmName.SHA256);
+            var cert = new CertificateRequest
+            ($"O=Devices,CN={commonName}", ecdsa, HashAlgorithmName.SHA256);
 
             byte[] pkcs10 = cert.CreateSigningRequest();
             StringBuilder builder = new();
