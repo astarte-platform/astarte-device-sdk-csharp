@@ -71,7 +71,7 @@ namespace AstarteDeviceSDKCSharp.Device
             _astarteTransport = _pairingHandler.GetTransports().First();
             if (_astarteTransport == null)
             {
-                throw new Exception("Astarte returned no supported transports for the Device!");
+                throw new AstarteTransportException("No supported transports for the device !");
             }
             ConfigureTransport();
         }
@@ -98,14 +98,7 @@ namespace AstarteDeviceSDKCSharp.Device
 
             if (!_initialized)
             {
-                try
-                {
-                    Init();
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(ex.Message);
-                }
+                Init();
                 _initialized = true;
             }
 

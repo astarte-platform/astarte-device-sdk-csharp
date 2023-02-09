@@ -87,7 +87,8 @@ namespace AstarteDeviceSDKCSharp.Utilities
                 }
                 else
                 {
-                    throw new ArgumentException("Computed hash code is null");
+                    throw new ArgumentException(
+                        "Error computing UUID from namespace and bytes: null hash");
                 }
             }
         }

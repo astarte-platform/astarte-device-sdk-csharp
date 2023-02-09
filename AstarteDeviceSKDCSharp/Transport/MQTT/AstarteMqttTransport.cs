@@ -21,6 +21,8 @@
 using AstarteDeviceSDK.Protocol;
 using MQTTnet;
 using MQTTnet.Client;
+using MQTTnet.Client.Connecting;
+using MQTTnet.Exceptions;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
 {
@@ -42,62 +44,47 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 {
                     _client.DisconnectAsync();
                 }
-                catch (Exception ex)
+                catch (MqttCommunicationException ex)
                 {
-                    throw new Exception(ex.StackTrace);
+                    throw new AstarteTransportException(ex.Message, ex);
                 }
             }
 
-            try
-            {
-                MqttFactory mqttFactory = new();
-                _client = mqttFactory.CreateMqttClient();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.StackTrace);
-            }
+            MqttFactory mqttFactory = new();
+            _client = mqttFactory.CreateMqttClient();
         }
 
         public override void Connect()
         {
-            try
+
+            if (_client != null)
             {
-                if (_client != null)
+                if (_client.IsConnected)
                 {
-                    if (_client.IsConnected)
-                    {
-                        return;
-                    }
+                    return;
                 }
-                else
-                {
-                    InitClient();
-                }
-
-
-                var result = _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(),
-                CancellationToken.None).Result;
             }
-            catch (Exception ex)
+            else
             {
-                throw new Exception(ex.StackTrace);
+                InitClient();
+            }
+
+            var result = _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(),
+            CancellationToken.None).Result;
+
+            if (result.ResultCode != MqttClientConnectResultCode.Success)
+            {
+                throw new AstarteTransportException
+                ($"Error connecting to MQTT. Code: {result.ResultCode}");
             }
 
         }
 
         public override void Disconnect()
         {
-            try
+            if (_client.IsConnected)
             {
-                if (_client.IsConnected)
-                {
-                    _client.DisconnectAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
+                _client.DisconnectAsync();
             }
         }
 

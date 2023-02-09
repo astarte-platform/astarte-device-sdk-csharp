@@ -25,7 +25,6 @@ using AstarteDeviceSDKCSharp.Utilities;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Security.Claims;
@@ -55,7 +54,6 @@ namespace AstarteDeviceSDKCSharp
 
         }
 
-
         internal async Task<List<AstarteTransport>> ReloadTransports(string credentialSecret,
         AstarteCryptoStore astarteCryptoStore, string deviceId)
         {
@@ -65,61 +63,62 @@ namespace AstarteDeviceSDKCSharp
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
             credentialSecret);
 
-            try
+            var response = await client
+                        .GetAsync(_pairingUrl + $"/{_astarteRealm}/devices/{deviceId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new AstartePairingException(
+                            "Request to Pairing API failed with "
+                                + response.StatusCode.ToString()
+                                + ". Returned body is "
+                                + response.Content.ToString());
+            }
+
+            var transportInfo = await response.Content.ReadAsStringAsync();
+
+            if (transportInfo != null)
             {
 
-                var response = await client
-                            .GetAsync(_pairingUrl + $"/{_astarteRealm}/devices/{deviceId}");
-
-                var transportInfo = await response.Content.ReadAsStringAsync();
-
-                if (transportInfo != null)
+                dynamic? jsonInfo;
+                try
                 {
-                    dynamic? jsonInfo = JsonConvert.DeserializeObject<object>(transportInfo);
-
-                    if (jsonInfo != null)
-                    {
-                        foreach (var item in jsonInfo.data.protocols)
-                        {
-
-                            AstarteProtocolType astarteProtocolType =
-                                (AstarteProtocolType)System
-                                .Enum.Parse(typeof(AstarteProtocolType), item.Name.ToUpper());
-
-                            try
-                            {
-                                AstarteTransport supportedTransport =
-                                   AstarteTransportFactory.CreateAstarteTransportFromPairing(
-                                   astarteProtocolType,
-                                   _astarteRealm,
-                                   deviceId,
-                                   item,
-                                   astarteCryptoStore);
-
-                                transports.Add(supportedTransport);
-                            }
-                            catch (Exception ex)
-                            {
-                                Trace.WriteLine(ex);
-                            }
-                        }
-
-                        if (transports.Count == 0)
-                        {
-                            throw new AstartePairingException
-                            ("Pairing did not return any supported Transport.");
-                        }
-
-                    }
+                    jsonInfo = JsonConvert.DeserializeObject<object>(transportInfo);
                 }
-                return transports;
+                catch (JsonException ex)
+                {
+                    throw new AstartePairingException(ex.Message, ex);
+                }
 
-            }
-            catch (Exception ex)
-            {
-                throw new AstartePairingException(ex.Message);
-            }
+                if (jsonInfo != null)
+                {
+                    foreach (var item in jsonInfo.data.protocols)
+                    {
 
+                        AstarteProtocolType astarteProtocolType =
+                            (AstarteProtocolType)System
+                            .Enum.Parse(typeof(AstarteProtocolType), item.Name.ToUpper());
+
+                        AstarteTransport supportedTransport =
+                           AstarteTransportFactory.CreateAstarteTransportFromPairing(
+                           astarteProtocolType,
+                           _astarteRealm,
+                           deviceId,
+                           item,
+                           astarteCryptoStore);
+
+                        transports.Add(supportedTransport);
+                    }
+
+                    if (transports.Count == 0)
+                    {
+                        throw new AstartePairingException
+                        ("Error in getting a valid transport from pairing");
+                    }
+
+                }
+            }
+            return transports;
         }
 
         public async Task<X509Certificate2> RequestNewCertificate
@@ -131,11 +130,10 @@ namespace AstarteDeviceSDKCSharp
             {
                 csr = astarteCryptoStore.GenerateCSR(_astarteRealm + "/" + deviceId);
             }
-            catch (Exception ex)
+            catch (AstarteCryptoException ex)
             {
                 throw new AstartePairingException("Could not generate a CSR", ex);
             }
-
 
             // Prepare the Pairing API request
             HttpClient client = new();
@@ -152,7 +150,7 @@ namespace AstarteDeviceSDKCSharp
                     (new Utilities.CertificateRequest() { Data = new CsrData() { Csr = csr } });
 
                 }
-                catch (Exception ex)
+                catch (JsonException ex)
                 {
                     throw new AstartePairingException
                     ("Could not generate the JSON Request Payload", ex);
@@ -200,7 +198,7 @@ namespace AstarteDeviceSDKCSharp
                     throw new AstartePairingException("Could not generate X509 certificate", ex);
                 }
             }
-            catch (Exception ex)
+            catch (AstarteCryptoException ex)
             {
                 throw new AstartePairingException("Failure in calling Pairing API", ex);
             }
@@ -217,7 +215,6 @@ namespace AstarteDeviceSDKCSharp
         {
             return await RegisterDevice(deviceId, RegisterDeviceHeadersWithPrivateKey(privateKeyFile));
         }
-
         /// <summary>
         /// Registers a Device against an Astarte instance/realm with a JWT Token
         /// </summary>
@@ -264,11 +261,7 @@ namespace AstarteDeviceSDKCSharp
             }
             catch (IOException e)
             {
-                throw new AstartePairingException("Can not access to file", e);
-            }
-            catch (Exception e)
-            {
-                throw new AstartePairingException("Private key read error", e);
+                throw new AstartePairingException("Unable to access the private key", e);
             }
 
             // creating the key 
@@ -279,7 +272,7 @@ namespace AstarteDeviceSDKCSharp
             }
             catch (CryptographicException e)
             {
-                throw new AstartePairingException("Import private key error", e);
+                throw new AstartePairingException("Error importing the private key", e);
             }
 
             ECDsaSecurityKey rsaSecurityKey = new(ecdsa);
@@ -327,9 +320,9 @@ namespace AstarteDeviceSDKCSharp
             }
             catch (ArgumentException e)
             {
-                throw new AstartePairingException("Token is not valid", e);
+                throw new AstartePairingException("Invalid token", e);
             }
-            catch (Exception e)
+            catch (SecurityTokenEncryptionFailedException e)
             {
                 throw new AstartePairingException("Token serialization failed", e);
             }
@@ -377,7 +370,7 @@ namespace AstarteDeviceSDKCSharp
 
             if (string.IsNullOrEmpty(credentialSecret))
             {
-                throw new AstartePairingException("Failure in calling device register API");
+                throw new AstartePairingException("Failed to call the device registration API");
             }
             return credentialSecret;
         }

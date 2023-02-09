@@ -62,48 +62,25 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 string topic = _baseTopic + "/" + astarteInterface.InterfaceName + path;
                 byte[] payload = AstartePayload.Serialize(value, timestamp);
 
-                try
-                {
-                    await DoSendMqttMessage(topic, payload, qos);
-                }
-                catch (Exception ex)
-                {
-                    if (astarteInterface.GetType()
-                    .IsInstanceOfType(typeof(AstarteDatastreamInterface)))
-                    {
-                        throw new AstarteTransportException("Mapping not found", ex);
-                    }
-                    else
-                    {
-                        throw new AstarteTransportException("Mapping not found", ex);
-                    }
-                }
+                await DoSendMqttMessage(topic, payload, qos);
             }
         }
 
         private async Task DoSendMqttMessage(string topic, byte[] payload, int qos)
         {
-            try
-            {
-                var applicationMessage = new MqttApplicationMessageBuilder()
-                                    .WithTopic(topic)
-                                    .WithPayload(payload)
-                                    .WithQualityOfServiceLevel(qos)
-                                    .WithRetainFlag(false)
-                                    .Build();
+            var applicationMessage = new MqttApplicationMessageBuilder()
+                                .WithTopic(topic)
+                                .WithPayload(payload)
+                                .WithQualityOfServiceLevel(qos)
+                                .WithRetainFlag(false)
+                                .Build();
 
-                MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
+            MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
 
-                if (result.ReasonCode != MqttClientPublishReasonCode.Success)
-                {
-                    throw new AstarteTransportException
-                    ($"MQTT raised an exception with a reason code: {result.ReasonCode}");
-                }
-            }
-            catch (Exception ex)
+            if (result.ReasonCode != MqttClientPublishReasonCode.Success)
             {
-                //we cannot implement error handling at the moment 
-                throw new AstarteTransportException(ex.Message, ex);
+                throw new AstarteTransportException
+                ($"Error publishing on MQTT. Code: {result.ReasonCode}");
             }
         }
 
@@ -127,14 +104,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             .Remove(introspectionStringBuilder.Length - 1, 1);
             string introspection = introspectionStringBuilder.ToString();
 
-            try
-            {
-                await DoSendMqttMessage(_baseTopic, Encoding.ASCII.GetBytes(introspection), 2);
-            }
-            catch (Exception ex)
-            {
-                throw new AstarteTransportException(ex.Message, ex);
-            }
+            await DoSendMqttMessage(_baseTopic, Encoding.ASCII.GetBytes(introspection), 2);
         }
 
         public override async Task SendIndividualValue(AstarteInterface astarteInterface,
