@@ -37,6 +37,8 @@ namespace AstarteDeviceSDKCSharp.Data
 
         }
 
+        public virtual DbSet<AstarteGenericPropertyEntry> AstarteGenericProperties { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var connectionString = "Filename=AstarteDeviceDb";
@@ -53,6 +55,8 @@ namespace AstarteDeviceSDKCSharp.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<AstarteGenericPropertyEntry>()
+            .HasKey(x => x.Id);
             base.OnModelCreating(modelBuilder);
         }
     }
