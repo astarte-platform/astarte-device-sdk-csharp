@@ -20,6 +20,7 @@
 
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AstarteDeviceSDKCSharp.Utilities
 {
@@ -54,7 +55,6 @@ namespace AstarteDeviceSDKCSharp.Utilities
             o = PrepareDateTimeValues(o);
 
             AstartePayloadItem payloadObject = new(o, t);
-
             MemoryStream ms = new();
             using (BsonDataWriter writer = new(ms))
             {
@@ -64,6 +64,87 @@ namespace AstarteDeviceSDKCSharp.Utilities
 
             byte[] payload = ms.ToArray();
             return payload;
+        }
+
+        public static DecodedMessage Deserialize(byte[] mqttPayload)
+        {
+            MemoryStream ms = new MemoryStream(mqttPayload);
+            using BsonDataReader reader = new(ms);
+            JsonSerializer serializer = new();
+
+            DecodedMessage decodedMessage = serializer.Deserialize<DecodedMessage>(reader)!;
+
+            object decodedObject = decodedMessage.GetPayload();
+            Type payloadType = GetPayloadType(decodedObject);
+
+            if (payloadType == typeof(DateTime))
+            {
+                decodedMessage.SetPayload(((DateTime)decodedObject).ToUniversalTime());
+            }
+            else if (payloadType == typeof(DateTime[]))
+            {
+                JArray bsonList = (JArray)decodedObject;
+                DateTime[] dateTimes = new DateTime[bsonList.Count];
+
+                for (int i = 0; i < ((JArray)decodedObject).Count; i++)
+                {
+                    JToken item = ((JArray)decodedObject).ElementAt(i);
+                    DateTime dateItem;
+                    if (DateTime.TryParse(item.ToString(), out dateItem))
+                    {
+                        dateTimes[i] = dateItem.ToUniversalTime();
+                    }
+                }
+                decodedMessage.SetPayload(dateTimes);
+            }
+            else if (payloadType == typeof(Array))
+            {
+                JArray bsonList = (JArray)decodedObject;
+                object[] objects = new object[bsonList.Count];
+                for (int i = 0; i < bsonList.Count; i++)
+                {
+                    JToken item = ((JArray)decodedObject).ElementAt(i);
+                    objects[i] = item.ToObject<object>()!;
+                }
+                decodedMessage.SetPayload(objects);
+            }
+            else if (payloadType == typeof(JObject))
+            {
+
+                // if payload is a map (JObject)
+                Dictionary<string, object> dic = ((JObject)decodedMessage.GetPayload()).ToObject<Dictionary<string, object>>()!;
+                decodedMessage.SetPayload(dic);
+
+            }
+
+            return decodedMessage;
+        }
+
+        private static Type GetPayloadType(object payload)
+        {
+            if (payload is DateTime)
+            {
+                return typeof(DateTime);
+            }
+            else if (payload is JObject)
+            {
+                if (payload is DateTime)
+                    return typeof(DateTime);
+
+                return payload.GetType();
+            }
+            else if (payload is JArray)
+            {
+                JArray bsonList = (JArray)payload;
+                var item = bsonList.First();
+                DateTime dateItem;
+                if (DateTime.TryParse(item.ToString(), out dateItem))
+                    return typeof(DateTime[]);
+
+                return typeof(Array);
+
+            }
+            return typeof(JObject);
         }
 
         private static object PrepareDateTimeValues(object o)
