@@ -27,22 +27,23 @@ namespace AstarteDeviceSDKCSharp.Data
     {
         [Key]
         public string Id { get; set; }
-
         [Column("INTERFACE_FIELD_NAME")]
         [Required]
         public string InterfaceName { get; set; }
-
         [Required]
         public string Path { get; set; }
         [Required]
+        public int InterfaceMajor { get; set; }
+        [Required]
         public byte[] BsonValue { get; set; }
-
-        public AstarteGenericPropertyEntry(string interfaceName, string path, byte[] bsonValue)
+        public AstarteGenericPropertyEntry(string interfaceName, string path, byte[] bsonValue,
+        int interfaceMajor)
         {
             Id = interfaceName + "/" + path;
             InterfaceName = interfaceName;
             Path = path;
             BsonValue = bsonValue;
+            InterfaceMajor = interfaceMajor;
         }
     }
 }

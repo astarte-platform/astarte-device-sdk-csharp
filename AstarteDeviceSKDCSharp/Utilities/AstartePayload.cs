@@ -45,7 +45,7 @@ namespace AstarteDeviceSDKCSharp.Utilities
     public class AstartePayload
     {
         public AstartePayload() { }
-        public static byte[] Serialize(Object o, DateTime? t)
+        public static byte[] Serialize(Object? o, DateTime? t)
         {
             if (o is not { })
             {
@@ -66,13 +66,18 @@ namespace AstarteDeviceSDKCSharp.Utilities
             return payload;
         }
 
-        public static DecodedMessage Deserialize(byte[] mqttPayload)
+        public static DecodedMessage? Deserialize(byte[] mqttPayload)
         {
             MemoryStream ms = new MemoryStream(mqttPayload);
             using BsonDataReader reader = new(ms);
             JsonSerializer serializer = new();
 
-            DecodedMessage decodedMessage = serializer.Deserialize<DecodedMessage>(reader)!;
+            DecodedMessage? decodedMessage = serializer.Deserialize<DecodedMessage>(reader);
+
+            if (decodedMessage is null)
+            {
+                return decodedMessage;
+            }
 
             object decodedObject = decodedMessage.GetPayload();
             Type payloadType = GetPayloadType(decodedObject);

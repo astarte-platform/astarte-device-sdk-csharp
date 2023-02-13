@@ -18,7 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Protocol;
+using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
 using AstarteDeviceSDKCSharp.Transport;
 using Newtonsoft.Json;
@@ -61,17 +63,25 @@ namespace AstarteDeviceSDK.Protocol
 
         public static AstarteInterface FromString(string astarteInterfaceObject)
         {
+            if (String.IsNullOrEmpty(astarteInterfaceObject))
+            {
+                throw new AstarteInterfaceException("Invalid Astarte interface is null or empty.");
+            }
+
             AstarteInterfaceModel? astarteInterfaceModel =
-             JsonConvert.DeserializeObject<AstarteInterfaceModel>(astarteInterfaceObject);
+            JsonConvert.DeserializeObject<AstarteInterfaceModel>(astarteInterfaceObject);
 
             if (astarteInterfaceModel is null)
             {
-                throw new AstarteInvalidInterfaceException("Astarte interface is null");
+                throw new AstarteInterfaceException
+                ("Got a null value after interface deserialization.");
             }
 
             string astarteInterfaceOwnership = astarteInterfaceModel.Ownership;
             string astarteInterfaceType = astarteInterfaceModel.Type;
             string astarteInterfaceAggregation;
+
+            IAstartePropertyStorage astartePropertyStorage = new AstartePropertyStorage();
 
             if (!string.IsNullOrEmpty(astarteInterfaceModel.Aggregation))
             {
@@ -97,6 +107,18 @@ namespace AstarteDeviceSDK.Protocol
 
             AstarteInterface? astarteInterface = null;
 
+            if (astarteInterfaceModel.Type.Equals("properties"))
+            {
+                if (astarteInterfaceOwnership.Equals("device"))
+                {
+                    astarteInterface = new AstarteDevicePropertyInterface(astartePropertyStorage);
+                }
+                else if (astarteInterfaceOwnership.Equals("server"))
+                {
+                    astarteInterface = new AstarteServerPropertyInterface(astartePropertyStorage);
+                }
+            }
+
             if (astarteInterfaceModel.Type.Equals("datastream"))
             {
                 if (astarteInterfaceAggregation.Equals("individual"))
@@ -107,7 +129,7 @@ namespace AstarteDeviceSDK.Protocol
 
             if (astarteInterface is null)
             {
-                throw new AstarteInvalidInterfaceException("Error parsing astarte interface");
+                throw new AstarteInterfaceException("Unable to create a valid Astarte interface.");
             }
 
             astarteInterface.InterfaceName = astarteInterfaceModel.InterfaceName;
@@ -146,7 +168,7 @@ namespace AstarteDeviceSDK.Protocol
             return astarteInterface;
         }
 
-        public void ValidatePayload(string path, object payload, DateTime timestamp)
+        public void ValidatePayload(string path, object payload, DateTime? timestamp)
         {
             FindMappingInInterface(path).ValidatePayload(payload, timestamp);
         }

@@ -28,16 +28,8 @@ namespace AstarteDeviceSDKCSharp.Data
 {
     public partial class AstarteDbContext : DbContext
     {
-        public AstarteDbContext()
-        {
-
-        }
-        public AstarteDbContext(DbContextOptions<AstarteDbContext> options) : base(options)
-        {
-
-        }
-
-        public virtual DbSet<AstarteGenericPropertyEntry> AstarteGenericProperties { get; set; }
+        public DbSet<AstarteGenericPropertyEntry> AstarteGenericProperties
+         => Set<AstarteGenericPropertyEntry>();
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
