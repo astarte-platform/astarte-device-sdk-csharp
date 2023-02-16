@@ -43,7 +43,8 @@ namespace AstarteDeviceSDKCSharp.Crypto
 
             if (File.Exists(_cryptoStoreDir + @"\device.crt"))
             {
-                ECDsa ecdsa = GenerateKey();
+                ECDsa ecdsa;
+                ecdsa = GenerateKey();
 
                 //Set certificate
                 X509Certificate2 caCert = new(File.ReadAllBytes(_cryptoStoreDir + @"\device.crt"));
@@ -56,8 +57,19 @@ namespace AstarteDeviceSDKCSharp.Crypto
         public void SaveCertificateIfNotExist(X509Certificate2 x509Certificate)
         {
             //Save certificate to file
-            File.WriteAllText(Path.Combine(_cryptoStoreDir, "device.crt"),
-            new(PemEncoding.Write("CERTIFICATE", x509Certificate.GetRawCertData()).ToArray()));
+            try
+            {
+                File.WriteAllText(Path.Combine(_cryptoStoreDir, "device.crt"),
+                new(PemEncoding.Write("CERTIFICATE", x509Certificate.GetRawCertData()).ToArray()));
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                throw new AstarteCryptoException("Failed to write certificate. Directory not found", ex);
+            }
+            catch (IOException ex)
+            {
+                throw new AstarteCryptoException("Failed to open .crt file", ex);
+            }
 
             LoadNewCertificate();
         }
@@ -71,15 +83,49 @@ namespace AstarteDeviceSDKCSharp.Crypto
             {
                 string newKey = new(PemEncoding.Write("PRIVATE KEY", ecdsa.ExportECPrivateKey())
                 .ToArray());
-                File.WriteAllText(Path.Combine(_cryptoStoreDir, fileName), newKey);
+                try
+                {
+                    File.WriteAllText(Path.Combine(_cryptoStoreDir, fileName), newKey);
+                }
+                catch (DirectoryNotFoundException ex)
+                {
+                    throw new AstarteCryptoException("Failed to write private key. Directory not found", ex);
+                }
+                catch (IOException ex)
+                {
+                    throw new AstarteCryptoException("Failed to open private key file", ex);
+                }
+
             }
             else
             {
-                string privateKey = File.ReadAllText(
-                Path.Combine(_cryptoStoreDir, fileName)).ToString()
-               .Replace("-----BEGIN PRIVATE KEY-----", "")
-               .Replace("-----END PRIVATE KEY-----", "").Replace("\n", "");
-                ecdsa.ImportECPrivateKey(Convert.FromBase64String(privateKey), out _);
+                string privateKey;
+                try
+                {
+                    privateKey = File.ReadAllText(
+                                    Path.Combine(_cryptoStoreDir, fileName)).ToString()
+                                   .Replace("-----BEGIN PRIVATE KEY-----", "")
+                                   .Replace("-----END PRIVATE KEY-----", "").Replace("\n", "");
+                    try
+                    {
+                        ecdsa.ImportECPrivateKey(Convert.FromBase64String(privateKey), out _);
+                    }
+                    catch (CryptographicException e)
+                    {
+                        throw new AstarteCryptoException("Error importing the private key", e);
+                    }
+
+                }
+                catch (Exception e) when (e is DirectoryNotFoundException ||
+                               e is FileNotFoundException)
+                {
+                    throw new AstarteCryptoException("Private key file or directory not found", e);
+                }
+                catch (IOException e)
+                {
+                    throw new AstarteCryptoException("Unable to access the private key", e);
+                }
+
             }
             return ecdsa;
         }
@@ -91,7 +137,8 @@ namespace AstarteDeviceSDKCSharp.Crypto
 
         public string GenerateCSR(string commonName)
         {
-            ECDsa ecdsa = GenerateKey();
+            ECDsa ecdsa;
+            ecdsa = GenerateKey();
 
             var cert = new CertificateRequest
             ($"O=Devices,CN={commonName}", ecdsa, HashAlgorithmName.SHA256);

@@ -22,9 +22,12 @@ using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Crypto;
 using AstarteDeviceSDKCSharp.Transport;
 using AstarteDeviceSDKCSharp.Utilities;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using System.Diagnostics;
+using Newtonsoft.Json.Linq;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
@@ -32,7 +35,7 @@ namespace AstarteDeviceSDKCSharp
 {
     public class AstartePairingService
     {
-        private Uri _pairingUrl;
+        private readonly Uri _pairingUrl;
         private readonly string _astarteRealm;
         private readonly HttpClient _httpClient;
 
@@ -51,8 +54,7 @@ namespace AstarteDeviceSDKCSharp
 
         }
 
-
-        public async Task<List<AstarteTransport>> ReloadTransports(string credentialSecret,
+        internal async Task<List<AstarteTransport>> ReloadTransports(string credentialSecret,
         AstarteCryptoStore astarteCryptoStore, string deviceId)
         {
             List<AstarteTransport> transports = new();
@@ -61,62 +63,62 @@ namespace AstarteDeviceSDKCSharp
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
             credentialSecret);
 
-            try
+            var response = await client
+                        .GetAsync(_pairingUrl + $"/{_astarteRealm}/devices/{deviceId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new AstartePairingException(
+                            "Request to Pairing API failed with "
+                                + response.StatusCode.ToString()
+                                + ". Returned body is "
+                                + response.Content.ToString());
+            }
+
+            var transportInfo = await response.Content.ReadAsStringAsync();
+
+            if (transportInfo != null)
             {
 
-                var response = await client
-                            .GetAsync(_pairingUrl + $"/{_astarteRealm}/devices/{deviceId}");
-
-                var transportInfo = await response.Content.ReadAsStringAsync();
-
-                if (transportInfo != null)
+                dynamic? jsonInfo;
+                try
                 {
-                    dynamic? jsonInfo = JsonConvert.DeserializeObject<object>(transportInfo);
-
-                    if (jsonInfo != null)
-                    {
-                        foreach (var item in jsonInfo.data.protocols)
-                        {
-
-                            AstarteProtocolType astarteProtocolType =
-                                (AstarteProtocolType)System
-                                .Enum.Parse(typeof(AstarteProtocolType), item.Name.ToUpper());
-
-                            try
-                            {
-                                AstarteTransport supportedTransport =
-                                   AstarteTransportFactory.CreateAstarteTransportFromPairing(
-                                   astarteProtocolType,
-                                   _astarteRealm,
-                                   deviceId,
-                                   item,
-                                   astarteCryptoStore);
-
-                                transports.Add(supportedTransport);
-                            }
-                            catch (Exception ex)
-                            {
-                                Trace.WriteLine(ex);
-                            }
-                        }
-
-                        if (transports.Count == 0)
-                        {
-                            throw new AstartePairingException
-                            ("Pairing did not return any supported Transport.");
-                        }
-
-                    }
+                    jsonInfo = JsonConvert.DeserializeObject<object>(transportInfo);
                 }
-                return transports;
+                catch (JsonException ex)
+                {
+                    throw new AstartePairingException(ex.Message, ex);
+                }
 
+                if (jsonInfo != null)
+                {
+                    foreach (var item in jsonInfo.data.protocols)
+                    {
+
+                        AstarteProtocolType astarteProtocolType =
+                            (AstarteProtocolType)System
+                            .Enum.Parse(typeof(AstarteProtocolType), item.Name.ToUpper());
+
+                        AstarteTransport supportedTransport =
+                           AstarteTransportFactory.CreateAstarteTransportFromPairing(
+                           astarteProtocolType,
+                           _astarteRealm,
+                           deviceId,
+                           item,
+                           astarteCryptoStore);
+
+                        transports.Add(supportedTransport);
+                    }
+
+                    if (transports.Count == 0)
+                    {
+                        throw new AstartePairingException
+                        ("Error in getting a valid transport from pairing");
+                    }
+
+                }
             }
-            catch (Exception ex)
-            {
-                throw new AstartePairingException(ex.Message);
-            }
-
-
+            return transports;
         }
 
         public async Task<X509Certificate2> RequestNewCertificate
@@ -128,11 +130,10 @@ namespace AstarteDeviceSDKCSharp
             {
                 csr = astarteCryptoStore.GenerateCSR(_astarteRealm + "/" + deviceId);
             }
-            catch (Exception ex)
+            catch (AstarteCryptoException ex)
             {
                 throw new AstartePairingException("Could not generate a CSR", ex);
             }
-
 
             // Prepare the Pairing API request
             HttpClient client = new();
@@ -149,7 +150,7 @@ namespace AstarteDeviceSDKCSharp
                     (new Utilities.CertificateRequest() { Data = new CsrData() { Csr = csr } });
 
                 }
-                catch (Exception ex)
+                catch (JsonException ex)
                 {
                     throw new AstartePairingException
                     ("Could not generate the JSON Request Payload", ex);
@@ -176,24 +177,203 @@ namespace AstarteDeviceSDKCSharp
 
                 try
                 {
-                    X509Certificate2 newCertificate = new X509Certificate2
-                    (Convert.FromBase64String(certificate.Data.ClientCrt
-                     .Replace("-----BEGIN CERTIFICATE-----", "")
-                     .Replace("-----END CERTIFICATE-----", "")
-                     .Replace("\n", "")));
+                    if (certificate != null)
+                    {
+                        X509Certificate2 newCertificate = new X509Certificate2
+                        (Convert.FromBase64String(certificate.Data.ClientCrt
+                        .Replace("-----BEGIN CERTIFICATE-----", "")
+                        .Replace("-----END CERTIFICATE-----", "")
+                        .Replace("\n", "")));
 
-                    astarteCryptoStore.SaveCertificateIfNotExist(newCertificate);
-                    return newCertificate;
+                        astarteCryptoStore.SaveCertificateIfNotExist(newCertificate);
+                        return newCertificate;
+                    }
+                    else
+                    {
+                        throw new AstartePairingException("Certificate is null");
+                    }
                 }
                 catch (CryptographicException ex)
                 {
                     throw new AstartePairingException("Could not generate X509 certificate", ex);
                 }
             }
-            catch (Exception ex)
+            catch (AstarteCryptoException ex)
             {
                 throw new AstartePairingException("Failure in calling Pairing API", ex);
             }
         }
+
+        /// <summary>
+        /// Registers a Device against an Astarte instance/realm with a Private Key
+        /// </summary>
+        /// <param name="deviceId">The Device ID to register.</param>
+        /// <param name="privateKeyFile">Path to the Private Key file for the Realm.
+        /// It will be used to Authenticate against Pairing API.</param>
+        /// <returns>Returns the Credentials secret for the Device</returns>
+        public async Task<string> RegisterDeviceWithPrivateKey(string deviceId, string privateKeyFile)
+        {
+            return await RegisterDevice(deviceId, RegisterDeviceHeadersWithPrivateKey(privateKeyFile));
+        }
+        /// <summary>
+        /// Registers a Device against an Astarte instance/realm with a JWT Token
+        /// </summary>
+        /// <param name="deviceId">The Device ID to register.</param>
+        /// <param name="jwtToken">A JWT Token to Authenticate against Pairing API. 
+        /// The token must have access to Pairing API and to the agent API paths.</param>
+        /// <returns>Returns the Credentials secret for the Device</returns>
+        public async Task<string> RegisterDeviceWithJwtToken(string deviceId, string jwtToken)
+        {
+            return await RegisterDevice(deviceId, RegisterDeviceHeadersWithJwtToken(jwtToken));
+        }
+
+        private AuthenticationHeaderValue RegisterDeviceHeadersWithPrivateKey(string privateKeyfile)
+        {
+            return new AuthenticationHeaderValue("Bearer", GenerateToken(privateKeyfile));
+        }
+
+        private AuthenticationHeaderValue RegisterDeviceHeadersWithJwtToken(string jwtToken)
+        {
+            return new AuthenticationHeaderValue("Bearer", jwtToken);
+        }
+
+        private string GenerateToken(string privateKeyFile, int expiry = 30)
+        {
+            List<string> authPaths = new();
+            authPaths.Add(".*::.*");
+
+            string privateKey;
+            try
+            {
+                privateKey = File.ReadAllText(
+                privateKeyFile).ToString()
+                .Replace("-----BEGIN EC PRIVATE KEY-----", "")
+                .Replace("-----END EC PRIVATE KEY-----", "")
+                .Replace("\n", "");
+            }
+            catch (DirectoryNotFoundException e)
+            {
+                throw new AstartePairingException("Private key file or directory not found", e);
+            }
+            catch (FileNotFoundException e)
+            {
+                throw new AstartePairingException("Private key file not found", e);
+            }
+            catch (IOException e)
+            {
+                throw new AstartePairingException("Unable to access the private key", e);
+            }
+
+            // creating the key 
+            ECDsa ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+            try
+            {
+                ecdsa.ImportECPrivateKey(Convert.FromBase64String(privateKey), out _);
+            }
+            catch (CryptographicException e)
+            {
+                throw new AstartePairingException("Error importing the private key", e);
+            }
+
+            ECDsaSecurityKey rsaSecurityKey = new(ecdsa);
+
+            List<string> realAuthPaths = new();
+            realAuthPaths.Add("JOIN::.*");
+            realAuthPaths.Add("WATCH::.*");
+
+            // Generating the token 
+            var now = DateTime.UtcNow;
+            var startDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            JArray jRealAuthPaths = new(realAuthPaths);
+
+            var claims = new[] {
+                    new Claim( "iat", ((long)(now - startDate).TotalSeconds).ToString(), ClaimValueTypes.Integer64),
+                    new Claim( "a_pa",jRealAuthPaths.ToString(),JsonClaimValueTypes.JsonArray),
+                };
+
+            var handler = new JwtSecurityTokenHandler();
+
+            JwtSecurityToken token;
+            try
+            {
+                token = new JwtSecurityToken(
+                                   null,
+                                   null,
+                                   claims,
+                                   null,
+                                   now.AddSeconds(expiry),
+                                   new SigningCredentials(rsaSecurityKey, SecurityAlgorithms.EcdsaSha256)
+                               );
+            }
+            catch (ArgumentException e)
+            {
+                throw new AstartePairingException("Token parameters error", e);
+            }
+
+            try
+            {
+                return handler.WriteToken(token);
+            }
+            catch (ArgumentNullException e)
+            {
+                throw new AstartePairingException("Token is null", e);
+            }
+            catch (ArgumentException e)
+            {
+                throw new AstartePairingException("Invalid token", e);
+            }
+            catch (SecurityTokenEncryptionFailedException e)
+            {
+                throw new AstartePairingException("Token serialization failed", e);
+            }
+
+        }
+
+        private async Task<string> RegisterDevice(string deviceId, AuthenticationHeaderValue header)
+        {
+            string credentialSecret = "";
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = header;
+
+            JObject payLoad;
+            try
+            {
+                payLoad = new(
+                    new JProperty("data",
+                      new JObject(
+                        new JProperty("hw_id", deviceId)))
+                );
+            }
+            catch (JsonException ex)
+            {
+                throw new AstartePairingException("Could not generate the JSON Request Payload", ex);
+            }
+
+            HttpContent content = new StringContent(payLoad.ToString());
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            HttpResponseMessage response = await client.PostAsync(_pairingUrl + $"/{_astarteRealm}/agent/devices", content);
+
+            if (!response.IsSuccessStatusCode || response.Content == null)
+            {
+                throw new AstartePairingException(
+                    "Request to device register API failed with "
+                        + response.StatusCode
+                        + ". Returned body is "
+                        + (response.Content != null ? await response.Content.ReadAsStringAsync() : "empty"));
+            }
+
+            dynamic? credential = JsonConvert.DeserializeObject<object>(await response.Content.ReadAsStringAsync());
+            if (credential != null)
+            {
+                credentialSecret = credential.data.credentials_secret;
+            }
+
+            if (string.IsNullOrEmpty(credentialSecret))
+            {
+                throw new AstartePairingException("Failed to call the device registration API");
+            }
+            return credentialSecret;
+        }
+
     }
 }
