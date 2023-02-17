@@ -119,6 +119,26 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         {
             await SendIndividualValue(astarteInterface, path, value, null);
         }
+
+        public override async Task SendAggregate(AstarteAggregateDatastreamInterface astarteInterface,
+        string path, Dictionary<string, object> value, DateTime? timeStamp)
+        {
+            AstarteInterfaceDatastreamMapping mapping =
+            (AstarteInterfaceDatastreamMapping)astarteInterface.GetMappings().Values.ToArray()[0];
+
+            if (mapping is null)
+            {
+                throw new AstarteTransportException("Mapping not found");
+            }
+
+            int qos = QosFromReliability(mapping);
+
+            string topic = _baseTopic + "/" + astarteInterface.InterfaceName + path;
+            byte[] payload = AstartePayload.Serialize(value, timeStamp);
+
+            await DoSendMqttMessage(topic, payload, qos);
+        }
+
         private int QosFromReliability(AstarteInterfaceDatastreamMapping mapping)
         {
             switch (mapping.GetReliability())

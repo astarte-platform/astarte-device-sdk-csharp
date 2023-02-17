@@ -36,6 +36,8 @@ namespace AstarteDeviceSDKCSharp.Transport
         }
 
         public abstract Task SendIntrospection();
+        public abstract Task SendAggregate(AstarteAggregateDatastreamInterface astarteInterface,
+        string path, Dictionary<string, object> value, DateTime? timeStamp);
         public abstract Task SendIndividualValue(AstarteInterface astarteInterface, string path,
         object? value, DateTime? timestamp);
         public abstract Task SendIndividualValue(AstarteInterface astarteInterface,

@@ -25,6 +25,8 @@ namespace AstarteDeviceSDK.Protocol
     public interface IAstarteProtocol
     {
         Task SendIntrospection();
+        Task SendAggregate(AstarteAggregateDatastreamInterface astarteInterface, string path,
+        Dictionary<string, object> value, DateTime? timeStamp);
         Task SendIndividualValue(AstarteInterface astarteInterface, String path, Object? value,
         DateTime? timestamp);
         Task SendIndividualValue(AstarteInterface astarteInterface, String path, Object? value);
