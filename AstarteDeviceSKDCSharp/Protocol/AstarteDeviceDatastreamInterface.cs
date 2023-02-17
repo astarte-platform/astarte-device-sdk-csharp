@@ -31,6 +31,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
 
         public void StreamData(string path, object payload, DateTime? timestamp)
         {
+            ValidatePayload(path, payload, timestamp);
             AstarteTransport? transport = GetAstarteTransport();
             if (transport == null)
             {
