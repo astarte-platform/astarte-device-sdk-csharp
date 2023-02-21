@@ -24,9 +24,9 @@ namespace AstarteDeviceSDK.Protocol
 {
     public class AstarteInterfaceMapping
     {
-        public string Path { get; set; }
-        public Type MapType { get; set; }
-        public Type PrimitiveArrayType { get; set; }
+        public string Path { get; set; } = String.Empty;
+        public Type? MapType { get; set; }
+        public Type? PrimitiveArrayType { get; set; }
 
         public static AstarteInterfaceMapping FromAstarteInterfaceMapping(Mapping astarteMapping)
         {
@@ -48,7 +48,7 @@ namespace AstarteDeviceSDK.Protocol
         }
 
 #pragma warning disable CS0108 // Member hides inherited member; missing new keyword
-        public Type GetType()
+        public Type? GetType()
 #pragma warning restore CS0108 // Member hides inherited member; missing new keyword
         {
             return MapType;

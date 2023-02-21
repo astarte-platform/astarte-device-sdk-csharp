@@ -69,23 +69,30 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 InitClient();
             }
 
-            var result = _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(),
-            CancellationToken.None).Result;
-
-            if (result.ResultCode != MqttClientConnectResultCode.Success)
+            if (_client != null)
             {
-                throw new AstarteTransportException
-                ($"Error connecting to MQTT. Code: {result.ResultCode}");
+                var result = _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(),
+                        CancellationToken.None).Result;
+
+                if (result.ResultCode != MqttClientConnectResultCode.Success)
+                {
+                    throw new AstarteTransportException
+                    ($"Error connecting to MQTT. Code: {result.ResultCode}");
+                }
             }
 
         }
 
         public override void Disconnect()
         {
-            if (_client.IsConnected)
+            if (_client != null)
             {
-                _client.DisconnectAsync();
+                if (_client.IsConnected)
+                {
+                    _client.DisconnectAsync();
+                }
             }
+
         }
 
         public override bool IsConnected()

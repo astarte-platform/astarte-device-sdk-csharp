@@ -54,7 +54,7 @@ namespace AstarteDeviceSDKCSharp.Tests
         public void TestGenerateUUID()
         {
             string astarteDeviceId = AstarteDeviceIdUtils.GenerateId();
-            byte[]? astarteDecodedId;
+            byte[] astarteDecodedId;
             try
             {
                 astarteDecodedId = Base64UrlEncoder.DecodeBytes(astarteDeviceId);

@@ -33,7 +33,7 @@ namespace AstarteDeviceSDKCSharp.Crypto
             _tlsOptions = new MqttClientOptionsBuilderTlsParameters
             {
                 UseTls = true,
-                Certificates = new List<X509Certificate>
+                Certificates = new List<X509Certificate?>
                     {
                       cryptoStore.GetCertificate()
                     },

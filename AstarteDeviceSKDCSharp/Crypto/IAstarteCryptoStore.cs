@@ -26,7 +26,7 @@ namespace AstarteDeviceSDKCSharp.Crypto
     public interface IAstarteCryptoStore
     {
         void ClearKeyStore();
-        X509Certificate2 GetCertificate();
+        X509Certificate2? GetCertificate();
         void SetAstarteCertificate(X509Certificate2 astarteCertificate);
         string GenerateCSR(string commonName);
         MqttClientOptionsBuilderTlsParameters GetMqttClientOptionsBuilderTlsParameters();
