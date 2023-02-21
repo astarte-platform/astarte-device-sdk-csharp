@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+using System.Diagnostics;
 using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
 using AstarteDeviceSDKCSharp.Transport;
@@ -52,6 +53,14 @@ namespace AstarteDeviceSDKCSharp.Protocol
             foreach (var interfaceMappingEntry in mappings)
             {
                 AstarteInterfaceMapping astarteInterfaceMapping = interfaceMappingEntry.Value;
+
+                if (astarteInterfaceMapping.Path is null)
+                {
+                    Trace.WriteLine("Astarte mapping path " +
+                    "{" + astarteInterfaceMapping.Path + " } "
+                    + " is null.");
+                    continue;
+                }
 
                 if (!payload.Any(x =>
                     x.Key == astarteInterfaceMapping.Path.Substring(fomattedPath.Length)))

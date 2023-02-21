@@ -118,8 +118,7 @@ namespace AstarteDeviceSDK.Protocol
                     astarteInterface = new AstarteServerPropertyInterface(astartePropertyStorage);
                 }
             }
-
-            if (astarteInterfaceModel.Type.Equals("datastream"))
+            else if (astarteInterfaceModel.Type.Equals("datastream"))
             {
                 if (astarteInterfaceOwnership.Equals("device"))
                 {
@@ -134,6 +133,16 @@ namespace AstarteDeviceSDK.Protocol
                         aggregateDatastreamInterface.ExplicitTimeStamp =
                             astarteInterfaceExplicitTimestamp is null ? false : (bool)astarteInterfaceExplicitTimestamp;
                         astarteInterface = aggregateDatastreamInterface;
+                    }
+                }
+                else if (astarteInterfaceOwnership.Equals("server"))
+                {
+                    if (astarteInterfaceAggregation.Equals("individual"))
+                    {
+                        astarteInterface = new AstarteServerDatastreamInterface();
+                    }
+                    else if (astarteInterfaceAggregation.Equals("object"))
+                    {
                     }
                 }
             }
