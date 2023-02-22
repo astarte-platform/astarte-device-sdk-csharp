@@ -18,10 +18,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
+namespace AstarteDeviceSDKCSharp.Protocol.AstarteException
 {
-    public interface IAstarteServerValueBuilder
+    public class AstartePayloadNotFoundException : Exception
     {
-        AstarteServerValue? Build(String interfacePath, Object serverValue, DateTime timestamp);
+        public AstartePayloadNotFoundException(String message) : base(message)
+        {
+
+        }
+
+        public AstartePayloadNotFoundException(String message, Exception cause)
+        : base(message, cause)
+        {
+
+        }
     }
 }

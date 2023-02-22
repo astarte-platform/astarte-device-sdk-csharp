@@ -143,6 +143,11 @@ namespace AstarteDeviceSDK.Protocol
                     }
                     else if (astarteInterfaceAggregation.Equals("object"))
                     {
+                        AstarteAggregateDatastreamInterface aggregateDatastreamInterface =
+                            new AstarteServerAggregateDatastreamInterface();
+                        aggregateDatastreamInterface.ExplicitTimeStamp =
+                        (bool?)astarteInterfaceExplicitTimestamp;
+                        astarteInterface = aggregateDatastreamInterface;
                     }
                 }
             }
@@ -193,11 +198,16 @@ namespace AstarteDeviceSDK.Protocol
             FindMappingInInterface(path).ValidatePayload(payload, timestamp);
         }
 
-        public static bool IsPathCompatibleWithMapping(string path, string mapping)
+        public static bool IsPathCompatibleWithMapping(string? path, string? mapping)
         {
+            if (mapping is null || path is null)
+            {
+                return false;
+            }
             // Tokenize and handle paths, to ensure we match parametric interfaces.
             string[] mappingTokens = mapping.Split("/");
             string[] pathTokens = path.Split("/");
+
             if (mappingTokens.Length != pathTokens.Length)
             {
                 return false;

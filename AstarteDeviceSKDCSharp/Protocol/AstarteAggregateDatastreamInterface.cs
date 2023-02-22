@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of Astarte.
  *
  * Copyright 2023 SECO Mind Srl
@@ -22,6 +22,10 @@ namespace AstarteDeviceSDKCSharp.Protocol
 {
     public abstract class AstarteAggregateDatastreamInterface : AstarteDatastreamInterface
     {
-        public bool ExplicitTimeStamp { get; set; }
+        public bool? ExplicitTimeStamp { get; set; }
+        public bool? IsExplicitTimeStamp()
+        {
+            return ExplicitTimeStamp;
+        }
     }
 }

@@ -20,8 +20,19 @@
 
 namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
 {
-    public interface IAstarteServerValueBuilder
+    public class AstarteAggregateDatastreamEvent : AstarteGenericAggregateEvent
     {
-        AstarteServerValue? Build(String interfacePath, Object serverValue, DateTime timestamp);
+        private readonly DateTime _timestamp;
+
+        public AstarteAggregateDatastreamEvent(
+      String interfaceName, Dictionary<String, Object> values, DateTime timestamp) : base(interfaceName, values)
+        {
+            _timestamp = timestamp;
+        }
+
+        public DateTime GetTimestamp()
+        {
+            return _timestamp;
+        }
     }
 }

@@ -50,11 +50,11 @@ namespace AstarteDeviceSDKCSharp.Protocol
             _listeners.Remove(listener);
         }
 
-        public AstarteServerValue Build(string interfacePath, object serverValue,
+        public AstarteServerValue? Build(string interfacePath, object serverValue,
         DateTime timestamp)
         {
             AstarteInterfaceMapping targetMapping = null!;
-            AstarteServerValue astarteServerValue =
+            AstarteServerValue? astarteServerValue =
             (new AstarteServerValueBuilder(serverValue)).Build();
             foreach (KeyValuePair<string, AstarteInterfaceMapping> entry in GetMappings())
             {

@@ -84,7 +84,7 @@ namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
                 return this;
             }
 
-            public AstarteServerValue Build()
+            public AstarteServerValue? Build()
             {
                 return new AstarteServerValue(this);
             }

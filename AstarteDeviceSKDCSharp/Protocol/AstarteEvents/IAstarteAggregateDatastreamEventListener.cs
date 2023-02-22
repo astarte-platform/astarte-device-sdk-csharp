@@ -20,8 +20,8 @@
 
 namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
 {
-    public interface IAstarteServerValueBuilder
+    public interface IAstarteAggregateDatastreamEventListener
     {
-        AstarteServerValue? Build(String interfacePath, Object serverValue, DateTime timestamp);
+        void ValueReceived(AstarteAggregateDatastreamEvent e);
     }
 }
