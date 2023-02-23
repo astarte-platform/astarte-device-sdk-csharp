@@ -29,7 +29,7 @@ namespace AstarteDeviceSDKCSharp.Transport
         private readonly AstarteProtocolType astarteProtocolType;
 
         public AstarteDevice? Device { get; set; }
-
+        protected bool _introspectionSent = false;
         protected AstarteTransport(AstarteProtocolType type)
         {
             astarteProtocolType = type;

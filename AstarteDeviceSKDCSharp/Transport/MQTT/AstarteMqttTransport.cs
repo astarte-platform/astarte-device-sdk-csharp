@@ -52,6 +52,16 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             MqttFactory mqttFactory = new();
             _client = mqttFactory.CreateMqttClient();
+            _client.UseConnectedHandler(OnConnectedAsync);
+        }
+
+        private async Task OnConnectedAsync(MqttClientConnectedEventArgs e)
+        {
+            if (!_introspectionSent)
+            {
+                await SendIntrospection();
+                _introspectionSent = true;
+            }
         }
 
         public override void Connect()
