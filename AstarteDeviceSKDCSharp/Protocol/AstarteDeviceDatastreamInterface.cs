@@ -31,7 +31,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
 
         public void StreamData(string path, object payload, DateTime? timestamp)
         {
-            AstarteTransport transport = GetAstarteTransport();
+            AstarteTransport? transport = GetAstarteTransport();
             if (transport == null)
             {
                 throw new AstarteTransportException("No available transport");

@@ -29,7 +29,7 @@ namespace AstarteDeviceSDKCSharp.Device
     {
         private readonly Dictionary<string, AstarteInterface> _astarteInterfaces = new();
         private readonly AstartePairingHandler _pairingHandler;
-        private AstarteTransport _astarteTransport;
+        private AstarteTransport? _astarteTransport;
         private bool _initialized;
 
         public AstarteDevice(
@@ -73,17 +73,17 @@ namespace AstarteDeviceSDKCSharp.Device
             {
                 throw new AstarteTransportException("No supported transports for the device !");
             }
-            ConfigureTransport();
+            ConfigureTransport(_astarteTransport);
         }
 
-        private void ConfigureTransport()
+        private void ConfigureTransport(AstarteTransport astarteTransport)
         {
-            _astarteTransport.SetDevice(this);
+            astarteTransport.SetDevice(this);
 
             // Set transport on all interfaces
             foreach (AstarteInterface astarteInterface in GetAllInterfaces())
             {
-                astarteInterface.SetAstarteTransport(_astarteTransport);
+                astarteInterface.SetAstarteTransport(astarteTransport);
             }
 
         }
@@ -102,6 +102,11 @@ namespace AstarteDeviceSDKCSharp.Device
                 _initialized = true;
             }
 
+            if (_astarteTransport == null)
+            {
+                throw new AstarteTransportException("Astarte transport is null");
+            }
+
             _astarteTransport.Connect();
 
         }
@@ -110,9 +115,14 @@ namespace AstarteDeviceSDKCSharp.Device
         {
             AstarteInterface astarteInterface = AstarteInterface.FromString(astarteInterfaceObject);
 
-            AstarteInterface formerInterface = GetInterface(astarteInterface.GetInterfaceName());
-            if (formerInterface != null &&
-            formerInterface.GetMajorVersion() == astarteInterface.GetMajorVersion())
+            AstarteInterface? formerInterface = GetInterface(astarteInterface.GetInterfaceName());
+
+            if (formerInterface == null)
+            {
+                throw new AstarteInvalidInterfaceException("Astarte interface is null");
+            }
+
+            if (formerInterface.GetMajorVersion() == astarteInterface.GetMajorVersion())
             {
                 if (formerInterface.GetMinorVersion() == astarteInterface.GetMinorVersion())
                 {
@@ -141,7 +151,7 @@ namespace AstarteDeviceSDKCSharp.Device
         public void SetAstarteTransport(AstarteTransport astarteTransport)
         {
             _astarteTransport = astarteTransport;
-            ConfigureTransport();
+            ConfigureTransport(_astarteTransport);
         }
 
     }

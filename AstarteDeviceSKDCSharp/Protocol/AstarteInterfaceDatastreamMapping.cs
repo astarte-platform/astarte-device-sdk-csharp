@@ -27,7 +27,6 @@ namespace AstarteDeviceSDKCSharp.Protocol
     {
         private bool explicitTimestamp;
         private MappingReliability reliability = MappingReliability.UNRELIABLE;
-        private MappingRetention retention = MappingRetention.DISCARD;
         private int expiry;
 
         public enum MappingReliability
@@ -55,8 +54,6 @@ namespace AstarteDeviceSDKCSharp.Protocol
             return reliability;
         }
 
-
-
         internal static AstarteInterfaceDatastreamMapping
         FromAstarteInterfaceMappingMaps(Mapping astarteMappingObject)
         {
@@ -83,22 +80,6 @@ namespace AstarteDeviceSDKCSharp.Protocol
                     astarteInterfaceDatastreamMapping.reliability = MappingReliability.UNIQUE;
                 }
 
-            }
-
-            if (astarteMappingObject.Retention != null)
-            {
-                if (astarteMappingObject.Retention == "discard")
-                {
-                    astarteInterfaceDatastreamMapping.retention = MappingRetention.DISCARD;
-                }
-                else if (astarteMappingObject.Retention == "volatile")
-                {
-                    astarteInterfaceDatastreamMapping.retention = MappingRetention.VOLATILE;
-                }
-                else if (astarteMappingObject.Retention == "stored")
-                {
-                    astarteInterfaceDatastreamMapping.retention = MappingRetention.STORED;
-                }
             }
 
             if (astarteMappingObject.Expiry != null)

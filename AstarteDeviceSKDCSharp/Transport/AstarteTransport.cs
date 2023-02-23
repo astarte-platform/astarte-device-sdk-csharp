@@ -28,9 +28,8 @@ namespace AstarteDeviceSDKCSharp.Transport
     {
         private readonly AstarteProtocolType astarteProtocolType;
 
-        public AstarteDevice Device { get; set; }
+        public AstarteDevice? Device { get; set; }
 
-        public AstarteIntrospection AstarteIntrospection { get; set; }
         protected AstarteTransport(AstarteProtocolType type)
         {
             astarteProtocolType = type;
@@ -42,12 +41,11 @@ namespace AstarteDeviceSDKCSharp.Transport
         public abstract Task SendIndividualValue(AstarteInterface astarteInterface,
         string path, object value);
 
-
         public void SetDevice(AstarteDevice astarteDevice)
         {
             Device = astarteDevice;
         }
-        public AstarteDevice GetDevice()
+        public AstarteDevice? GetDevice()
         {
             return Device;
         }

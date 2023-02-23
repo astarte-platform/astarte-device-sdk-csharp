@@ -32,9 +32,9 @@ namespace AstarteDeviceSDK.Protocol
         public int MinorVersion { get; set; }
         private readonly Dictionary<string, AstarteInterfaceMapping> Mappings = new();
 
-        private AstarteTransport _astarteTransport;
+        private AstarteTransport? _astarteTransport;
 
-        public AstarteTransport GetAstarteTransport()
+        public AstarteTransport? GetAstarteTransport()
         {
             return _astarteTransport;
         }
@@ -61,8 +61,14 @@ namespace AstarteDeviceSDK.Protocol
 
         public static AstarteInterface FromString(string astarteInterfaceObject)
         {
-            AstarteInterfaceModel astarteInterfaceModel =
+            AstarteInterfaceModel? astarteInterfaceModel =
              JsonConvert.DeserializeObject<AstarteInterfaceModel>(astarteInterfaceObject);
+
+            if (astarteInterfaceModel is null)
+            {
+                throw new AstarteInvalidInterfaceException("Astarte interface is null");
+            }
+
             string astarteInterfaceOwnership = astarteInterfaceModel.Ownership;
             string astarteInterfaceType = astarteInterfaceModel.Type;
             string astarteInterfaceAggregation;
@@ -89,7 +95,7 @@ namespace AstarteDeviceSDK.Protocol
                 astarteInterfaceExplicitTimestamp = false;
             }
 
-            AstarteInterface astarteInterface = null;
+            AstarteInterface? astarteInterface = null;
 
             if (astarteInterfaceModel.Type.Equals("datastream"))
             {
@@ -97,6 +103,11 @@ namespace AstarteDeviceSDK.Protocol
                 {
                     astarteInterface = new AstarteDeviceDatastreamInterface();
                 }
+            }
+
+            if (astarteInterface is null)
+            {
+                throw new AstarteInvalidInterfaceException("Error parsing astarte interface");
             }
 
             astarteInterface.InterfaceName = astarteInterfaceModel.InterfaceName;

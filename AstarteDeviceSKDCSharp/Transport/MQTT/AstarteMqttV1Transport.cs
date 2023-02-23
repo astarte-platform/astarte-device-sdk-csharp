@@ -19,6 +19,7 @@
  */
 
 using AstarteDeviceSDK.Protocol;
+using AstarteDeviceSDKCSharp.Device;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
 using AstarteDeviceSDKCSharp.Utilities;
@@ -86,9 +87,16 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         public override async Task SendIntrospection()
         {
             StringBuilder introspectionStringBuilder = new();
+            AstarteDevice? astarteDevice = GetDevice();
+
+            if (astarteDevice == null)
+            {
+                throw new AstarteTransportException("Error sending introspection." +
+                    " Astarte device is null");
+            }
 
             foreach (AstarteInterface astarteInterface in
-            AstarteIntrospection.GetAllAstarteInterfaces())
+            astarteDevice.GetAllInterfaces())
             {
                 introspectionStringBuilder.Append(astarteInterface.InterfaceName);
                 introspectionStringBuilder.Append(':');

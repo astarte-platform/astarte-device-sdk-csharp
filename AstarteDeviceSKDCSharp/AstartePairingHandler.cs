@@ -31,8 +31,8 @@ namespace AstarteDeviceSDKCSharp
         private readonly string _deviceId;
         private readonly string _credentialSecret;
         readonly AstarteCryptoStore _cryptoStore;
-        private List<AstarteTransport> _transports;
-        private X509Certificate2 _certificate;
+        private List<AstarteTransport>? _transports;
+        private X509Certificate2? _certificate;
 
         public AstartePairingHandler(string pairingUrl, string astarteRealm, string deviceId,
         string credentialSecret, AstarteCryptoStore astarteCryptoStore)
@@ -65,6 +65,10 @@ namespace AstarteDeviceSDKCSharp
 
         public List<AstarteTransport> GetTransports()
         {
+            if (_transports == null)
+            {
+                throw new AstarteTransportException("No supported transports for the device !");
+            }
             return _transports;
         }
 

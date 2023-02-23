@@ -27,7 +27,7 @@ namespace AstarteDeviceSDKCSharp.Crypto
 {
     public class AstarteCryptoStore : IAstarteCryptoStore
     {
-        private X509Certificate2 _certificate;
+        private X509Certificate2? _certificate;
         private AstarteMutualTLSParametersFactory? _parametersFactory;
         private readonly string _cryptoStoreDir = string.Empty;
 
@@ -132,7 +132,10 @@ namespace AstarteDeviceSDKCSharp.Crypto
 
         public void ClearKeyStore()
         {
-            _certificate.Dispose();
+            if (_certificate != null)
+            {
+                _certificate.Dispose();
+            }
         }
 
         public string GenerateCSR(string commonName)
@@ -164,7 +167,7 @@ namespace AstarteDeviceSDKCSharp.Crypto
             return builder.ToString();
         }
 
-        public X509Certificate2 GetCertificate()
+        public X509Certificate2? GetCertificate()
         {
             return _certificate;
         }
