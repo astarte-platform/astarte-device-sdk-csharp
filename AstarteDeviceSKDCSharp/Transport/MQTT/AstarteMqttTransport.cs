@@ -22,7 +22,9 @@ using AstarteDeviceSDK.Protocol;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
+using MQTTnet.Client.Publishing;
 using MQTTnet.Exceptions;
+using System.Text;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
 {
@@ -60,6 +62,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             if (!_introspectionSent)
             {
                 await SendIntrospection();
+                await SendEmptyCacheAsync();
                 _introspectionSent = true;
             }
         }
@@ -118,5 +121,22 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         {
             return _connectionInfo;
         }
+
+        private async Task SendEmptyCacheAsync()
+        {
+            var applicationMessage = new MqttApplicationMessageBuilder()
+                                  .WithTopic(_connectionInfo.GetClientId() + "/control/emptyCache")
+                                  .WithPayload(Encoding.ASCII.GetBytes("1"))
+                                  .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce)
+                                  .WithRetainFlag(false)
+                                  .Build();
+
+            MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
+            if (result.ReasonCode != MqttClientPublishReasonCode.Success)
+            {
+                throw new AstarteTransportException($"Error publishing on MQTT. Code: {result.ReasonCode}");
+            }
+        }
+
     }
 }
