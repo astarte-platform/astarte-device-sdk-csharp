@@ -144,7 +144,13 @@ namespace AstarteDeviceSDKCSharp.Device
                 }
             }
 
+            if (_astarteTransport == null)
+            {
+                throw new AstarteTransportException("Astarte transport is null");
+            }
+
             _astarteInterfaces.Add(astarteInterface.GetInterfaceName(), astarteInterface);
+            astarteInterface.SetAstarteTransport(_astarteTransport);
         }
 
         public AstarteInterface? GetInterface(string interfaceName)
