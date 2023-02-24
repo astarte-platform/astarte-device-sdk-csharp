@@ -18,15 +18,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using AstarteDeviceSDKCSharp.Protocol;
-
-namespace AstarteDeviceSDK.Protocol
+namespace AstarteDeviceSDKCSharp.Protocol.AstarteException
 {
-    public interface IAstarteProtocol
+    public class AstartePropertyStorageException : Exception
     {
-        Task SendIntrospection();
-        Task SendIndividualValue(AstarteInterface astarteInterface, String path, Object? value,
-        DateTime? timestamp);
-        Task SendIndividualValue(AstarteInterface astarteInterface, String path, Object? value);
+        public AstartePropertyStorageException(String message) : base(message)
+        {
+
+        }
+
+        public AstartePropertyStorageException(String message, Exception cause) : base(message, cause)
+        {
+        }
     }
 }

@@ -20,8 +20,10 @@
 
 using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Crypto;
+using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
 using AstarteDeviceSDKCSharp.Transport;
+using Microsoft.EntityFrameworkCore;
 
 namespace AstarteDeviceSDKCSharp.Device
 {
@@ -54,6 +56,12 @@ namespace AstarteDeviceSDKCSharp.Device
             {
                 AstarteInterface astarteInterface = AstarteInterface.FromString(item);
                 _astarteInterfaces.Add(astarteInterface.GetInterfaceName(), astarteInterface);
+            }
+
+            using (var _context = new AstarteDbContext())
+            {
+                _context.Database.SetCommandTimeout(160);
+                _context.Database.Migrate();
             }
 
         }

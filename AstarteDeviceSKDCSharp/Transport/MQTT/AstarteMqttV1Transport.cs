@@ -41,7 +41,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         }
 
         public override async Task SendIndividualValue(AstarteInterface astarteInterface,
-        string path, object value, DateTime? timestamp)
+        string path, object? value, DateTime? timestamp)
         {
             AstarteInterfaceDatastreamMapping mapping;
 
@@ -115,7 +115,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         }
 
         public override async Task SendIndividualValue(AstarteInterface astarteInterface,
-        string path, object value)
+        string path, object? value)
         {
             await SendIndividualValue(astarteInterface, path, value, null);
         }
