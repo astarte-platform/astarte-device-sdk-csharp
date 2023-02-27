@@ -30,10 +30,10 @@ namespace AstarteDeviceSDKCSharp.Data
         public List<string> GetStoredPathsForInterface(string interfaceName, int interfaceMajor);
         public DecodedMessage? GetStoredValue(AstarteInterface astarteInterface, String path,
         int interfaceMajor);
-        public void SetStoredValue(String interfaceName, String path, Object value,
+        public void SetStoredValue(String interfaceName, String path, Object? value,
         int interfaceMajor);
         public void RemoveStoredPath(String interfaceName, String path, int interfaceMajor);
-        public void PurgeProperties(Dictionary<String, List<String>> availableProperties,
-        int interfaceMajor);
+        public void PurgeProperties(Dictionary<AstarteInterfaceHelper,
+        List<String>> availableProperties);
     }
 }

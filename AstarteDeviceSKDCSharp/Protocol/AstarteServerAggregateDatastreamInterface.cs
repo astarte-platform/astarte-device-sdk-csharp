@@ -45,7 +45,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
             _listeners.Remove(listener);
         }
 
-        public AstarteServerValue? Build(string interfacePath, object serverValue,
+        public AstarteServerValue? Build(string interfacePath, object? serverValue,
         DateTime timestamp)
         {
             if (serverValue is null)

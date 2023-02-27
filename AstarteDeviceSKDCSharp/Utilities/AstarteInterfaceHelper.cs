@@ -18,10 +18,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
+
+namespace AstarteDeviceSDKCSharp.Utilities
 {
-    public interface IAstarteServerValueBuilder
+    public class AstarteInterfaceHelper
     {
-        AstarteServerValue? Build(String interfacePath, Object? serverValue, DateTime timestamp);
+        public string InterfaceName { get; set; }
+        public int InterfaceMajor { get; set; }
+
+        public AstarteInterfaceHelper(string interfaceName, int interfaceMajor)
+        {
+            InterfaceName = interfaceName;
+            InterfaceMajor = interfaceMajor;
+        }
     }
 }

@@ -168,5 +168,10 @@ namespace AstarteDeviceSDKCSharp.Device
             ConfigureTransport(_astarteTransport);
         }
 
+        public bool HasInterface(string interfaceName)
+        {
+            return _astarteInterfaces.ContainsKey(interfaceName);
+        }
+
     }
 }

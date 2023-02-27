@@ -20,6 +20,7 @@
 
 using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteEvents;
+using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using System.Diagnostics;
 using static AstarteDeviceSDKCSharp.Protocol.AstarteEvents.AstarteServerValue;
 
@@ -34,26 +35,26 @@ namespace AstarteDeviceSDKCSharp.Protocol
         {
             _listeners = new List<IAstarteDatastreamEventListener>();
         }
-
         public List<IAstarteDatastreamEventListener> GetAllListeners()
         {
             return _listeners;
         }
-
         public void AddListener(IAstarteDatastreamEventListener listener)
         {
             _listeners.Add(listener);
         }
-
         public void RemoveListener(IAstarteDatastreamEventListener listener)
         {
             _listeners.Remove(listener);
         }
-
-        public AstarteServerValue? Build(string interfacePath, object serverValue,
+        public AstarteServerValue? Build(string interfacePath, object? serverValue,
         DateTime timestamp)
         {
-            AstarteInterfaceMapping targetMapping = null!;
+            AstarteInterfaceMapping? targetMapping = null;
+            if (serverValue is null)
+            {
+                throw new AstartePayloadNotFoundException("Error, received message is empty.");
+            }
             AstarteServerValue? astarteServerValue =
             (new AstarteServerValueBuilder(serverValue)).Build();
             foreach (KeyValuePair<string, AstarteInterfaceMapping> entry in GetMappings())
@@ -64,8 +65,6 @@ namespace AstarteDeviceSDKCSharp.Protocol
                     break;
                 }
             }
-
-
             if (targetMapping != null)
             {
                 object astarteValue = serverValue;

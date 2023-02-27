@@ -18,10 +18,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
+using AstarteDeviceSDKCSharp.Protocol.AstarteException;
+
+namespace AstarteDeviceSDKCSharp
 {
-    public interface IAstarteServerValueBuilder
+    public interface IAstarteMessageListener
     {
-        AstarteServerValue? Build(String interfacePath, Object? serverValue, DateTime timestamp);
+        void OnConnected();
+        void OnDisconnected(AstarteMessageException cause);
+        void OnFailure(AstarteMessageException cause);
     }
 }
