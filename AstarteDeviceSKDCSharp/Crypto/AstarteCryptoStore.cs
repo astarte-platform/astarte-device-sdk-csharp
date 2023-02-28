@@ -41,13 +41,13 @@ namespace AstarteDeviceSDKCSharp.Crypto
         private void LoadNewCertificate()
         {
 
-            if (File.Exists(_cryptoStoreDir + @"\device.crt"))
+            if (File.Exists(Path.Combine(_cryptoStoreDir, "device.crt")))
             {
                 ECDsa ecdsa;
                 ecdsa = GenerateKey();
 
                 //Set certificate
-                X509Certificate2 caCert = new(File.ReadAllBytes(_cryptoStoreDir + @"\device.crt"));
+                X509Certificate2 caCert = new(File.ReadAllBytes(Path.Combine(_cryptoStoreDir, "device.crt")));
                 X509Certificate2 caCertWithKey = caCert.CopyWithPrivateKey(ecdsa);
                 _certificate = new(caCertWithKey.Export(X509ContentType.Pfx));
             }

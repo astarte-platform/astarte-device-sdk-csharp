@@ -48,7 +48,7 @@ namespace AstarteDeviceSDKCSharp.Device
              astarteRealm,
              deviceId,
              credentialSecret,
-             new AstarteCryptoStore($@"{cryptoStoreDirectory}\{deviceId}\crypto\"));
+             new AstarteCryptoStore(Path.Combine(cryptoStoreDirectory, deviceId, "crypto")));
 
             List<string> allInterfaces = astarteInterfaceProvider.LoadAllInterfaces();
 
