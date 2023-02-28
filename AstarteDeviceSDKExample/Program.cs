@@ -22,77 +22,135 @@ using AstarteDeviceSDKCSharp;
 using AstarteDeviceSDKCSharp.Device;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Utilities;
-using AstarteDeviceSDKExample;
+using CommandLine;
 
-string valuesInterfaceName = "org.astarte-platform.genericsensors.Values";
-string pairingUrl = "http://localhost:4003";  //replace with your pairing url
-string realm = "test"; //replace with your realm name
-string cryptoStoreDir = AppDomain.CurrentDomain.BaseDirectory; // direcory to save certificates
-string deviceId = ""; // replace with your device ID or leave empty to get random device ID
-string credentialsSecret = ""; // replace with your credential or leave empty
-var sensorUuid = "b2c5a6ed-ebe4-4c5c-9d8a-6d2f114fc6e5";
-// generate jwt using astartectl: astartectl utils gen-jwt pairing -k test_private.pem
-string jwt = "";
-
-
-/// <summary>
-/// Astarte device id creation
-/// </summary>
-if (String.IsNullOrEmpty(deviceId))
+namespace AstarteDeviceSDKExample
 {
-    Guid nameSpace = Guid.Parse("f79ad91f-c638-4889-ae74-9d001a3b4ca4");
-    string macAdress = "0099112233";
-    deviceId = AstarteDeviceIdUtils.GenerateId(nameSpace, macAdress);
-    credentialsSecret = await new AstartePairingService(pairingUrl, realm)
-        .RegisterDeviceWithJwtToken(deviceId, jwt);
-}
+    class Program
+    {
+        private static readonly string valuesInterfaceName = "org.astarte-platform.genericsensors.Values";
+        private static readonly string sensorUuid = "b2c5a6ed-ebe4-4c5c-9d8a-6d2f114fc6e5";
 
-//Path validation will be implemented on device creation
-#region check path 
-if (!Directory.Exists(cryptoStoreDir))
-{
-    throw new FileNotFoundException(cryptoStoreDir + " is not directory");
-}
+        static async Task<int> Main(string[] args)
+        {
+            string realm = string.Empty;
+            string pairingUrl = string.Empty;
+            string deviceId = string.Empty;
+            string credentialsSecret = string.Empty;
+            string jwt = string.Empty;
+            string cryptoStoreDir = string.Empty;
 
-if (!Directory.Exists(Path.Join(cryptoStoreDir, deviceId)))
-{
-    Directory.CreateDirectory(Path.Join(cryptoStoreDir, deviceId));
-}
+            var result = Parser.Default.ParseArguments<Options>(args)
+                     .WithParsed(o =>
+                     {
+                         realm = o.Realm;
+                         pairingUrl = o.PairingUrl;
+                         deviceId = o.DeviceId;
+                         credentialsSecret = o.CredentialsSecret;
+                         jwt = o.Jwt;
+                         cryptoStoreDir = o.CryptoStoreDir;
+                     });
 
-if (!Directory.Exists(Path.Join(cryptoStoreDir, deviceId, "crypto")))
-{
-    Directory.CreateDirectory(Path.Join(cryptoStoreDir, deviceId, "crypto"));
-}
-#endregion
+            if (result.Errors.Any())
+            {
+                return 1;
+            }
 
-/// <summary>
-/// Astarte device creation
-/// 
-/// The interfaces supported by the device are populated by ExampleInterfaceProvider,
-/// see that class for more details
-/// </summary>
-var interfaceProvider = new ExampleInterfaceProvider();
-AstarteDevice myDevice = new(
-    deviceId,
-    realm,
-    credentialsSecret,
-    interfaceProvider,
-    pairingUrl,
-    cryptoStoreDir);
+            /// <summary>
+            /// Astarte device id creation
+            /// </summary>
+            if (String.IsNullOrEmpty(deviceId))
+            {
+                Guid nameSpace = Guid.NewGuid();
+                string macAdress = "0099112233";
+                deviceId = AstarteDeviceIdUtils.GenerateId(nameSpace, macAdress);
+                credentialsSecret = await new AstartePairingService(pairingUrl, realm)
+                    .RegisterDeviceWithJwtToken(deviceId, jwt);
+            }
 
-/// <summary>
-/// Start the connection
-/// </summary>
-myDevice.Connect();
+            if (String.IsNullOrEmpty(cryptoStoreDir))
+            {
+                cryptoStoreDir = AppDomain.CurrentDomain.BaseDirectory;
+            }
 
-AstarteDeviceDatastreamInterface valuesInterface =
-    (AstarteDeviceDatastreamInterface)myDevice.GetInterface(valuesInterfaceName);
+            //Path validation will be implemented on device creation
+            #region check path 
+            if (!Directory.Exists(cryptoStoreDir))
+            {
+                throw new FileNotFoundException(cryptoStoreDir + " is not directory");
+            }
 
-while (true)
-{
-    double value = Random.Shared.NextDouble();
-    Console.WriteLine("Streaming value: " + value);
-    valuesInterface.StreamData($"/{sensorUuid}/value", value, DateTime.Now);
+            if (!Directory.Exists(Path.Join(cryptoStoreDir, deviceId)))
+            {
+                Directory.CreateDirectory(Path.Join(cryptoStoreDir, deviceId));
+            }
 
-    Thread.Sleep(1000);
+            if (!Directory.Exists(Path.Join(cryptoStoreDir, deviceId, "crypto")))
+            {
+                Directory.CreateDirectory(Path.Join(cryptoStoreDir, deviceId, "crypto"));
+            }
+            #endregion
+
+            /// <summary>
+            /// Astarte device creation
+            /// 
+            /// The interfaces supported by the device are populated by ExampleInterfaceProvider,
+            /// see that class for more details
+            /// </summary>
+            var interfaceProvider = new ExampleInterfaceProvider();
+            AstarteDevice myDevice = new(
+                deviceId,
+                realm,
+                credentialsSecret,
+                interfaceProvider,
+                pairingUrl,
+                cryptoStoreDir);
+
+            /// <summary>
+            /// Start the connection
+            /// </summary>
+            myDevice.Connect();
+
+            AstarteDeviceDatastreamInterface valuesInterface =
+                (AstarteDeviceDatastreamInterface)myDevice.GetInterface(valuesInterfaceName);
+
+            while (true)
+            {
+                double value = Random.Shared.NextDouble();
+                Console.WriteLine("Streaming value: " + value);
+
+                valuesInterface.StreamData($"/{sensorUuid}/value", value, DateTime.Now);
+
+                Thread.Sleep(1000);
+            }
+
+        }
+
+        public class Options
+        {
+            [Option('r', "realm", Required = true, HelpText = "The target Astarte realm")]
+            public string Realm { get; set; }
+
+            [Option('t', "jwt", SetName = "UseToken", Required = true,
+                HelpText = "The jwt for the Astarte Register Device. " +
+                "Generate jwt using astartectl:astartectl utils gen-jwt pairing -k test_private.pem")]
+            public string Jwt { get; set; }
+
+            [Option('d', "device-id", Required = false,
+                HelpText = "The device id for the Astarte Device")]
+            public string DeviceId { get; set; }
+
+            [Option('c', "credentials-secret", SetName = "UseCredentials", Required = true,
+                HelpText = "The credentials secret for the Astarte Device")]
+            public string CredentialsSecret { get; set; }
+
+            [Option('p', "pairing-url", Required = true,
+                HelpText = "The URL to reach Pairing API in the target Astarte instance")]
+            public string PairingUrl { get; set; }
+
+            [Option('s', "crypto-store", Required = false,
+                HelpText = "The existing path for storing certificates")]
+            public string CryptoStoreDir { get; set; }
+        }
+    }
 }

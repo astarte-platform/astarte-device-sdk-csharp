@@ -26,4 +26,12 @@ SPDX-License-Identifier: Apache-2.0 -->
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+  </ItemGroup>
+
 </Project>
