@@ -59,7 +59,7 @@ namespace AstarteDeviceSDK.Protocol
             return otherType == MapType || otherType == PrimitiveArrayType;
         }
 
-        public void ValidatePayload(Object payload, DateTime? timestamp)
+        public virtual void ValidatePayload(Object payload, DateTime? timestamp)
         {
             ValidatePayload(payload);
         }

@@ -20,6 +20,7 @@
 
 using System.ComponentModel;
 using AstarteDeviceSDK.Protocol;
+using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
 
 namespace AstarteDeviceSDKCSharp.Protocol
 {
@@ -58,6 +59,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
         FromAstarteInterfaceMappingMaps(Mapping astarteMappingObject)
         {
             AstarteInterfaceDatastreamMapping astarteInterfaceDatastreamMapping = new();
+            astarteInterfaceDatastreamMapping.ParseMappingFromAstarteInterface(astarteMappingObject);
 
             if (astarteMappingObject.ExplicitTimestamp != null)
             {
@@ -89,6 +91,21 @@ namespace AstarteDeviceSDKCSharp.Protocol
 
 
             return astarteInterfaceDatastreamMapping;
+        }
+
+        public bool IsExplicitTimestamp()
+        {
+            return explicitTimestamp;
+        }
+
+        public override void ValidatePayload(Object payload, DateTime? timestamp)
+        {
+            ValidatePayload(payload);
+            if (IsExplicitTimestamp() && timestamp == null)
+            {
+                throw new AstarteInvalidValueException(
+                    "Timestamp cannot be null");
+            }
         }
     }
 }

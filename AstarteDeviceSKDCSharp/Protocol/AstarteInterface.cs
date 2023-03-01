@@ -121,9 +121,20 @@ namespace AstarteDeviceSDK.Protocol
 
             if (astarteInterfaceModel.Type.Equals("datastream"))
             {
-                if (astarteInterfaceAggregation.Equals("individual"))
+                if (astarteInterfaceOwnership.Equals("device"))
                 {
-                    astarteInterface = new AstarteDeviceDatastreamInterface();
+                    if (astarteInterfaceAggregation.Equals("individual"))
+                    {
+                        astarteInterface = new AstarteDeviceDatastreamInterface();
+                    }
+                    else if (astarteInterfaceAggregation.Equals("object"))
+                    {
+                        AstarteAggregateDatastreamInterface aggregateDatastreamInterface =
+                            new AstarteDeviceAggregateDatastreamInterface();
+                        aggregateDatastreamInterface.ExplicitTimeStamp =
+                            astarteInterfaceExplicitTimestamp is null ? false : (bool)astarteInterfaceExplicitTimestamp;
+                        astarteInterface = aggregateDatastreamInterface;
+                    }
                 }
             }
 

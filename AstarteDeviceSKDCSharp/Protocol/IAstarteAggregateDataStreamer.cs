@@ -18,27 +18,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using AstarteDeviceSDKCSharp.Transport;
-
 namespace AstarteDeviceSDKCSharp.Protocol
 {
-    public class AstarteDeviceDatastreamInterface : AstarteDatastreamInterface, IAstarteDataStreamer
+    public interface IAstarteAggregateDataStreamer
     {
-        public void StreamData(string path, object payload)
-        {
-            StreamData(path, payload, null);
-        }
+        void StreamData(String path, Dictionary<String, Object> payload);
 
-        public void StreamData(string path, object payload, DateTime? timestamp)
-        {
-            ValidatePayload(path, payload, timestamp);
-            AstarteTransport? transport = GetAstarteTransport();
-            if (transport == null)
-            {
-                throw new AstarteTransportException("No available transport");
-            }
-
-            transport.SendIndividualValue(this, path, payload, timestamp);
-        }
+        void StreamData(String path, Dictionary<String, Object> payload, DateTime? timestamp);
     }
 }

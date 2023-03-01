@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of Astarte.
  *
  * Copyright 2023 SECO Mind Srl
@@ -18,27 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using AstarteDeviceSDKCSharp.Transport;
-
 namespace AstarteDeviceSDKCSharp.Protocol
 {
-    public class AstarteDeviceDatastreamInterface : AstarteDatastreamInterface, IAstarteDataStreamer
+    public abstract class AstarteAggregateDatastreamInterface : AstarteDatastreamInterface
     {
-        public void StreamData(string path, object payload)
-        {
-            StreamData(path, payload, null);
-        }
-
-        public void StreamData(string path, object payload, DateTime? timestamp)
-        {
-            ValidatePayload(path, payload, timestamp);
-            AstarteTransport? transport = GetAstarteTransport();
-            if (transport == null)
-            {
-                throw new AstarteTransportException("No available transport");
-            }
-
-            transport.SendIndividualValue(this, path, payload, timestamp);
-        }
+        public bool ExplicitTimeStamp { get; set; }
     }
 }
