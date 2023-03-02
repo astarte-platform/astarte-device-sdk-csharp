@@ -57,7 +57,7 @@ namespace AstarteDeviceSDKCSharp.Transport
             return astarteProtocolType;
         }
 
-        public abstract void Connect();
+        public abstract Task Connect();
         public abstract void Disconnect();
         public abstract bool IsConnected();
 
