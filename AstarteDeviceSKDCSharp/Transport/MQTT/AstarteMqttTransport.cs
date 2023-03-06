@@ -170,6 +170,19 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             string path = e.ApplicationMessage.Topic
             .Replace(_connectionInfo.GetClientId() + "/", "");
 
+            if (path.StartsWith("control"))
+            {
+                if (path == "control/consumer/properties")
+                {
+                    HandlePurgeProperties(e.ApplicationMessage.Payload, astarteDevice);
+                }
+                else
+                {
+                    Trace.WriteLine("Unhandled control message!" + path);
+                }
+                return;
+            }
+
             string astarteInterface = path.Split("/")[0];
             string interfacePath = path.Replace(astarteInterface, "");
 
@@ -191,21 +204,20 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 decodedMessage = AstartePayload.Deserialize(e.ApplicationMessage.Payload);
                 if (decodedMessage is null)
                 {
-                    throw new AstartePayloadNotFoundException("Error, received message is empty.");
+                    Trace.WriteLine("Unable to get payload, decodedMessage was null");
+                    return;
                 }
                 payload = decodedMessage.GetPayload();
                 timestamp = decodedMessage.GetTimestamp();
             }
 
             AstarteInterface? targetInterface = astarteDevice.GetInterface(astarteInterface);
-            if (targetInterface is null)
+            if (targetInterface is null ||
+            !typeof(IAstarteServerValueBuilder).IsAssignableFrom(targetInterface.GetType()))
             {
                 return;
             }
-            if (!typeof(IAstarteServerValueBuilder).IsAssignableFrom(targetInterface.GetType()))
-            {
-                return;
-            }
+
             if (!DateTime.TryParse(timestamp.ToString(), out DateTime timeStampBuilder))
             {
                 timeStampBuilder = DateTime.MinValue;
@@ -218,7 +230,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             if (astarteServerValue == null)
             {
-                throw new AstartePayloadNotFoundException("Error, received message is empty."); ;
+                Trace.WriteLine("Unable to get value, astarteServerValue was null");
+                return;
             }
 
             if (targetInterface.GetType() == typeof(AstarteServerPropertyInterface))
@@ -274,7 +287,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             if (astarteDevice == null)
             {
-                throw new AstarteTransportException("Error sending introspection." +
+                throw new AstarteTransportException("Unable to purge properties." +
                     " Astarte device is null");
             }
 
@@ -334,7 +347,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 }
                 catch (AstartePropertyStorageException e)
                 {
-                    throw new AstarteTransportException("Failed to purge properties", e);
+                    throw new AstarteTransportException("Unable to purge properties", e);
                 }
             }
         }

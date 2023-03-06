@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+using System.Diagnostics;
 using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteEvents;
 using AstarteDeviceSDKCSharp.Protocol.AstarteException;
@@ -50,7 +51,8 @@ namespace AstarteDeviceSDKCSharp.Protocol
         {
             if (serverValue is null)
             {
-                throw new AstartePayloadNotFoundException("Error, received message is empty.");
+                Trace.WriteLine("Unable to build AstarteServerValue, serverValue was empty");
+                return null;
             }
 
             Dictionary<string, object>? astartePayload = new();
@@ -66,7 +68,8 @@ namespace AstarteDeviceSDKCSharp.Protocol
 
             if (astartePayload is null)
             {
-                throw new AstartePayloadNotFoundException("Error, received message is empty.");
+                Trace.WriteLine("Unable to build AstarteServerValue, astartePayload was empty");
+                return null;
             }
 
             foreach (KeyValuePair<string, object> entry in astartePayload)
@@ -97,9 +100,9 @@ namespace AstarteDeviceSDKCSharp.Protocol
         public void Publish(AstarteServerValue astarteServerValue)
         {
             AstarteAggregateDatastreamEvent e = new AstarteAggregateDatastreamEvent(
-                                                    GetInterfaceName(),
-                                                    astarteServerValue.GetMapValue(),
-                                                    astarteServerValue.GetTimestamp());
+                GetInterfaceName(), astarteServerValue.GetMapValue(),
+                astarteServerValue.GetTimestamp());
+
             foreach (IAstarteAggregateDatastreamEventListener listener in _listeners)
             {
                 listener.ValueReceived(e);

@@ -31,30 +31,37 @@ namespace AstarteDeviceSDKCSharp.Protocol
     {
 
         private readonly List<IAstarteDatastreamEventListener> _listeners;
+
         public AstarteServerDatastreamInterface()
         {
             _listeners = new List<IAstarteDatastreamEventListener>();
         }
+
         public List<IAstarteDatastreamEventListener> GetAllListeners()
         {
             return _listeners;
         }
+
         public void AddListener(IAstarteDatastreamEventListener listener)
         {
             _listeners.Add(listener);
         }
+
         public void RemoveListener(IAstarteDatastreamEventListener listener)
         {
             _listeners.Remove(listener);
         }
+
         public AstarteServerValue? Build(string interfacePath, object? serverValue,
         DateTime timestamp)
         {
             AstarteInterfaceMapping? targetMapping = null;
             if (serverValue is null)
             {
-                throw new AstartePayloadNotFoundException("Error, received message is empty.");
+                Trace.WriteLine($"Unable to build AstarteServerValue, astartePayload was empty");
+                return null;
             }
+
             AstarteServerValue? astarteServerValue =
             (new AstarteServerValueBuilder(serverValue)).Build();
             foreach (KeyValuePair<string, AstarteInterfaceMapping> entry in GetMappings())
