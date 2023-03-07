@@ -101,7 +101,7 @@ namespace AstarteDeviceSDKCSharp.Device
             return _astarteInterfaces.Values.ToList();
         }
 
-        public void Connect()
+        public async Task Connect()
         {
 
             if (!_initialized)
@@ -115,7 +115,7 @@ namespace AstarteDeviceSDKCSharp.Device
                 throw new AstarteTransportException("Astarte transport is null");
             }
 
-            _astarteTransport.Connect();
+            await _astarteTransport.Connect();
 
         }
 
