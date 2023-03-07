@@ -27,7 +27,7 @@ SPDX-License-Identifier: Apache-2.0 -->
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AstarteDeviceSKDCSharp\AstarteDeviceSDKCSharp.csproj" />
+    <ProjectReference Include="..\AstarteDeviceSDKCSharp\AstarteDeviceSDKCSharp.csproj" />
   </ItemGroup>
 
 </Project>
