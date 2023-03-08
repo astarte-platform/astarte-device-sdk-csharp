@@ -22,13 +22,6 @@ namespace AstarteDeviceSDKCSharp.Protocol.AstarteException
 {
     public class AstartePropertyStorageException : Exception
     {
-        public AstartePropertyStorageException(String message) : base(message)
-        {
-
-        }
-
-        public AstartePropertyStorageException(String message, Exception cause) : base(message, cause)
-        {
-        }
+        public AstartePropertyStorageException(String message) : base(message) { }
     }
 }
