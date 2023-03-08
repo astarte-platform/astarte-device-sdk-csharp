@@ -24,7 +24,7 @@ namespace AstarteDeviceSDK.Protocol
 {
     public class AstarteInterfaceMapping
     {
-        public string Path { get; set; } = String.Empty;
+        public string? Path { get; set; }
         public Type? MapType { get; set; }
         public Type? PrimitiveArrayType { get; set; }
 
@@ -42,14 +42,12 @@ namespace AstarteDeviceSDK.Protocol
             PrimitiveArrayType = StringToPrimitiveArrayCSharpType(astarteMappingObject.Type);
         }
 
-        public string GetPath()
+        public string? GetPath()
         {
             return Path;
         }
 
-#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
-        public Type? GetType()
-#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
+        public Type? GetTypeMapping()
         {
             return MapType;
         }

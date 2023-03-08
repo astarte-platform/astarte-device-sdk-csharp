@@ -18,13 +18,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+using System.Diagnostics;
+using System.IO.Compression;
+using System.Text;
 using AstarteDeviceSDK.Protocol;
+using AstarteDeviceSDKCSharp.Data;
+using AstarteDeviceSDKCSharp.Device;
+using AstarteDeviceSDKCSharp.Protocol;
+using AstarteDeviceSDKCSharp.Protocol.AstarteEvents;
+using AstarteDeviceSDKCSharp.Protocol.AstarteException;
+using AstarteDeviceSDKCSharp.Utilities;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Exceptions;
-using System.Text;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
 {
@@ -32,10 +40,13 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
     {
         protected IMqttClient? _client;
         private readonly IMqttConnectionInfo _connectionInfo;
+        private readonly IAstartePropertyStorage _astartePropertyStorage;
+        protected IAstarteMessageListener? _messageListener;
         protected AstarteMqttTransport(AstarteProtocolType type,
         IMqttConnectionInfo connectionInfo) : base(type)
         {
             _connectionInfo = connectionInfo;
+            _astartePropertyStorage = new AstartePropertyStorage();
         }
 
         private async Task<IMqttClient> InitClientAsync()
@@ -64,6 +75,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 await SendEmptyCacheAsync();
                 _introspectionSent = true;
             }
+            _client.UseApplicationMessageReceivedHandler(OnMessageReceive);
         }
 
         public override async Task Connect()
@@ -93,7 +105,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 throw new AstarteTransportException
                 ($"Error connecting to MQTT. Code: {result.ResultCode}");
             }
-
         }
 
         public override void Disconnect()
@@ -105,7 +116,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                     _client.DisconnectAsync();
                 }
             }
-
         }
 
         public override bool IsConnected()
@@ -138,5 +148,208 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
         }
 
+        private void OnMessageReceive(MqttApplicationMessageReceivedEventArgs e)
+        {
+            Trace.WriteLine("Incoming message: "
+            + Encoding.UTF8.GetString(e.ApplicationMessage.Payload));
+
+            if (!e.ApplicationMessage.Topic.Contains(_connectionInfo.GetClientId())
+            || _messageListener == null)
+            {
+                return;
+            }
+
+            AstarteDevice? astarteDevice = GetDevice();
+
+            if (astarteDevice == null)
+            {
+                throw new AstarteTransportException("Unable to receive messages." +
+                    " Astarte device is null.");
+            }
+
+            string path = e.ApplicationMessage.Topic
+            .Replace(_connectionInfo.GetClientId() + "/", "");
+
+            if (path.StartsWith("control"))
+            {
+                if (path == "control/consumer/properties")
+                {
+                    HandlePurgeProperties(e.ApplicationMessage.Payload, astarteDevice);
+                }
+                else
+                {
+                    Trace.WriteLine("Unhandled control message!" + path);
+                }
+                return;
+            }
+
+            string astarteInterface = path.Split("/")[0];
+            string interfacePath = path.Replace(astarteInterface, "");
+
+            if (!astarteDevice.HasInterface(astarteInterface))
+            {
+                Trace.WriteLine("Got an unexpected interface!" + astarteInterface);
+                return;
+            }
+
+            object? payload;
+            DateTime? timestamp = DateTime.MinValue;
+            DecodedMessage? decodedMessage;
+            if (e.ApplicationMessage.Payload.Length == 0)
+            {
+                payload = null;
+            }
+            else
+            {
+                decodedMessage = AstartePayload.Deserialize(e.ApplicationMessage.Payload);
+                if (decodedMessage is null)
+                {
+                    Trace.WriteLine("Unable to get payload, decodedMessage was null");
+                    return;
+                }
+                payload = decodedMessage.GetPayload();
+                timestamp = decodedMessage.GetTimestamp();
+            }
+
+            AstarteInterface? targetInterface = astarteDevice.GetInterface(astarteInterface);
+            if (targetInterface is null ||
+            !typeof(IAstarteServerValueBuilder).IsAssignableFrom(targetInterface.GetType()))
+            {
+                return;
+            }
+
+            if (!DateTime.TryParse(timestamp.ToString(), out DateTime timeStampBuilder))
+            {
+                timeStampBuilder = DateTime.MinValue;
+            }
+
+            IAstarteServerValueBuilder astarteServerValueBuilder =
+                (IAstarteServerValueBuilder)targetInterface;
+            AstarteServerValue? astarteServerValue =
+                astarteServerValueBuilder.Build(interfacePath, payload, timeStampBuilder);
+
+            if (astarteServerValue == null)
+            {
+                Trace.WriteLine("Unable to get value, astarteServerValue was null");
+                return;
+            }
+
+            if (targetInterface.GetType() == typeof(AstarteServerPropertyInterface))
+            {
+                try
+                {
+                    if (astarteServerValue.GetValue() != null)
+                    {
+                        _astartePropertyStorage
+                        .SetStoredValue(astarteInterface,
+                        interfacePath,
+                        astarteServerValue.GetValue(),
+                        targetInterface.GetMajorVersion());
+                    }
+                    else
+                    {
+                        _astartePropertyStorage
+                        .RemoveStoredPath(astarteInterface,
+                        interfacePath,
+                        targetInterface.GetMajorVersion());
+                    }
+
+                }
+                catch (AstartePropertyStorageException ex)
+                {
+                    Trace.WriteLine(ex.Message);
+                }
+            }
+
+            if (!typeof(IAstarteServerValuePublisher).IsAssignableFrom(targetInterface.GetType()))
+            {
+                return;
+            }
+
+            IAstarteServerValuePublisher astarteServerValuePublisher =
+                (IAstarteServerValuePublisher)targetInterface;
+            astarteServerValuePublisher.Publish(astarteServerValue);
+
+        }
+
+        private void HandlePurgeProperties(byte[] payload, AstarteDevice? astarteDevice)
+        {
+            byte[] deflated = new byte[payload.Length - 4];
+            Array.Copy(payload, 4, deflated, 0, payload.Length - 4);
+
+            MemoryStream bais = new(deflated);
+            ZLibStream iis = new(bais, CompressionMode.Decompress);
+
+            StringBuilder result = new StringBuilder();
+            byte[] buf = new byte[256];
+            int rlen = 0;
+            byte[] bufResult;
+
+            if (astarteDevice == null)
+            {
+                throw new AstarteTransportException("Unable to purge properties." +
+                    " Astarte device is null");
+            }
+
+            try
+            {
+                while ((rlen = iis.Read(buf)) != 0)
+                {
+                    bufResult = new byte[rlen];
+                    Array.Copy(buf, bufResult, rlen);
+                    result.Append(Encoding.UTF8.GetString(bufResult));
+                }
+            }
+            catch (IOException e)
+            {
+                Trace.WriteLine(e.Message);
+            }
+
+            string purgePropertiesPayload = result.ToString();
+            if (_astartePropertyStorage != null)
+            {
+                Dictionary<AstarteInterfaceHelper, List<String>> availableProperties = new();
+
+                foreach (AstarteInterface astarteInterface in astarteDevice.GetAllInterfaces())
+                {
+                    if (astarteInterface is AstarteServerPropertyInterface)
+                    {
+                        availableProperties.Add(new AstarteInterfaceHelper
+                        (astarteInterface.GetInterfaceName(),
+                        astarteInterface.GetMajorVersion()),
+                        new List<string>());
+                    }
+                }
+
+                String[] allProperties = purgePropertiesPayload.Split(";");
+                foreach (String property in allProperties)
+                {
+                    String[] propertyTokens = property.Split("/", 2);
+                    if (propertyTokens.Length != 2)
+                    {
+                        continue;
+                    }
+
+                    List<string>? pathList =
+                    availableProperties.Where(e => e.Key.InterfaceName ==
+                    propertyTokens[0]).Select(e => e.Value).FirstOrDefault();
+
+                    if (pathList is null)
+                    {
+                        continue;
+                    }
+                    pathList.Add("/" + propertyTokens[1]);
+                }
+
+                try
+                {
+                    _astartePropertyStorage.PurgeProperties(availableProperties);
+                }
+                catch (AstartePropertyStorageException e)
+                {
+                    throw new AstarteTransportException("Unable to purge properties", e);
+                }
+            }
+        }
     }
 }

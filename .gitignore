@@ -380,3 +380,6 @@ MigrationBackup/
 FodyWeavers.xsd
 .DS_Store
 CleaSmartHMIsBackend/mosquitto/data/mosquitto.db
+
+#vscode 
+.vscode/*

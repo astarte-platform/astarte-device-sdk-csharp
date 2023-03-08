@@ -41,7 +41,6 @@ namespace AstarteDeviceSDKCSharp.Utilities
             }
         }
     }
-
     public class AstartePayload
     {
         public AstartePayload() { }
@@ -79,7 +78,13 @@ namespace AstarteDeviceSDKCSharp.Utilities
                 return decodedMessage;
             }
 
-            object decodedObject = decodedMessage.GetPayload();
+            object? decodedObject = decodedMessage.GetPayload();
+
+            if (decodedObject is null)
+            {
+                return null;
+            }
+
             Type payloadType = GetPayloadType(decodedObject);
 
             if (payloadType == typeof(DateTime))
@@ -115,13 +120,15 @@ namespace AstarteDeviceSDKCSharp.Utilities
             }
             else if (payloadType == typeof(JObject))
             {
-
                 // if payload is a map (JObject)
-                Dictionary<string, object> dic = ((JObject)decodedMessage.GetPayload()).ToObject<Dictionary<string, object>>()!;
+                Dictionary<string, object>? dic =
+                ((JObject)decodedMessage.GetPayload()).ToObject<Dictionary<string, object>>();
+                if (dic is null)
+                {
+                    return decodedMessage;
+                }
                 decodedMessage.SetPayload(dic);
-
             }
-
             return decodedMessage;
         }
 

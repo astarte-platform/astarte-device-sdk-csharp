@@ -18,14 +18,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-namespace AstarteDeviceSDKCSharp.Protocol
+namespace AstarteDeviceSDKCSharp.Protocol.AstarteException
 {
-    public abstract class AstarteAggregateDatastreamInterface : AstarteDatastreamInterface
+    public class AstarteMessageException : Exception
     {
-        public bool? ExplicitTimeStamp { get; set; }
-        public bool? IsExplicitTimeStamp()
+        public AstarteMessageException(String message) : base(message)
         {
-            return ExplicitTimeStamp;
+
+        }
+        public AstarteMessageException(String message, Exception cause)
+        : base(message, cause)
+        {
+
         }
     }
 }

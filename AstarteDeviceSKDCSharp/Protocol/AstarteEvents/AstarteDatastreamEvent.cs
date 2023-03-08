@@ -18,14 +18,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-namespace AstarteDeviceSDKCSharp.Protocol
+namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
 {
-    public abstract class AstarteAggregateDatastreamInterface : AstarteDatastreamInterface
+    public class AstarteDatastreamEvent : AstarteGenericIndividualEvent
     {
-        public bool? ExplicitTimeStamp { get; set; }
-        public bool? IsExplicitTimeStamp()
+        private readonly DateTime _timestamp;
+
+        public AstarteDatastreamEvent(string interfaceName, string path, object? value, DateTime timestamp)
+                                    : base(interfaceName, path, value)
         {
-            return ExplicitTimeStamp;
+            _timestamp = timestamp;
+        }
+
+        public AstarteDatastreamEvent(string interfaceName, string path, object? value)
+                            : base(interfaceName, path, value)
+        {
+            _timestamp = new DateTime();
+        }
+
+        public DateTime GetTimestamp()
+        {
+            return _timestamp;
         }
     }
 }

@@ -85,23 +85,29 @@ namespace AstarteDeviceSDKCSharp.Data
                     return returnedValues;
                 }
 
-                Object value = decodedMessage.GetPayload();
-                returnedValues.Add(property.Path, value);
+                Object? value = decodedMessage.GetPayload();
+                if (value is not null)
+                {
+                    returnedValues.Add(property.Path, value);
+                }
+
             }
 
             return returnedValues;
         }
 
-        public void PurgeProperties(Dictionary<string, List<string>> availableProperties,
-        int interfaceMajor)
+        public void PurgeProperties(Dictionary<AstarteInterfaceHelper,
+        List<string>> availableProperties)
         {
             foreach (var entry in availableProperties)
             {
-                foreach (String storedPath in GetStoredPathsForInterface(entry.Key, interfaceMajor))
+                foreach (String storedPath in GetStoredPathsForInterface(entry.Key.InterfaceName,
+                entry.Key.InterfaceMajor))
                 {
                     if (!entry.Value.Contains(storedPath))
                     {
-                        RemoveStoredPath(entry.Key, storedPath, interfaceMajor);
+                        RemoveStoredPath(entry.Key.InterfaceName, storedPath,
+                        entry.Key.InterfaceMajor);
                     }
                 }
             }
@@ -120,11 +126,10 @@ namespace AstarteDeviceSDKCSharp.Data
                 throw new AstartePropertyStorageException("Error local database is empty.");
             }
             _astarteDbContext.Remove(astarteProperty);
-
             _astarteDbContext.SaveChanges();
         }
 
-        public void SetStoredValue(string interfaceName, string path, object value,
+        public void SetStoredValue(string interfaceName, string path, object? value,
         int interfaceMajor)
         {
             var astarteProp = _astarteDbContext.AstarteGenericProperties
@@ -144,7 +149,6 @@ namespace AstarteDeviceSDKCSharp.Data
                     interfaceMajor);
 
                 _astarteDbContext.AstarteGenericProperties.Add(astarteProperty);
-
             }
 
             _astarteDbContext.SaveChanges();
