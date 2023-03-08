@@ -22,6 +22,6 @@ namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
 {
     public interface IAstarteDatastreamEventListener
     {
-        void ValueRecieved(AstarteDatastreamEvent e);
+        void ValueReceived(AstarteDatastreamEvent e);
     }
 }
