@@ -5,7 +5,9 @@ VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstarteDeviceSDKCSharp", "AstarteDeviceSKDCSharp\AstarteDeviceSDKCSharp.csproj", "{CD089244-7A3E-47E7-BC27-999F55930019}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AstarteDeviceSDKCSharp.Tests", "AstarteDeviceSDKCSharp.Tests\AstarteDeviceSDKCSharp.Tests.csproj", "{AB352EC7-FE21-444D-B541-B1D1CBCD9589}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstarteDeviceSDKCSharp.Tests", "AstarteDeviceSDKCSharp.Tests\AstarteDeviceSDKCSharp.Tests.csproj", "{AB352EC7-FE21-444D-B541-B1D1CBCD9589}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstarteDeviceSDKExample", "AstarteDeviceSDKExample\AstarteDeviceSDKExample.csproj", "{D205CF3A-FB33-43FE-9D31-CC1AB8462BB1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{AB352EC7-FE21-444D-B541-B1D1CBCD9589}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB352EC7-FE21-444D-B541-B1D1CBCD9589}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB352EC7-FE21-444D-B541-B1D1CBCD9589}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D205CF3A-FB33-43FE-9D31-CC1AB8462BB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D205CF3A-FB33-43FE-9D31-CC1AB8462BB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D205CF3A-FB33-43FE-9D31-CC1AB8462BB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D205CF3A-FB33-43FE-9D31-CC1AB8462BB1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
