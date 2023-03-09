@@ -149,7 +149,7 @@ namespace AstarteDeviceSDKCSharp.Utilities
                 return typeof(Array);
 
             }
-            return typeof(JObject);
+            return payload.GetType();
         }
 
         private static object PrepareDateTimeValues(object o)
