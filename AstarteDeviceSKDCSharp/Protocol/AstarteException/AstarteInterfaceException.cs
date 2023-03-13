@@ -22,15 +22,6 @@ namespace AstarteDeviceSDKCSharp.Protocol.AstarteException
 {
     public class AstarteInterfaceException : Exception
     {
-        public AstarteInterfaceException(String message) : base(message)
-        {
-
-        }
-
-        public AstarteInterfaceException(String message, Exception cause)
-        : base(message, cause)
-        {
-
-        }
+        public AstarteInterfaceException(String message) : base(message) { }
     }
 }
