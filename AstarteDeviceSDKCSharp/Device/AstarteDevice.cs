@@ -110,6 +110,11 @@ namespace AstarteDeviceSDKCSharp.Device
                 _initialized = true;
             }
 
+            if (!_pairingHandler.IsCertificateAvailable())
+            {
+                await _pairingHandler.RequestNewCertificate();
+            }
+
             if (_astarteTransport == null)
             {
                 throw new AstarteTransportException("Astarte transport is null");
