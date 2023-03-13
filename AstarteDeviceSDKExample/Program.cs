@@ -109,7 +109,7 @@ namespace AstarteDeviceSDKExample
             /// <summary>
             /// Start the connection
             /// </summary>
-            myDevice.Connect();
+            await myDevice.Connect();
 
             AstarteDeviceDatastreamInterface valuesInterface =
                 (AstarteDeviceDatastreamInterface)myDevice.GetInterface(valuesInterfaceName);
