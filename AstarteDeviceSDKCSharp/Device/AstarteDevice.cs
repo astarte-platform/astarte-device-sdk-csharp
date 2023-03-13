@@ -33,6 +33,7 @@ namespace AstarteDeviceSDKCSharp.Device
         private readonly AstartePairingHandler _pairingHandler;
         private AstarteTransport? _astarteTransport;
         private bool _initialized;
+        private const string _cryptoSubDir = "crypto";
 
         public AstarteDevice(
             string deviceId,
@@ -42,13 +43,23 @@ namespace AstarteDeviceSDKCSharp.Device
             string pairingBaseUrl,
             string cryptoStoreDirectory)
         {
+            if (!Directory.Exists(cryptoStoreDirectory))
+            {
+                throw new DirectoryNotFoundException($"Unable to found {cryptoStoreDirectory}");
+            }
+
+            string fullCryptoDirPath = Path.Combine(cryptoStoreDirectory, deviceId, _cryptoSubDir);
+            if (!Directory.Exists(fullCryptoDirPath))
+            {
+                Directory.CreateDirectory(fullCryptoDirPath);
+            }
 
             _pairingHandler = new AstartePairingHandler(
              pairingBaseUrl,
              astarteRealm,
              deviceId,
              credentialSecret,
-             new AstarteCryptoStore(Path.Combine(cryptoStoreDirectory, deviceId, "crypto")));
+             new AstarteCryptoStore(fullCryptoDirPath));
 
             List<string> allInterfaces = astarteInterfaceProvider.LoadAllInterfaces();
 
