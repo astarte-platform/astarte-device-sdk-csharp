@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstarteDeviceSDKCSharp", "AstarteDeviceSKDCSharp\AstarteDeviceSDKCSharp.csproj", "{CD089244-7A3E-47E7-BC27-999F55930019}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstarteDeviceSDKCSharp", "AstarteDeviceSDKCSharp\AstarteDeviceSDKCSharp.csproj", "{CD089244-7A3E-47E7-BC27-999F55930019}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstarteDeviceSDKCSharp.Tests", "AstarteDeviceSDKCSharp.Tests\AstarteDeviceSDKCSharp.Tests.csproj", "{AB352EC7-FE21-444D-B541-B1D1CBCD9589}"
 EndProject
