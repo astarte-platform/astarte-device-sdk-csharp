@@ -72,5 +72,26 @@ namespace AstarteDeviceSDKCSharp
             return _transports;
         }
 
+        public bool IsCertificateAvailable()
+        {
+            X509Certificate2? certificate = _cryptoStore.GetCertificate();
+
+            if (certificate is null)
+            {
+                return false;
+            }
+
+            DateTime now = DateTime.Now;
+
+            return certificate.NotBefore < now && certificate.NotAfter > now;
+        }
+
+        public async Task RequestNewCertificate()
+        {
+            _certificate = await _AstartePairingService.RequestNewCertificate(
+                _credentialSecret, _cryptoStore, _deviceId);
+
+        }
+
     }
 }
