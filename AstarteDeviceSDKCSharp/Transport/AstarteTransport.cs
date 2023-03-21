@@ -27,9 +27,10 @@ namespace AstarteDeviceSDKCSharp.Transport
     public abstract class AstarteTransport : IAstarteProtocol
     {
         private readonly AstarteProtocolType astarteProtocolType;
-
+        protected IAstarteTransportEventListener? _astarteTransportEventListener;
         public AstarteDevice? Device { get; set; }
         protected bool _introspectionSent = false;
+        protected IAstarteMessageListener? _messageListener;
         protected AstarteTransport(AstarteProtocolType type)
         {
             astarteProtocolType = type;
@@ -55,6 +56,20 @@ namespace AstarteDeviceSDKCSharp.Transport
         public AstarteProtocolType GetAstarteProtocolType()
         {
             return astarteProtocolType;
+        }
+
+        public void SetMessageListener(IAstarteMessageListener messageListener)
+        {
+            _messageListener = messageListener;
+        }
+        public IAstarteTransportEventListener? GetAstarteTransportEventListener()
+        {
+            return _astarteTransportEventListener;
+        }
+        public void SetAstarteTransportEventListener(
+            IAstarteTransportEventListener astarteTransportEventListener)
+        {
+            _astarteTransportEventListener = astarteTransportEventListener;
         }
 
         public abstract Task Connect();

@@ -18,22 +18,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+using System.Diagnostics;
 using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Crypto;
 using AstarteDeviceSDKCSharp.Data;
+using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
 using AstarteDeviceSDKCSharp.Transport;
 using Microsoft.EntityFrameworkCore;
 
 namespace AstarteDeviceSDKCSharp.Device
 {
-    public class AstarteDevice
+    public class AstarteDevice : IAstarteTransportEventListener
     {
         private readonly Dictionary<string, AstarteInterface> _astarteInterfaces = new();
         private readonly AstartePairingHandler _pairingHandler;
         private AstarteTransport? _astarteTransport;
+        private IAstarteMessageListener? _astarteMessagelistener;
         private bool _initialized;
         private const string _cryptoSubDir = "crypto";
+        private bool _alwaysReconnect = false;
+        private bool _explicitDisconnectionRequest;
+        private static int MIN_INCREMENT_INTERVAL = 5000;
+        private static int MAX_INCREMENT_INTERVAL = 60000;
 
         public AstarteDevice(
             string deviceId,
@@ -99,6 +106,12 @@ namespace AstarteDeviceSDKCSharp.Device
         {
             astarteTransport.SetDevice(this);
 
+            if (_astarteTransport != null && _astarteMessagelistener != null)
+            {
+                _astarteTransport.SetAstarteTransportEventListener(this);
+                _astarteTransport.SetMessageListener(_astarteMessagelistener);
+            }
+
             // Set transport on all interfaces
             foreach (AstarteInterface astarteInterface in GetAllInterfaces())
             {
@@ -107,9 +120,44 @@ namespace AstarteDeviceSDKCSharp.Device
 
         }
 
+        private bool EventualyReconnect()
+        {
+            if (_astarteTransport is null)
+            {
+                return false;
+            }
+            lock (this)
+            {
+                int x = 1;
+                int interval = 0;
+                while (_alwaysReconnect && !IsConnected())
+                {
+
+                    if (interval < MAX_INCREMENT_INTERVAL)
+                    {
+                        interval = MIN_INCREMENT_INTERVAL * x;
+                        x++;
+                    }
+                    else
+                    {
+                        interval = MAX_INCREMENT_INTERVAL;
+                    }
+                    Task.Run(async () => await Connect()).Wait(interval);
+                }
+            }
+
+            _explicitDisconnectionRequest = false;
+            return false;
+        }
+
         public List<AstarteInterface> GetAllInterfaces()
         {
             return _astarteInterfaces.Values.ToList();
+        }
+
+        public void SetAlwaysReconnect(bool alwaysReconnect)
+        {
+            _alwaysReconnect = alwaysReconnect;
         }
 
         public async Task Connect()
@@ -117,22 +165,56 @@ namespace AstarteDeviceSDKCSharp.Device
 
             if (!_initialized)
             {
+
                 Init();
                 _initialized = true;
             }
 
-            if (!_pairingHandler.IsCertificateAvailable())
+            if (IsConnected())
             {
-                await _pairingHandler.RequestNewCertificate();
+                return;
             }
 
-            if (_astarteTransport == null)
+            try
             {
-                throw new AstarteTransportException("Astarte transport is null");
+                if (_astarteTransport is null)
+                {
+                    return;
+                }
+                await _astarteTransport.Connect();
             }
+            catch (AstarteCryptoException)
+            {
+                Trace.WriteLine("Regenerating the cert");
+                try
+                {
+                    await _pairingHandler.RequestNewCertificate();
+                    _initialized = false;
+                }
+                catch (AstartePairingException ex)
+                {
+                    OnTransportConnectionError(ex);
+                    return;
+                }
+            }
+        }
 
-            await _astarteTransport.Connect();
+        public bool IsConnected()
+        {
+            return _astarteTransport?.IsConnected() ?? false;
+        }
 
+        public void Disconnect()
+        {
+            lock (this)
+            {
+                if (!IsConnected())
+                {
+                    return;
+                }
+                _explicitDisconnectionRequest = true;
+                _astarteTransport?.Disconnect();
+            }
         }
 
         public void AddInterface(string astarteInterfaceObject)
@@ -166,7 +248,7 @@ namespace AstarteDeviceSDKCSharp.Device
             }
 
             _astarteInterfaces.Add(astarteInterface.GetInterfaceName(), astarteInterface);
-            astarteInterface.SetAstarteTransport(_astarteTransport);
+
         }
 
         public AstarteInterface? GetInterface(string interfaceName)
@@ -189,5 +271,119 @@ namespace AstarteDeviceSDKCSharp.Device
             return _astarteInterfaces.ContainsKey(interfaceName);
         }
 
+        public IAstarteMessageListener? GetAstarteMessageListener()
+        {
+            return _astarteMessagelistener == null ? null : _astarteMessagelistener;
+        }
+
+        public void SetAstarteMessageListener(IAstarteMessageListener astarteMessageListener)
+        {
+            _astarteMessagelistener = astarteMessageListener;
+            if (_astarteTransport != null && _astarteMessagelistener != null)
+            {
+                _astarteTransport.SetMessageListener(astarteMessageListener);
+            }
+        }
+
+        public void OnTransportConnected()
+        {
+            lock (this)
+            {
+                _astarteMessagelistener?.OnConnected();
+            }
+        }
+
+        public void OnTransportConnectionInitializationError(Exception ex)
+        {
+            lock (this)
+            {
+
+                _astarteMessagelistener?.OnFailure(new AstarteMessageException(ex.Message, ex));
+
+                new Thread(delegate ()
+                {
+                    try
+                    {
+                        Disconnect();
+
+                        _astarteMessagelistener?
+                        .OnDisconnected(new AstarteMessageException(ex.Message, ex));
+
+                    }
+                    catch (AstarteTransportException e)
+                    {
+                        Trace.WriteLine(e.Message);
+                    }
+                    EventualyReconnect();
+                }).Start();
+
+            }
+        }
+
+        public void OnTransportConnectionError(Exception ex)
+        {
+            lock (this)
+            {
+                if (ex is AstarteCryptoException)
+                {
+                    Trace.WriteLine("Regenerating the cert");
+                    try
+                    {
+                        Task.Run(() => _pairingHandler.RequestNewCertificate());
+                    }
+                    catch (AstartePairingException e)
+                    {
+
+                        if (!EventualyReconnect())
+                        {
+
+                            _astarteMessagelistener?
+                            .OnFailure(new AstarteMessageException(e.Message, e));
+                            Trace.WriteLine(e);
+                        }
+                        return;
+                    }
+
+                    try
+                    {
+                        _astarteTransport?.Connect();
+                    }
+                    catch (AstarteTransportException e)
+                    {
+
+                        _astarteMessagelistener?
+                        .OnFailure(new AstarteMessageException(e.Message, e));
+
+                    }
+                }
+                else
+                {
+                    if (!EventualyReconnect())
+                    {
+
+                        _astarteMessagelistener?
+                        .OnFailure(new AstarteMessageException(ex.Message, ex));
+
+                    }
+                }
+            }
+        }
+
+        public void OnTransportDisconnected()
+        {
+            lock (this)
+            {
+
+                _astarteMessagelistener?
+                .OnDisconnected(new AstarteMessageException("Connection lost"));
+
+                if (_alwaysReconnect && !_explicitDisconnectionRequest)
+                {
+                    EventualyReconnect();
+                }
+                _explicitDisconnectionRequest = false;
+
+            }
+        }
     }
 }

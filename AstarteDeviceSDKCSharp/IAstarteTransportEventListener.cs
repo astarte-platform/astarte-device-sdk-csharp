@@ -18,15 +18,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-namespace AstarteDeviceSDKCSharp.Protocol.AstarteException
+namespace AstarteDeviceSDKCSharp.Transport
 {
-    public class AstarteMessageException : Exception
+    public interface IAstarteTransportEventListener
     {
-        public AstarteMessageException(String message) : base(message) { }
+        public void OnTransportConnected();
 
-        public AstarteMessageException(string message, Exception innerException)
-        : base(message, innerException)
-        {
-        }
+        public void OnTransportConnectionInitializationError(Exception ex);
+
+        public void OnTransportConnectionError(Exception ex);
+
+        public void OnTransportDisconnected();
     }
 }
