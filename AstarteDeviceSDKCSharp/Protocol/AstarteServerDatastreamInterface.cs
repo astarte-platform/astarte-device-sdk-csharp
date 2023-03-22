@@ -103,7 +103,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
 
             foreach (IAstarteDatastreamEventListener listener in _listeners)
             {
-                listener.ValueRecieved(e);
+                listener.ValueReceived(e);
             }
         }
     }
