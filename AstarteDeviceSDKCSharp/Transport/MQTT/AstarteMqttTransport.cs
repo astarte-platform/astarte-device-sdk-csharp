@@ -71,6 +71,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         {
             if (!_introspectionSent)
             {
+                await SetupSubscriptions();
                 await SendIntrospection();
                 await SendEmptyCacheAsync();
                 _introspectionSent = true;
@@ -135,6 +136,35 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         public IMqttConnectionInfo GetConnectionInfo()
         {
             return _connectionInfo;
+        }
+
+        private async Task SetupSubscriptions()
+        {
+
+            await _client.SubscribeAsync(_connectionInfo.GetClientId() +
+            "/control/consumer/properties",
+            MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
+
+            AstarteDevice? astarteDevice = GetDevice();
+
+            if (astarteDevice == null)
+            {
+                throw new AstarteTransportException("Error setting up subscriptions." +
+                    " Astarte device is null");
+            }
+
+            foreach (AstarteInterface astarteInterface in astarteDevice.GetAllInterfaces())
+            {
+                if ((astarteInterface.GetType()
+                 == typeof(AstarteServerAggregateDatastreamInterface))
+                || (astarteInterface.GetType() == typeof(AstarteServerDatastreamInterface))
+                || (astarteInterface.GetType() == typeof(AstarteServerPropertyInterface)))
+                {
+                    await _client.SubscribeAsync(_connectionInfo.GetClientId()
+                     + "/" + astarteInterface.GetInterfaceName() + "/#",
+                        MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
+                }
+            }
         }
 
         private async Task SendEmptyCacheAsync()
