@@ -106,10 +106,17 @@ namespace AstarteDeviceSDKExample
                 pairingUrl,
                 cryptoStoreDir);
 
+            myDevice.SetAlwaysReconnect(true);
+            myDevice.SetAstarteMessageListener(new ExampleMessageListener());
             /// <summary>
             /// Start the connection
             /// </summary>
             await myDevice.Connect();
+
+            while (!myDevice.IsConnected())
+            {
+                Thread.Sleep(1000);
+            }
 
             AstarteDeviceDatastreamInterface valuesInterface =
                 (AstarteDeviceDatastreamInterface)myDevice.GetInterface(valuesInterfaceName);
