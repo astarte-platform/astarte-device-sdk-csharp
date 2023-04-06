@@ -76,6 +76,15 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 _introspectionSent = true;
             }
 
+            try
+            {
+                RetryFailedMessages();
+            }
+            catch (AstarteTransportException e)
+            {
+                throw new AstarteTransportException("Message redelivery failed", e);
+            }
+
             if (_astarteTransportEventListener != null)
             {
                 _astarteTransportEventListener.OnTransportConnected();
