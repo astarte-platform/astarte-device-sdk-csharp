@@ -5,3 +5,7 @@ Source: https://github.com/secomind/astarte-device-sdk-csharp
 Files: AstarteDeviceSDKExample/Resources/standard-interfaces/*
 Copyright: SECO Mind Srl
 License: CC0-1.0
+
+Files: CHANGELOG.md
+Copyright: 2023 SECO Mind Srl
+License: CC0-1.0
