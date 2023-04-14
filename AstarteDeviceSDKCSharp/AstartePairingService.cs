@@ -42,14 +42,13 @@ namespace AstarteDeviceSDKCSharp
         public AstartePairingService(string pairingUrl, string astarteRealm)
         {
             _astarteRealm = astarteRealm;
-            _pairingUrl = new Uri(pairingUrl);
+            _pairingUrl = new Uri($"{pairingUrl.TrimEnd('/')}/v1");
 
             if (_pairingUrl == null)
             {
                 throw new ArgumentNullException(nameof(_pairingUrl), "Pairing url is empty");
             }
 
-            _pairingUrl = new Uri(_pairingUrl, "v1");
             _httpClient = new HttpClient();
 
         }
