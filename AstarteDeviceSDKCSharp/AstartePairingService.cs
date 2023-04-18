@@ -374,5 +374,9 @@ namespace AstarteDeviceSDKCSharp
             return credentialSecret;
         }
 
+        public Uri PairingUrl()
+        {
+            return _pairingUrl;
+        }
     }
 }
