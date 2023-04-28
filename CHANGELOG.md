@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.1] - Unreleased
 ### Fixed
 - Fix the construction of Pairing URL.
+- Fix receiving properties from Astarte.
 
 ## [0.5.0] - 2023-04-07
 ### Added
