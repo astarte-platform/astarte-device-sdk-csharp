@@ -62,7 +62,7 @@ namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
             internal string interfacePath = string.Empty;
             internal DateTime timestamp;
 
-            public AstarteServerValueBuilder(object value)
+            public AstarteServerValueBuilder(object? value)
             {
                 this.value = value;
             }
