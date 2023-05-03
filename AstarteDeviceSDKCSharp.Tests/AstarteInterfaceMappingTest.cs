@@ -19,7 +19,7 @@
  */
 
 using AstarteDeviceSDK.Protocol;
-using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
+using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using Newtonsoft.Json;
 using System;
 using Xunit;

@@ -23,7 +23,6 @@ using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Crypto;
 using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Protocol.AstarteException;
-using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
 using AstarteDeviceSDKCSharp.Transport;
 using Microsoft.EntityFrameworkCore;
 

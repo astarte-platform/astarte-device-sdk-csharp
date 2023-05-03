@@ -21,7 +21,6 @@
 using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteException;
-using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
 using AstarteDeviceSDKCSharp.Transport;
 using Newtonsoft.Json;
 
