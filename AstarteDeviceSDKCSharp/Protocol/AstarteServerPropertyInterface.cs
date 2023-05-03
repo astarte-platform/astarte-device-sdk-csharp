@@ -37,6 +37,16 @@ namespace AstarteDeviceSDKCSharp.Protocol
             _listeners = new();
         }
 
+        public void AddListener(IAstartePropertyEventListener listener)
+        {
+            _listeners.Add(listener);
+        }
+
+        public void RemoveListener(IAstartePropertyEventListener listener)
+        {
+            _listeners.Remove(listener);
+        }
+
         public AstarteServerValue? Build(string interfacePath, object? serverValue,
         DateTime timestamp)
         {
