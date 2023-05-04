@@ -22,6 +22,7 @@ using System.Diagnostics;
 using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Crypto;
 using AstarteDeviceSDKCSharp.Data;
+using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using AstarteDeviceSDKCSharp.Transport;
 using Microsoft.EntityFrameworkCore;
@@ -384,5 +385,44 @@ namespace AstarteDeviceSDKCSharp.Device
 
             }
         }
+
+        public void AddGlobalEventListener(AstarteGlobalEventListener eventListener)
+        {
+            foreach (AstarteInterface astarteInterface in _astarteInterfaces.Values)
+            {
+                if (astarteInterface is AstarteServerPropertyInterface astarteServerPropertyInterface)
+                {
+                    astarteServerPropertyInterface.AddListener(eventListener);
+                }
+                else if (astarteInterface is AstarteServerDatastreamInterface astarteServerDatastreamInterface)
+                {
+                    astarteServerDatastreamInterface.AddListener(eventListener);
+                }
+                else if (astarteInterface is AstarteServerAggregateDatastreamInterface astarteServerAggregateDatastreamInterface)
+                {
+                    astarteServerAggregateDatastreamInterface.AddListener(eventListener);
+                }
+            }
+        }
+
+        public void RemoveGlobalEventListener(AstarteGlobalEventListener eventListener)
+        {
+            foreach (AstarteInterface astarteInterface in _astarteInterfaces.Values)
+            {
+                if (astarteInterface is AstarteServerPropertyInterface astarteServerPropertyInterface)
+                {
+                    astarteServerPropertyInterface.RemoveListener(eventListener);
+                }
+                else if (astarteInterface is AstarteServerDatastreamInterface astarteServerDatastreamInterface)
+                {
+                    astarteServerDatastreamInterface.RemoveListener(eventListener);
+                }
+                else if (astarteInterface is AstarteServerAggregateDatastreamInterface astarteServerAggregateDatastreamInterface)
+                {
+                    astarteServerAggregateDatastreamInterface.RemoveListener(eventListener);
+                }
+            }
+        }
+
     }
 }
