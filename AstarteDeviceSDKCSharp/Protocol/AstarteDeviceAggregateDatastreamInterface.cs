@@ -20,7 +20,7 @@
 
 using System.Diagnostics;
 using AstarteDeviceSDK.Protocol;
-using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
+using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using AstarteDeviceSDKCSharp.Transport;
 
 namespace AstarteDeviceSDKCSharp.Protocol

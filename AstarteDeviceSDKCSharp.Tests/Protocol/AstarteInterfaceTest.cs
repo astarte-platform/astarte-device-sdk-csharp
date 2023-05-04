@@ -19,7 +19,7 @@
  */
 
 using AstarteDeviceSDK.Protocol;
-using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
+using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using Xunit;
 
 namespace AstarteDeviceSDKCSharp.Tests
