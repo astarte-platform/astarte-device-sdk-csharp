@@ -20,7 +20,7 @@
 
 using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Protocol;
-using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
+using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using System;
 using System.Collections.Generic;
 using Xunit;

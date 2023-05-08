@@ -42,14 +42,7 @@ namespace AstarteDeviceSDKCSharp
         public AstartePairingService(string pairingUrl, string astarteRealm)
         {
             _astarteRealm = astarteRealm;
-            _pairingUrl = new Uri(pairingUrl);
-
-            if (_pairingUrl == null)
-            {
-                throw new ArgumentNullException(nameof(_pairingUrl), "Pairing url is empty");
-            }
-
-            _pairingUrl = new Uri(_pairingUrl, "v1");
+            _pairingUrl = new Uri($"{pairingUrl.TrimEnd('/')}/v1");
             _httpClient = new HttpClient();
 
         }
@@ -375,5 +368,9 @@ namespace AstarteDeviceSDKCSharp
             return credentialSecret;
         }
 
+        public Uri PairingUrl()
+        {
+            return _pairingUrl;
+        }
     }
 }

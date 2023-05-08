@@ -21,7 +21,7 @@
 using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Device;
 using AstarteDeviceSDKCSharp.Protocol;
-using AstarteDeviceSDKCSharp.Protocol.AstarteExeption;
+using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using AstarteDeviceSDKCSharp.Utilities;
 using MQTTnet;
 using MQTTnet.Client;

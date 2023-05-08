@@ -235,5 +235,41 @@ namespace AstarteDeviceSDKCSharp.Tests
             Assert.Equal(expectedCredentialSecret, credentialSecret);
         }
 
+        [Fact]
+        public void TestPairingServiceUrlConstructor_Local()
+        {
+            // Arrange
+            Uri _expectedPairingUrl = new Uri("http://localhost:4003");
+
+            //Act
+            _service = new AstartePairingService(_expectedPairingUrl.OriginalString, "test");
+
+            Uri _actualPairingUrl = _service.PairingUrl();
+
+            //Assert
+            Assert.Equal(_expectedPairingUrl.Scheme, _actualPairingUrl.Scheme);
+            Assert.Equal(_expectedPairingUrl.Host, _actualPairingUrl.Host);
+            Assert.Equal(_expectedPairingUrl.Port, _actualPairingUrl.Port);
+            Assert.Equal("/v1", _actualPairingUrl.AbsolutePath);
+        }
+
+        [Fact]
+        public void TestPairingServiceUrlConstructor_Custom()
+        {
+            // Arrange
+            Uri _expectedPairingUrl = new Uri("https://astarte.instance.test/pairing");
+
+            //Act
+            _service = new AstartePairingService(_expectedPairingUrl.OriginalString, "test");
+
+            Uri _actualPairingUrl = _service.PairingUrl();
+
+            //Assert
+            Assert.Equal(_expectedPairingUrl.Scheme, _actualPairingUrl.Scheme);
+            Assert.Equal(_expectedPairingUrl.Host, _actualPairingUrl.Host);
+            Assert.Equal(_expectedPairingUrl.Port, _actualPairingUrl.Port);
+            Assert.Equal(_expectedPairingUrl.AbsolutePath + "/v1", _actualPairingUrl.AbsolutePath);
+        }
+
     }
 }

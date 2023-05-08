@@ -18,10 +18,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-namespace AstarteDeviceSDKCSharp.Protocol.AstarteException
+using AstarteDeviceSDKCSharp.Protocol.AstarteEvents;
+
+namespace AstarteDeviceSDKCSharp.Protocol
 {
-    public class AstarteInvalidValueException : Exception
+    public interface IAstartePropertyEventListener
     {
-        public AstarteInvalidValueException(String text) : base(text) { }
+        void PropertyReceived(AstartePropertyEvent e);
+
+        void PropertyUnset(AstartePropertyEvent e);
     }
 }

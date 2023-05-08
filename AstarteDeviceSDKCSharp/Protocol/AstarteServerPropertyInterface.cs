@@ -18,18 +18,80 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Data;
+using AstarteDeviceSDKCSharp.Protocol.AstarteEvents;
 
 namespace AstarteDeviceSDKCSharp.Protocol
 {
-    public class AstarteServerPropertyInterface : AstartePropertyInterface
+    public class AstarteServerPropertyInterface : AstartePropertyInterface,
+    IAstarteServerValueBuilder, IAstarteServerValuePublisher
     {
         private readonly IAstartePropertyStorage _propertyStorage;
+        private readonly List<IAstartePropertyEventListener> _listeners;
 
-        public AstarteServerPropertyInterface(IAstartePropertyStorage propertyStorage) : base(propertyStorage)
+        public AstarteServerPropertyInterface(IAstartePropertyStorage propertyStorage)
+        : base(propertyStorage)
         {
             _propertyStorage = propertyStorage;
+            _listeners = new();
         }
 
+        public void AddListener(IAstartePropertyEventListener listener)
+        {
+            _listeners.Add(listener);
+        }
+
+        public void RemoveListener(IAstartePropertyEventListener listener)
+        {
+            _listeners.Remove(listener);
+        }
+
+        public AstarteServerValue? Build(string interfacePath, object? serverValue,
+        DateTime timestamp)
+        {
+            AstarteServerValue? astarteServerValue = null;
+            foreach (var entry in GetMappings())
+            {
+                if (AstarteInterface.IsPathCompatibleWithMapping(interfacePath, entry.Key))
+                {
+                    AstarteInterfaceMapping targetMapping = entry.Value;
+                    object? astarteValue = serverValue;
+                    if (targetMapping.GetType() == typeof(DateTime))
+                    {
+                        astarteValue = Convert.ToDateTime(serverValue);
+                    }
+                    astarteServerValue =
+                            new AstarteServerValue.AstarteServerValueBuilder(astarteValue)
+                           .InterfacePath(interfacePath)
+                           .Build();
+                    break;
+                }
+            }
+            return astarteServerValue;
+        }
+
+        public void Publish(AstarteServerValue astarteServerValue)
+        {
+            AstartePropertyEvent e = new AstartePropertyEvent(
+               GetInterfaceName(),
+               astarteServerValue.GetInterfacePath(),
+               astarteServerValue.GetValue());
+
+            if (astarteServerValue.GetValue() == null)
+            {
+                foreach (IAstartePropertyEventListener listener in _listeners)
+                {
+                    listener.PropertyUnset(e);
+                }
+            }
+            else
+            {
+                foreach (IAstartePropertyEventListener listener in _listeners)
+                {
+                    listener.PropertyReceived(e);
+                }
+            }
+        }
     }
 }
