@@ -22,6 +22,11 @@ namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
 {
     public interface IAstarteAggregateDatastreamEventListener
     {
+        /// <summary>
+        /// This function gets called when the device receives data on a server owned
+        /// datastream interface with object aggregation.
+        /// </summary>
+        /// <param name="e"></param>
         void ValueReceived(AstarteAggregateDatastreamEvent e);
     }
 }
