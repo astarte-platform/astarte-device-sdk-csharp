@@ -41,7 +41,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
     {
         protected IMqttClient? _client;
         private readonly IMqttConnectionInfo _connectionInfo;
-        private readonly IAstartePropertyStorage _astartePropertyStorage;
+        protected IAstartePropertyStorage _astartePropertyStorage;
         protected AstarteMqttTransport(AstarteProtocolType type,
         IMqttConnectionInfo connectionInfo) : base(type)
         {
@@ -74,6 +74,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 await SetupSubscriptions();
                 await SendIntrospection();
                 await SendEmptyCacheAsync();
+                await ResendAllProperties();
                 _introspectionSent = true;
             }
 
