@@ -249,6 +249,11 @@ namespace AstarteDeviceSDKCSharp.Device
 
             _astarteInterfaces.Add(astarteInterface.GetInterfaceName(), astarteInterface);
 
+            if (IsConnected())
+            {
+                astarteInterface.SetAstarteTransport(_astarteTransport);
+                _astarteTransport.SendIntrospection();
+            }
         }
 
         public AstarteInterface? GetInterface(string interfaceName)
