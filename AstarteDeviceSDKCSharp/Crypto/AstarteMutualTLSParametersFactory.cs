@@ -34,13 +34,13 @@ namespace AstarteDeviceSDKCSharp.Crypto
             {
                 UseTls = true,
                 Certificates = new List<X509Certificate?>
-                    {
-                      cryptoStore.GetCertificate()
-                    },
-                IgnoreCertificateChainErrors = true,
-                IgnoreCertificateRevocationErrors = true,
+                {
+                    cryptoStore.GetCertificate()
+                },
+                IgnoreCertificateChainErrors = cryptoStore.IgnoreSSLErrors,
+                IgnoreCertificateRevocationErrors = cryptoStore.IgnoreSSLErrors,
                 SslProtocol = System.Security.Authentication.SslProtocols.Tls12,
-                AllowUntrustedCertificates = true
+                AllowUntrustedCertificates = cryptoStore.IgnoreSSLErrors
             };
         }
 

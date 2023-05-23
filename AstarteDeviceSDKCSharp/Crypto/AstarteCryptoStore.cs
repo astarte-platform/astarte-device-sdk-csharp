@@ -30,6 +30,7 @@ namespace AstarteDeviceSDKCSharp.Crypto
         private X509Certificate2? _certificate;
         private AstarteMutualTLSParametersFactory? _parametersFactory;
         private readonly string _cryptoStoreDir = string.Empty;
+        private bool _ignoreSSLErrors = false;
 
         public AstarteCryptoStore(string cryptoStoreDir)
         {
@@ -185,5 +186,12 @@ namespace AstarteDeviceSDKCSharp.Crypto
         {
             _certificate = astarteCertificate;
         }
+
+        public bool IgnoreSSLErrors
+        {
+            get { return _ignoreSSLErrors; }
+            set { _ignoreSSLErrors = value; }
+        }
+
     }
 }

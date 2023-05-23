@@ -48,7 +48,8 @@ namespace AstarteDeviceSDKCSharp.Device
             string credentialSecret,
             IAstarteInterfaceProvider astarteInterfaceProvider,
             string pairingBaseUrl,
-            string cryptoStoreDirectory)
+            string cryptoStoreDirectory,
+            bool ignoreSSLErrors = false)
         {
             if (!Directory.Exists(cryptoStoreDirectory))
             {
@@ -61,12 +62,15 @@ namespace AstarteDeviceSDKCSharp.Device
                 Directory.CreateDirectory(fullCryptoDirPath);
             }
 
+            AstarteCryptoStore astarteCryptoStore = new AstarteCryptoStore(fullCryptoDirPath);
+            astarteCryptoStore.IgnoreSSLErrors = ignoreSSLErrors;
+
             _pairingHandler = new AstartePairingHandler(
              pairingBaseUrl,
              astarteRealm,
              deviceId,
              credentialSecret,
-             new AstarteCryptoStore(fullCryptoDirPath));
+             astarteCryptoStore);
 
             List<string> allInterfaces = astarteInterfaceProvider.LoadAllInterfaces();
 
