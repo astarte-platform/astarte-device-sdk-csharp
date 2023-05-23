@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.0] - Unreleased
 ### Added
 - Add the capability to update the introspection dynamically.
+- Handling sessionPresent flag from the broker.
 
 ## [0.5.1] - 2023-05-05
 ### Added
