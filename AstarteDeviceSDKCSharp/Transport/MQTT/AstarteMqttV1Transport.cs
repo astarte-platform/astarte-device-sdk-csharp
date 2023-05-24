@@ -154,5 +154,38 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
         }
 
+        public override async Task ResendAllProperties()
+        {
+
+            AstarteDevice? astarteDevice = GetDevice() ??
+                throw new AstarteTransportException("Error sending properties." +
+                " Astarte device is null");
+
+            foreach (AstarteInterface astarteInterface in astarteDevice.GetAllInterfaces())
+            {
+                if (astarteInterface is AstarteDevicePropertyInterface)
+                {
+                    Dictionary<string, object> storedPaths;
+                    try
+                    {
+                        storedPaths = _astartePropertyStorage
+                            .GetStoredValuesForInterface(astarteInterface);
+                    }
+                    catch (AstartePropertyStorageException e)
+                    {
+                        throw new AstarteTransportException("Error sending properties", e);
+                    }
+
+                    if (storedPaths != null)
+                    {
+                        foreach (var entry in storedPaths)
+                        {
+                            await SendIndividualValue(astarteInterface, entry.Key, entry.Value);
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }

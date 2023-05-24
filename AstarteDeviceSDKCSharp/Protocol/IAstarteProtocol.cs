@@ -30,5 +30,6 @@ namespace AstarteDeviceSDK.Protocol
         Task SendIndividualValue(AstarteInterface astarteInterface, String path, Object? value,
         DateTime? timestamp);
         Task SendIndividualValue(AstarteInterface astarteInterface, String path, Object? value);
+        Task ResendAllProperties();
     }
 }

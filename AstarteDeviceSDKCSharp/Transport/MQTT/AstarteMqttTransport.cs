@@ -41,7 +41,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
     {
         protected IMqttClient? _client;
         private readonly IMqttConnectionInfo _connectionInfo;
-        private readonly IAstartePropertyStorage _astartePropertyStorage;
+        protected IAstartePropertyStorage _astartePropertyStorage;
         protected AstarteMqttTransport(AstarteProtocolType type,
         IMqttConnectionInfo connectionInfo) : base(type)
         {
@@ -67,13 +67,14 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             return mqttFactory.CreateMqttClient();
         }
 
-        private async Task CompleteAstarteConnection()
+        private async Task CompleteAstarteConnection(bool IsSessionPresent)
         {
-            if (!_introspectionSent)
+            if (!IsSessionPresent || !_introspectionSent)
             {
                 await SetupSubscriptions();
                 await SendIntrospection();
                 await SendEmptyCacheAsync();
+                await ResendAllProperties();
                 _introspectionSent = true;
             }
 
@@ -109,8 +110,15 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             var result = await _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(),
                     CancellationToken.None);
 
-            await CompleteAstarteConnection();
-
+            if (result.ResultCode == MqttClientConnectResultCode.Success)
+            {
+                await CompleteAstarteConnection(result.IsSessionPresent);
+            }
+            else
+            {
+                throw new AstarteTransportException
+                ($"Error connecting to MQTT. Code: {result.ResultCode}");
+            }
         }
 
         public override void Disconnect()
