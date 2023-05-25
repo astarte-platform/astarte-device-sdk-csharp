@@ -157,6 +157,11 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         public override async Task ResendAllProperties()
         {
 
+            if (_astartePropertyStorage == null)
+            {
+                return;
+            }
+
             AstarteDevice? astarteDevice = GetDevice() ??
                 throw new AstarteTransportException("Error sending properties." +
                 " Astarte device is null");

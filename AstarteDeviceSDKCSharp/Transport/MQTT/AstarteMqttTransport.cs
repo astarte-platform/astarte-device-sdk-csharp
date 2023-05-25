@@ -18,11 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using System.Diagnostics;
-using System.IO.Compression;
-using System.Text;
 using AstarteDeviceSDK.Protocol;
-using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Device;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteEvents;
@@ -34,6 +30,9 @@ using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Publishing;
 using MQTTnet.Exceptions;
+using System.Diagnostics;
+using System.IO.Compression;
+using System.Text;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
 {
@@ -41,12 +40,11 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
     {
         protected IMqttClient? _client;
         private readonly IMqttConnectionInfo _connectionInfo;
-        protected IAstartePropertyStorage _astartePropertyStorage;
+
         protected AstarteMqttTransport(AstarteProtocolType type,
         IMqttConnectionInfo connectionInfo) : base(type)
         {
             _connectionInfo = connectionInfo;
-            _astartePropertyStorage = new AstartePropertyStorage();
         }
 
         private async Task<IMqttClient> InitClientAsync()
@@ -293,7 +291,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 return;
             }
 
-            if (targetInterface.GetType() == typeof(AstarteServerPropertyInterface))
+            if (targetInterface.GetType() == typeof(AstarteServerPropertyInterface) && _astartePropertyStorage != null)
             {
                 try
                 {
