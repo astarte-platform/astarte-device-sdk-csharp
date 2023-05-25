@@ -19,6 +19,7 @@
  */
 
 using AstarteDeviceSDK.Protocol;
+using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using System;
@@ -52,7 +53,7 @@ namespace AstarteDeviceSDKCSharp.Tests.Protocol
                 + "        }\n"
                 + "    ]\n"
                 + "}";
-            aInterface = (AstarteDevicePropertyInterface)AstarteInterface.FromString(json);
+            aInterface = (AstarteDevicePropertyInterface)AstarteInterface.FromString(json, new AstartePropertyStorage(""));
         }
     }
 

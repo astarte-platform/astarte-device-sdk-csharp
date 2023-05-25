@@ -19,6 +19,7 @@
  */
 
 using AstarteDeviceSDK.Protocol;
+using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteEvents;
 using Newtonsoft.Json;
@@ -71,7 +72,7 @@ namespace AstarteDeviceSDKCSharp.Tests.Protocol
 
         public AggregateInterfaceFixture()
         {
-            datastreamInterface = (AstarteServerAggregateDatastreamInterface)AstarteInterface.FromString(dtInterface);
+            datastreamInterface = (AstarteServerAggregateDatastreamInterface)AstarteInterface.FromString(dtInterface, new AstartePropertyStorage(""));
         }
     }
 

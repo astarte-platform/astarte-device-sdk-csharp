@@ -19,6 +19,7 @@
  */
 
 using AstarteDeviceSDK.Protocol;
+using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using Xunit;
 
@@ -57,7 +58,7 @@ namespace AstarteDeviceSDKCSharp.Tests
               + "    ]\n"
               + "}\n";
 
-            AstarteInterface astarteInterface = AstarteInterface.FromString(iface);
+            AstarteInterface astarteInterface = AstarteInterface.FromString(iface, new AstartePropertyStorage(""));
 
             Assert.Equal("org.astarte-platform.genericsensors.AvailableSensors", astarteInterface.GetInterfaceName());
             Assert.Equal(0, astarteInterface.GetMajorVersion());
@@ -94,7 +95,7 @@ namespace AstarteDeviceSDKCSharp.Tests
             + "    ]\n"
             + "}\n";
 
-            Assert.Throws<AstarteInvalidInterfaceException>(() => AstarteInterface.FromString(iface));
+            Assert.Throws<AstarteInvalidInterfaceException>(() => AstarteInterface.FromString(iface, new AstartePropertyStorage("")));
         }
     }
 }
