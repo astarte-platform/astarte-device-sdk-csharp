@@ -44,6 +44,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         string path, object? value, DateTime? timestamp)
         {
             AstarteInterfaceDatastreamMapping mapping;
+            int qos = 2;
 
             if (astarteInterface.GetType() == (typeof(AstarteDeviceDatastreamInterface)))
             {
@@ -57,13 +58,13 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 {
                     throw new AstarteTransportException("Mapping not found", e);
                 }
-                int qos = QosFromReliability(mapping);
-
-                string topic = _baseTopic + "/" + astarteInterface.InterfaceName + path;
-                byte[] payload = AstartePayload.Serialize(value, timestamp);
-
-                await DoSendMqttMessage(topic, payload, qos);
+                qos = QosFromReliability(mapping);
             }
+
+            string topic = _baseTopic + "/" + astarteInterface.InterfaceName + path;
+            byte[] payload = AstartePayload.Serialize(value, timestamp);
+
+            await DoSendMqttMessage(topic, payload, qos);
         }
 
         private async Task DoSendMqttMessage(string topic, byte[] payload, int qos)
