@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add the capability to update the introspection dynamically.
 - Handling sessionPresent flag from the broker.
 
+## [0.5.2] - 2023-05-26
+### Fixed
+- Fix a bug preventing sending of properties in the SendIndividualValue method.
+
 ## [0.5.1] - 2023-05-05
 ### Added
 - Add a global event listener for listening incoming data from Astarte.
