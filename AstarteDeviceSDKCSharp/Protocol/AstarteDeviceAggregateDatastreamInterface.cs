@@ -45,10 +45,38 @@ namespace AstarteDeviceSDKCSharp.Protocol
             transport.SendAggregate(this, path, payload, timestamp);
         }
 
-        public void ValidatePayload(string path, Dictionary<string, Object> payload, DateTime? timestamp)
+        public void ValidatePayload(string path, Dictionary<string, object> payload, DateTime? timestamp)
         {
-            string fomattedPath = path + "/";
             Dictionary<string, AstarteInterfaceMapping> mappings = GetMappings();
+
+            string? firstMappingPath = mappings.Values.First().GetPath();
+            string prefix = string.Empty;
+
+            if (firstMappingPath != null)
+            {
+                prefix = firstMappingPath[..firstMappingPath.LastIndexOf('/')];
+            }
+
+            string[] splitMappingPath = prefix.Split('/');
+            string[] splitPath = path.Split("/");
+
+            if (splitPath.Length != splitMappingPath.Length)
+            {
+                throw new AstarteInterfaceMappingNotFoundException(
+                      $"{path} not found in interface");
+            }
+
+            for (int i = 0; i < splitPath.Length; i++)
+            {
+                if (!splitPath[i].Equals(splitMappingPath[i]) &&
+                    !splitMappingPath[i].StartsWith("%{"))
+                {
+                    throw new AstarteInterfaceMappingNotFoundException(
+                        $"{path} not found in interface");
+                }
+            }
+
+            string formattedPath = prefix + "/";
 
             foreach (var interfaceMappingEntry in mappings)
             {
@@ -61,26 +89,27 @@ namespace AstarteDeviceSDKCSharp.Protocol
                     + " is null.");
                     continue;
                 }
-
-                if (!payload.Any(x =>
-                    x.Key == astarteInterfaceMapping.Path.Substring(fomattedPath.Length)))
+                if (!payload.ContainsKey(
+                    astarteInterfaceMapping.Path[formattedPath.Length..]))
                 {
                     throw new AstarteInvalidValueException(
-                        $"Value not found for {astarteInterfaceMapping.Path}");
+                         $"Value not found for {astarteInterfaceMapping.Path}");
                 }
             }
 
             foreach (var data in payload)
             {
-                if (mappings.Any(x => x.Key == fomattedPath + data.Key))
+                string mappingKey = formattedPath + data.Key;
+
+                if (mappings.ContainsKey(mappingKey))
                 {
-                    FindMappingInInterface(fomattedPath + data.Key)
+                    FindMappingInInterface(mappingKey)
                         .ValidatePayload(data.Value, timestamp);
                 }
                 else
                 {
                     throw new AstarteInterfaceMappingNotFoundException(
-                        $"{fomattedPath + data.Key} not found in interface");
+                        $"{mappingKey} not found in interface");
                 }
             }
         }
