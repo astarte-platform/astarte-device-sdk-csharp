@@ -201,8 +201,10 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
         private void OnMessageReceive(MqttApplicationMessageReceivedEventArgs e)
         {
+            object? payload = null;
+
             Trace.WriteLine("Incoming message: "
-            + Encoding.UTF8.GetString(e.ApplicationMessage.Payload));
+                + Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0]));
 
             if (!e.ApplicationMessage.Topic.Contains(_connectionInfo.GetClientId())
             || _messageListener == null)
@@ -223,7 +225,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             if (path.StartsWith("control"))
             {
-                if (path == "control/consumer/properties")
+                if (path == "control/consumer/properties" && e.ApplicationMessage.Payload != null)
                 {
                     HandlePurgeProperties(e.ApplicationMessage.Payload, astarteDevice);
                 }
@@ -243,15 +245,11 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 return;
             }
 
-            object? payload;
             DateTime? timestamp = DateTime.MinValue;
             DecodedMessage? decodedMessage;
-            if (e.ApplicationMessage.Payload.Length == 0)
+            if (e.ApplicationMessage.Payload != null && e.ApplicationMessage.Payload.Length != 0)
             {
-                payload = null;
-            }
-            else
-            {
+
                 decodedMessage = AstartePayload.Deserialize(e.ApplicationMessage.Payload);
                 if (decodedMessage is null)
                 {
@@ -260,6 +258,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 }
                 payload = decodedMessage.GetPayload();
                 timestamp = decodedMessage.GetTimestamp();
+
             }
 
             AstarteInterface? targetInterface = astarteDevice.GetInterface(astarteInterface);
