@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.3] - Unreleased
 ### Fixed
 - Fix payload validation on the aggregated object interface.
+- Resolve the type inconsistency issue when deserializing BSON to a double array.
 
 ## [0.5.2] - 2023-05-26
 ### Fixed
