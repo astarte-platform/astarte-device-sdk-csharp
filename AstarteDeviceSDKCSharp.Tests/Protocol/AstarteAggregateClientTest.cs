@@ -104,16 +104,7 @@ namespace AstarteDeviceSDKCSharp.Tests.Protocol
                 name = "build"
             };
 
-            MemoryStream ms = new();
-            using (BsonDataWriter writer = new(ms))
-            {
-                JsonSerializer serializer = new();
-                serializer.Serialize(writer, mock);
-            }
-
-            byte[] payload = ms.ToArray();
-
-            AstarteServerValue astarteServerValue = datastreamInterface.Build("/test", payload, new DateTime());
+            AstarteServerValue astarteServerValue = datastreamInterface.Build("/test", mock, new DateTime());
 
             Assert.NotNull(astarteServerValue);
             Assert.Equal("/test", astarteServerValue.GetInterfacePath());
@@ -140,19 +131,10 @@ namespace AstarteDeviceSDKCSharp.Tests.Protocol
                 name = "build"
             };
 
-            MemoryStream ms = new();
-            using (BsonDataWriter writer = new(ms))
-            {
-                JsonSerializer serializer = new();
-                serializer.Serialize(writer, mock);
-            }
-
-            byte[] excpectedValues = ms.ToArray();
-
             IAstarteAggregateDatastreamEventListener listener = new AstarteAggregateClientTest();
             datastreamInterface.AddListener(listener);
 
-            AstarteServerValue astarteServerValue = datastreamInterface.Build("/test", excpectedValues, new DateTime());
+            AstarteServerValue astarteServerValue = datastreamInterface.Build("/test", mock, new DateTime());
 
             datastreamInterface.Publish(astarteServerValue);
             datastreamInterface.RemoveListener(listener);
