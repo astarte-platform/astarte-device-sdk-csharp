@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolve the type inconsistency issue when deserializing BSON to a double array.
 - Resolve array equality issue when setting the device property.
 - Fix receiving unset property message
+- Fix parsing issue when receiving an aggregate object payload.
 
 ## [0.5.2] - 2023-05-26
 ### Fixed
