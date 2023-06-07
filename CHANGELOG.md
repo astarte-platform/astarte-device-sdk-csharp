@@ -4,12 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.3] - Unreleased
+## [0.5.3] - 2023-06-07
 ### Fixed
 - Fix payload validation on the aggregated object interface.
 - Resolve the type inconsistency issue when deserializing BSON to a double array.
 - Resolve array equality issue when setting the device property.
-- Fix receiving unset property message
+- Fix receiving unset property message.
 - Fix parsing issue when receiving an aggregate object payload.
 
 ## [0.5.2] - 2023-05-26
