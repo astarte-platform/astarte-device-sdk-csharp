@@ -57,14 +57,9 @@ namespace AstarteDeviceSDKCSharp.Protocol
 
             Dictionary<string, object>? astartePayload = new();
             Dictionary<string, object> astarteAggregate = new();
-            using (MemoryStream ms = new MemoryStream((byte[])serverValue))
-            {
-                using (BsonDataReader reader = new BsonDataReader(ms))
-                {
-                    JsonSerializer serializer = new JsonSerializer();
-                    astartePayload = serializer.Deserialize<Dictionary<string, object>>(reader);
-                }
-            }
+
+            astartePayload = JsonConvert.DeserializeObject
+            <Dictionary<string, object>>(JsonConvert.SerializeObject(serverValue));
 
             if (astartePayload is null)
             {

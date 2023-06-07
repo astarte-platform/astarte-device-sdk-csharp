@@ -145,5 +145,18 @@ namespace AstarteDeviceSDKCSharp.Tests
             Assert.True(decodedMessage.GetPayload().GetType() == typeof(DateTime[]));
             Assert.Equal(d, decodedMessage.GetPayload());
         }
+
+        [Fact]
+        public void DoubleArrayToEncodedBSONTest()
+        {
+            double[] i = new double[] { 1.1, 2.1, 3.1 };
+            byte[] encodedPayload = AstartePayload.Serialize(i, new DateTime());
+            DecodedMessage decodedMessage = AstartePayload.Deserialize(encodedPayload);
+
+            var objects = decodedMessage.GetPayload() as object[];
+            double[] payloadArray = objects.Select(x => Convert.ToDouble(x)).ToArray();
+            Assert.True(payloadArray.GetType() == typeof(double[]));
+            Assert.Equal(i, (double[])payloadArray);
+        }
     }
 }
