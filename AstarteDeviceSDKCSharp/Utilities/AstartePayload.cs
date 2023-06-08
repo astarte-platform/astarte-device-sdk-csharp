@@ -145,14 +145,12 @@ namespace AstarteDeviceSDKCSharp.Utilities
 
                 return payload.GetType();
             }
-            else if (payload is JArray)
+            else if (payload is JArray bsonList)
             {
-                JArray bsonList = (JArray)payload;
-                var item = bsonList.First();
-                DateTime dateItem;
-                if (DateTime.TryParse(item.ToString(), out dateItem))
+                if (bsonList.First().Type is JTokenType.Date)
+                {
                     return typeof(DateTime[]);
-
+                }
                 return typeof(Array);
 
             }

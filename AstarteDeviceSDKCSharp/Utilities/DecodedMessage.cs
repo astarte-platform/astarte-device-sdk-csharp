@@ -54,6 +54,47 @@ namespace AstarteDeviceSDKCSharp.Utilities
         {
             this.timestamp = timestamp;
         }
+
+        public bool PayloadEquality(object? otherPayload)
+        {
+            if (otherPayload is null)
+            {
+                return false;
+            }
+
+            if (payload is Array array && otherPayload is Array otherArray)
+            {
+                if (array == null || otherArray == null) return false;
+                if (array.Length != otherArray.Length) return false;
+                return ArrayEquality(array, otherArray);
+            }
+
+            return payload.GetHashCode().Equals(otherPayload.GetHashCode());
+
+        }
+
+        private bool ArrayEquality(Array array, Array otherArray)
+        {
+
+            for (int i = 0; i < array.Length; i++)
+            {
+                if (array.GetValue(i) == null || otherArray.GetValue(i) == null) return false;
+
+                if (array.GetValue(i) is Array arrayOfArray && otherArray.GetValue(i) is Array arrayOfOtherArray)
+                {
+                    if (!ArrayEquality(arrayOfArray, arrayOfOtherArray))
+                    {
+                        return false;
+                    }
+                }
+                else if (!array.GetValue(i)!.GetHashCode().Equals(otherArray.GetValue(i)!.GetHashCode()))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
     }
 
 }

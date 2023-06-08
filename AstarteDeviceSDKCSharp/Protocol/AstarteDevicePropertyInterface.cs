@@ -72,7 +72,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
             }
             else
             {
-                if (!payload.Equals(storedValue.GetPayload()))
+                if (!storedValue.PayloadEquality(payload))
                 {
                     transport.SendIndividualValue(this, path, payload);
                 }
