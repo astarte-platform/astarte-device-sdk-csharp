@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add the capability to update the introspection dynamically.
 - Handling sessionPresent flag from the broker.
+- Add option to ignore SSL errors in the AstarteDevice constructor.
 
 ## [0.5.3] - 2023-06-07
 ### Fixed
