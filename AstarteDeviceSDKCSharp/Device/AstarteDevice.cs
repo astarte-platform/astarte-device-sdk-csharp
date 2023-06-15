@@ -260,6 +260,27 @@ namespace AstarteDeviceSDKCSharp.Device
             }
         }
 
+        /// <summary>
+        /// Remove interface from device 
+        /// </summary>
+        /// <param name="interfaceName">Interface name</param>
+        public void RemoveInterface(string interfaceName)
+        {
+            AstarteInterface? astarteInterface = GetInterface(interfaceName);
+
+            if (astarteInterface == null)
+            {
+                throw new AstarteInterfaceException("Interface " + interfaceName + " not found");
+            }
+
+            _astarteInterfaces.Remove(astarteInterface.GetInterfaceName());
+
+            if (IsConnected())
+            {
+                _astarteTransport?.SendIntrospection();
+            }
+        }
+
         public AstarteInterface? GetInterface(string interfaceName)
         {
             if (_astarteInterfaces.ContainsKey(interfaceName))
