@@ -21,6 +21,12 @@ SPDX-License-Identifier: Apache-2.0 -->
     <None Update="Resources\standard-interfaces\org.astarte-platform.genericevents.DeviceEvents.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Resources\standard-interfaces\org.astarte-platform.genericsensors.AvailableSensors.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\standard-interfaces\org.astarte-platform.genericsensors.Geolocation.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\standard-interfaces\org.astarte-platform.genericsensors.Values.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

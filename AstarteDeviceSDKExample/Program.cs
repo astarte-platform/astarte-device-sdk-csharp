@@ -23,13 +23,20 @@ using AstarteDeviceSDKCSharp.Device;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Utilities;
 using CommandLine;
+using Newtonsoft.Json;
 
 namespace AstarteDeviceSDKExample
 {
     class Program
     {
-        private static readonly string valuesInterfaceName = "org.astarte-platform.genericsensors.Values";
-        private static readonly string sensorUuid = "b2c5a6ed-ebe4-4c5c-9d8a-6d2f114fc6e5";
+        private static readonly string valuesInterfaceName =
+            "org.astarte-platform.genericsensors.Values";
+        private static readonly string availableSensorsInterfaceName =
+            "org.astarte-platform.genericsensors.AvailableSensors";
+        private static readonly string geolocationInterfaceName =
+            "org.astarte-platform.genericsensors.Geolocation";
+        private static readonly string sensorUuid =
+            "b2c5a6ed-ebe4-4c5c-9d8a-6d2f114fc6e5";
 
         static async Task<int> Main(string[] args)
         {
@@ -73,24 +80,6 @@ namespace AstarteDeviceSDKExample
                 cryptoStoreDir = AppDomain.CurrentDomain.BaseDirectory;
             }
 
-            //Path validation will be implemented on device creation
-            #region check path 
-            if (!Directory.Exists(cryptoStoreDir))
-            {
-                throw new FileNotFoundException(cryptoStoreDir + " is not directory");
-            }
-
-            if (!Directory.Exists(Path.Join(cryptoStoreDir, deviceId)))
-            {
-                Directory.CreateDirectory(Path.Join(cryptoStoreDir, deviceId));
-            }
-
-            if (!Directory.Exists(Path.Join(cryptoStoreDir, deviceId, "crypto")))
-            {
-                Directory.CreateDirectory(Path.Join(cryptoStoreDir, deviceId, "crypto"));
-            }
-            #endregion
-
             /// <summary>
             /// Astarte device creation
             /// 
@@ -108,6 +97,8 @@ namespace AstarteDeviceSDKExample
 
             myDevice.SetAlwaysReconnect(true);
             myDevice.SetAstarteMessageListener(new ExampleMessageListener());
+            myDevice.AddGlobalEventListener(new ExampleGlobalEventListener());
+
             /// <summary>
             /// Start the connection
             /// </summary>
@@ -118,17 +109,63 @@ namespace AstarteDeviceSDKExample
                 Thread.Sleep(1000);
             }
 
+            /// <summary>
+            /// Publish on a properties interface
+            /// Retrieve the interface from the device and call SetProperty and UnsetPropery on it.
+            /// </summary>
+            AstarteDevicePropertyInterface availableSensorsInterface =
+                (AstarteDevicePropertyInterface)myDevice
+                .GetInterface(availableSensorsInterfaceName);
+
+            availableSensorsInterface.SetProperty(
+                $"/{sensorUuid}/name", "randomThermometer");
+            availableSensorsInterface.SetProperty($"/{sensorUuid}/unit", "°C");
+
+            // Unset property
+            availableSensorsInterface.SetProperty(
+                "/myPath/name", "randomThermometer");
+            availableSensorsInterface.UnsetProperty("/myPath/name");
+
+            /// <summary>
+            /// Individual datastream interface creation
+            /// </summary>
             AstarteDeviceDatastreamInterface valuesInterface =
-                (AstarteDeviceDatastreamInterface)myDevice.GetInterface(valuesInterfaceName);
+                (AstarteDeviceDatastreamInterface)myDevice
+                .GetInterface(valuesInterfaceName);
+
+            /// <summary>
+            /// Aggregate datastream interface creation
+            /// </summary>
+            AstarteDeviceAggregateDatastreamInterface aggregateInterface =
+                (AstarteDeviceAggregateDatastreamInterface)myDevice
+                .GetInterface(geolocationInterfaceName);
 
             while (true)
             {
                 double value = Random.Shared.NextDouble();
                 Console.WriteLine("Streaming value: " + value);
 
+                //Stream individual value
                 valuesInterface.StreamData($"/{sensorUuid}/value", value, DateTime.Now);
 
+                Dictionary<string, object> gpsValues = new()
+                {
+                    { "latitude", Random.Shared.NextDouble() * 50 },
+                    { "longitude", Random.Shared.NextDouble() * 50 },
+                    { "altitude", Random.Shared.NextDouble() },
+                    { "accuracy", Random.Shared.NextDouble() },
+                    { "altitudeAccuracy", Random.Shared.NextDouble() },
+                    { "heading", Random.Shared.NextDouble() },
+                    { "speed", Random.Shared.NextDouble() * 100}
+                };
+
+                Console.WriteLine("Streaming object:" + JsonConvert.SerializeObject(gpsValues));
+
+                //Stream aggregate object
+                aggregateInterface.StreamData($"/{sensorUuid}", gpsValues, DateTime.Now);
+
                 Thread.Sleep(1000);
+
             }
 
         }

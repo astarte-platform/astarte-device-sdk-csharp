@@ -113,9 +113,121 @@ while (true)
 }   
 ```
 
-### 6. Run the example
+#### 5.2 Publishing on a datastream interface with object aggregation
 
-#### 6.1 Using an unregistered device
+Retrieve the object aggregated interface and call `Stream data` on it.
+
+``` CSharp
+ AstarteDeviceAggregateDatastreamInterface aggregateInterface =
+                (AstarteDeviceAggregateDatastreamInterface)myDevice
+                .GetInterface(geolocationInterfaceName)
+
+            while (true)
+            {
+
+                Dictionary<string, object> gpsValues = new()
+                {
+                    { "latitude", Random.Shared.NextDouble() * 50 },
+                    { "longitude", Random.Shared.NextDouble() * 50 },
+                    { "altitude", Random.Shared.NextDouble() },
+                    { "accuracy", Random.Shared.NextDouble() },
+                    { "altitudeAccuracy", Random.Shared.NextDouble() },
+                    { "heading", Random.Shared.NextDouble() },
+                    { "speed", Random.Shared.NextDouble() * 100}
+                };
+
+                Console.WriteLine("Streaming object:" + JsonConvert.SerializeObject(gpsValues));
+
+                aggregateInterface.StreamData($"/{sensor_id}", gpsValues, DateTime.Now);
+
+                Thread.Sleep(1000);
+
+            }
+```
+
+#### 5.3 Setting a device properties
+
+Retrieve the properties interface and call `SetProperty` on it.
+
+``` CSharp
+AstarteDevicePropertyInterface availableSensorsInterface =
+                (AstarteDevicePropertyInterface)myDevice
+                .GetInterface(availableSensorsInterfaceName);
+
+            availableSensorsInterface.SetProperty(
+                $"/{sensorUuid}/name", "randomThermometer");
+            availableSensorsInterface.SetProperty($"/{sensorUuid}/unit", "°C")
+```
+
+#### 5.4 Unsetting a device properties
+
+Retrieve the properties interface and call `UnsetProperty` on it.
+
+``` CSharp
+AstarteDevicePropertyInterface availableSensorsInterface =
+                (AstarteDevicePropertyInterface)myDevice
+                .GetInterface(availableSensorsInterfaceName);
+
+availableSensorsInterface.UnsetProperty("/myPath/name");
+```
+
+### 6. Receive
+
+The SDK offers an abstract class called `AstarteGlobalEventListener`, which includes several interfaces for obtaining datastreams and properties from Astarte. Inheriting from `AstarteGlobalEventListener` is essential to implement all of its methods.
+
+#### 6.1 Receiving on server owned datastream interface
+
+#### 6.1.1 Receiving on server owned datastream interface with individual aggregation
+
+``` CSharp
+public override void ValueReceived(AstarteDatastreamEvent e)
+    {
+        Console.WriteLine(
+            $"Received datastream value on interface { e.GetInterfaceName()}, " +
+            $"path: { e.GetPath()}, " +
+            $"value:{ e.GetValue()}");
+    }
+```
+
+#### 6.1.2 Receiving on server owned datastream interface with object aggregation
+
+``` CSharp
+public override void ValueReceived(AstarteAggregateDatastreamEvent e)
+    {
+        Console.WriteLine(
+            $"Received aggregate datastream object on interface {e.GetInterfaceName()}, " +
+            $"value:{JsonConvert.SerializeObject(e.GetValues())}");
+    }
+```
+
+#### 6.2 Receiving on server owned properties interface
+
+#### 6.2.1 Receiving data on server owned properties interface
+
+``` CSharp
+public override void PropertyReceived(AstartePropertyEvent e)
+        {
+            Console.WriteLine(
+                $"Received property on interface { e.GetInterfaceName() }, " +
+                $"path: { e.GetPath() }, " +
+                $"value:{ e.GetValue() }");
+        }
+```
+
+#### 6.2.2 Receiving unset on a server owned properties interface
+
+``` CSharp
+public override void PropertyUnset(AstartePropertyEvent e)
+        {
+            Console.WriteLine(
+                $"Received unset on interface { e.GetInterfaceName() }, " +
+                $"path: { e.GetPath() }");
+        }
+```
+
+### 7. Run the example
+
+#### 7.1 Using an unregistered device
 
 Run the code from the root of the example project with
 
@@ -125,7 +237,7 @@ dotnet run AstarteDeviceSDKExample.csproj --r "<realm>" --p "<pairing-url>" --t 
 
 where `pairing-url` is the URL to reach Pairing API in your Astarte instance, usually `https://api.<your-astarte-domain>/pairing`.
 
-#### 6.1 Using a registered device
+#### 7.2 Using a registered device
 
 Run the code from the root of the example project with
 

@@ -32,9 +32,13 @@ namespace AstarteDeviceSDKExample
         public List<string> LoadAllInterfaces()
         {
             List<string> interfaces = new List<string>();
-            List<string> interfaceNames = new List<string>();
-            interfaceNames.Add("org.astarte-platform.genericevents.DeviceEvents");
-            interfaceNames.Add("org.astarte-platform.genericsensors.Values");
+            List<string> interfaceNames = new List<string>
+            {
+                "org.astarte-platform.genericevents.DeviceEvents",
+                "org.astarte-platform.genericsensors.Values",
+                "org.astarte-platform.genericsensors.AvailableSensors",
+                "org.astarte-platform.genericsensors.Geolocation"
+            };
 
             foreach (string interfaceName in interfaceNames)
             {
