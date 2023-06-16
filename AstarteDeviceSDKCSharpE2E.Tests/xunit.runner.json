@@ -1,0 +1,5 @@
+{
+    "diagnosticMessages": true,
+    "methodDisplay": "method",
+    "parallelizeAssembly": false
+}
