@@ -58,8 +58,11 @@ namespace AstarteDeviceSDKCSharp.Protocol
                 Trace.WriteLine(e.Message);
             }
 
-            if (storedValue == null)
+            if (!(storedValue?.PayloadEquality(payload) ?? false))
             {
+
+                transport.SendIndividualValue(this, path, payload);
+
                 try
                 {
                     propertyStorage.SetStoredValue(this.GetInterfaceName(), path, payload,
@@ -70,14 +73,6 @@ namespace AstarteDeviceSDKCSharp.Protocol
                     throw new AstarteTransportException("Property storage failure", e);
                 }
             }
-            else
-            {
-                if (!storedValue.PayloadEquality(payload))
-                {
-                    transport.SendIndividualValue(this, path, payload);
-                }
-            }
-
         }
 
         public void UnsetProperty(string path)
