@@ -96,7 +96,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
         {
             AstarteAggregateDatastreamEvent e = new AstarteAggregateDatastreamEvent(
                 GetInterfaceName(), astarteServerValue.GetMapValue(),
-                astarteServerValue.GetTimestamp());
+                astarteServerValue.GetTimestamp(), astarteServerValue.GetInterfacePath());
 
             foreach (IAstarteAggregateDatastreamEventListener listener in _listeners)
             {

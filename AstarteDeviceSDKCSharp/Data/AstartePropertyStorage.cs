@@ -137,10 +137,10 @@ namespace AstarteDeviceSDKCSharp.Data
                             && x.InterfaceMajor == interfaceMajor)
                             .FirstOrDefault();
 
+            byte[] bsonValue = AstartePayload.Serialize(value, null);
+
             if (astarteProp == null)
             {
-                byte[] bsonValue = AstartePayload.Serialize(value, null);
-
                 AstarteGenericPropertyEntry astarteProperty =
                     new AstarteGenericPropertyEntry
                     (interfaceName,
@@ -149,6 +149,10 @@ namespace AstarteDeviceSDKCSharp.Data
                     interfaceMajor);
 
                 _astarteDbContext.AstarteGenericProperties.Add(astarteProperty);
+            }
+            else
+            {
+                astarteProp.BsonValue = bsonValue;
             }
 
             _astarteDbContext.SaveChanges();
