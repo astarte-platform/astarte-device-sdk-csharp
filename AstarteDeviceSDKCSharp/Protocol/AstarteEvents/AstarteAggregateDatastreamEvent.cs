@@ -23,16 +23,23 @@ namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
     public class AstarteAggregateDatastreamEvent : AstarteGenericAggregateEvent
     {
         private readonly DateTime _timestamp;
+        private readonly string _interfacePath;
 
         public AstarteAggregateDatastreamEvent(
-      String interfaceName, Dictionary<String, Object> values, DateTime timestamp) : base(interfaceName, values)
+      String interfaceName, Dictionary<String, Object> values, DateTime timestamp, string interfacePath) : base(interfaceName, values)
         {
             _timestamp = timestamp;
+            _interfacePath = interfacePath;
         }
 
         public DateTime GetTimestamp()
         {
             return _timestamp;
+        }
+
+        public string GetPath()
+        {
+            return _interfacePath;
         }
     }
 }
