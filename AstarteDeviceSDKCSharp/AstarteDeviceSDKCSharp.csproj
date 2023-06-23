@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0 -->
     <RootNamespace>AstarteDeviceSDKCSharp</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.5.3</Version>
+    <Version>0.5.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
