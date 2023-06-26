@@ -19,6 +19,7 @@
  */
 
 using AstarteDeviceSDK.Protocol;
+using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Device;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteException;
@@ -26,7 +27,9 @@ using AstarteDeviceSDKCSharp.Utilities;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Publishing;
+using MQTTnet.Exceptions;
 using System.Text;
+using static AstarteDeviceSDKCSharp.Protocol.AstarteInterfaceDatastreamMapping;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
 {
@@ -137,7 +140,55 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             string topic = _baseTopic + "/" + astarteInterface.InterfaceName + path;
             byte[] payload = AstartePayload.Serialize(value, timeStamp);
 
-            await DoSendMqttMessage(topic, payload, qos);
+            try
+            {
+                await DoSendMqttMessage(topic, payload, qos);
+            }
+            catch (MqttCommunicationException e)
+            {
+
+                HandleDatastreamFailedPublish(e, mapping, topic, payload, qos);
+            }
+        }
+
+        public override void RetryFailedMessages()
+        {
+            if (_failedMessageStorage is null)
+            {
+                return;
+            }
+
+            while (!_failedMessageStorage.IsEmpty())
+            {
+                IAstarteFailedMessage? failedMessage = _failedMessageStorage.PeekFirst();
+                if (failedMessage is null)
+                {
+                    return;
+                }
+
+                if (failedMessage.IsExpired())
+                {
+                    // No need to send this anymore, drop it
+                    _failedMessageStorage.RejectFirst();
+                    continue;
+                }
+
+                try
+                {
+                    Task.Run(async () => await DoSendMessage(failedMessage));
+                }
+                catch (MqttCommunicationException e)
+                {
+                    throw new AstarteTransportException(e.Message);
+                }
+                _failedMessageStorage.AckFirst();
+            }
+        }
+
+        private async Task DoSendMessage(IAstarteFailedMessage failedMessage)
+        {
+            await DoSendMqttMessage(failedMessage.GetTopic(), failedMessage.GetPayload(),
+            failedMessage.GetQos());
         }
 
         private int QosFromReliability(AstarteInterfaceDatastreamMapping mapping)
@@ -190,6 +241,63 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                         }
                     }
                 }
+            }
+        }
+        private void HandlePropertiesFailedPublish(MqttCommunicationException e, string topic,
+        byte[] payload, int qos)
+        {
+            if (_failedMessageStorage is null)
+            {
+                return;
+            }
+
+            // Properties are always stored and never expire
+            _failedMessageStorage.InsertStored(topic, payload, qos);
+        }
+
+        private async void DoSendMqttMessage(IAstarteFailedMessage failedMessage)
+        {
+            await DoSendMqttMessage(failedMessage.GetTopic(),
+            failedMessage.GetPayload(),
+            failedMessage.GetQos());
+        }
+
+        private void HandleDatastreamFailedPublish(MqttCommunicationException e,
+        AstarteInterfaceDatastreamMapping mapping, string topic, byte[] payload, int qos)
+        {
+            int expiry = mapping.GetExpiry();
+            switch (mapping.GetRetention())
+            {
+                case MappingRetention.DISCARD:
+                    throw new AstarteTransportException("Cannot send value", e);
+
+                case MappingRetention.VOLATILE:
+                    {
+                        if (expiry > 0)
+                        {
+                            _failedMessageStorage?.InsertVolatile(topic, payload, qos, expiry);
+                        }
+                        else
+                        {
+                            _failedMessageStorage?.InsertVolatile(topic, payload, qos);
+                        }
+                        break;
+                    }
+
+                case MappingRetention.STORED:
+                    {
+                        if (expiry > 0)
+                        {
+                            _failedMessageStorage?.InsertStored(topic, payload, qos, expiry);
+                        }
+                        else
+                        {
+                            _failedMessageStorage?.InsertStored(topic, payload, qos);
+                        }
+                        break;
+                    }
+                default:
+                    throw new AstarteTransportException("Invalid retention value", e);
             }
         }
 

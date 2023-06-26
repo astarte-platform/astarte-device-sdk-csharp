@@ -27,7 +27,8 @@ namespace AstarteDeviceSDKCSharp.Protocol
     public class AstarteInterfaceDatastreamMapping : AstarteInterfaceMapping
     {
         private bool explicitTimestamp;
-        private MappingReliability reliability = MappingReliability.UNRELIABLE;
+        private MappingReliability reliability;
+        private MappingRetention retention;
         private int expiry;
 
         public enum MappingReliability
@@ -53,6 +54,11 @@ namespace AstarteDeviceSDKCSharp.Protocol
         public MappingReliability GetReliability()
         {
             return reliability;
+        }
+
+        public MappingRetention GetRetention()
+        {
+            return retention;
         }
 
         internal static AstarteInterfaceDatastreamMapping
@@ -81,6 +87,31 @@ namespace AstarteDeviceSDKCSharp.Protocol
                 {
                     astarteInterfaceDatastreamMapping.reliability = MappingReliability.UNIQUE;
                 }
+                else
+                {
+                    astarteInterfaceDatastreamMapping.reliability = MappingReliability.UNRELIABLE;
+                }
+
+            }
+
+            if (astarteMappingObject.Retention != null)
+            {
+                if (astarteMappingObject.Retention == "discard")
+                {
+                    astarteInterfaceDatastreamMapping.retention = MappingRetention.DISCARD;
+                }
+                else if (astarteMappingObject.Retention == "volatile")
+                {
+                    astarteInterfaceDatastreamMapping.retention = MappingRetention.VOLATILE;
+                }
+                else if (astarteMappingObject.Retention == "stored")
+                {
+                    astarteInterfaceDatastreamMapping.retention = MappingRetention.STORED;
+                }
+                else
+                {
+                    astarteInterfaceDatastreamMapping.retention = MappingRetention.DISCARD;
+                }
 
             }
 
@@ -96,6 +127,11 @@ namespace AstarteDeviceSDKCSharp.Protocol
         public bool IsExplicitTimestamp()
         {
             return explicitTimestamp;
+        }
+
+        public int GetExpiry()
+        {
+            return expiry;
         }
 
         public override void ValidatePayload(Object payload, DateTime? timestamp)

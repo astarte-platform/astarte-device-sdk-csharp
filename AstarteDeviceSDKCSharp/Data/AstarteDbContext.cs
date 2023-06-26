@@ -25,8 +25,6 @@ namespace AstarteDeviceSDKCSharp.Data
 {
     public partial class AstarteDbContext : DbContext
     {
-        public DbSet<AstarteGenericPropertyEntry> AstarteGenericProperties
-         => Set<AstarteGenericPropertyEntry>();
         private readonly string _persistencyDir = string.Empty;
 
         public AstarteDbContext(string persistencyDir)
@@ -34,6 +32,11 @@ namespace AstarteDeviceSDKCSharp.Data
             _persistencyDir = persistencyDir;
         }
 
+        public DbSet<AstarteGenericPropertyEntry> AstarteGenericProperties
+        => Set<AstarteGenericPropertyEntry>();
+
+        public DbSet<AstarteFailedMessageEntry> AstarteFailedMessages
+         => Set<AstarteFailedMessageEntry>();
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
 
@@ -50,6 +53,8 @@ namespace AstarteDeviceSDKCSharp.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AstarteGenericPropertyEntry>()
+            .HasKey(x => x.Id);
+            modelBuilder.Entity<AstarteFailedMessageEntry>()
             .HasKey(x => x.Id);
             base.OnModelCreating(modelBuilder);
         }

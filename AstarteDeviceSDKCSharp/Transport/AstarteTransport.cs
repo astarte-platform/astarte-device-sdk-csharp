@@ -33,6 +33,7 @@ namespace AstarteDeviceSDKCSharp.Transport
         protected bool _introspectionSent = false;
         protected IAstarteMessageListener? _messageListener;
         protected IAstartePropertyStorage? _astartePropertyStorage;
+        protected IAstarteFailedMessageStorage? _failedMessageStorage;
         protected AstarteTransport(AstarteProtocolType type)
         {
             astarteProtocolType = type;
@@ -65,6 +66,17 @@ namespace AstarteDeviceSDKCSharp.Transport
         {
             _messageListener = messageListener;
         }
+
+        public IAstarteFailedMessageStorage? GetAstarteFailedMessageStorage()
+        {
+            return _failedMessageStorage;
+        }
+
+        public void SetFailedMessageStorage(IAstarteFailedMessageStorage failedMessageStorage)
+        {
+            _failedMessageStorage = failedMessageStorage;
+        }
+
         public IAstarteTransportEventListener? GetAstarteTransportEventListener()
         {
             return _astarteTransportEventListener;
@@ -78,6 +90,7 @@ namespace AstarteDeviceSDKCSharp.Transport
         public abstract Task Connect();
         public abstract void Disconnect();
         public abstract bool IsConnected();
+        public abstract void RetryFailedMessages();
 
         public void SetPropertyStorage(IAstartePropertyStorage propertyStorage)
         {

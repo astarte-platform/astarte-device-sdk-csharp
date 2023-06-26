@@ -36,6 +36,7 @@ namespace AstarteDeviceSDKCSharp.Device
         private AstarteTransport? _astarteTransport;
         private IAstarteMessageListener? _astarteMessagelistener;
         private IAstartePropertyStorage astartePropertyStorage;
+        private AstarteFailedMessageStorage _astarteFailedMessageStorage;
         private bool _initialized;
         private const string _cryptoSubDir = "crypto";
         private bool _alwaysReconnect = false;
@@ -89,6 +90,7 @@ namespace AstarteDeviceSDKCSharp.Device
                 _context.Database.Migrate();
             }
 
+            _astarteFailedMessageStorage = new(fullCryptoDirPath);
         }
 
         private void Init()
@@ -112,6 +114,7 @@ namespace AstarteDeviceSDKCSharp.Device
         private void ConfigureTransport(AstarteTransport astarteTransport)
         {
             astarteTransport.SetDevice(this);
+            astarteTransport.SetFailedMessageStorage(_astarteFailedMessageStorage);
 
             if (_astarteTransport != null)
             {
