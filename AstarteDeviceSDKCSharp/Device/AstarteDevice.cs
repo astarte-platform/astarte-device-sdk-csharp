@@ -35,6 +35,7 @@ namespace AstarteDeviceSDKCSharp.Device
         private readonly AstartePairingHandler _pairingHandler;
         private AstarteTransport? _astarteTransport;
         private IAstarteMessageListener? _astarteMessagelistener;
+        private IAstartePropertyStorage astartePropertyStorage;
         private bool _initialized;
         private const string _cryptoSubDir = "crypto";
         private bool _alwaysReconnect = false;
@@ -72,15 +73,17 @@ namespace AstarteDeviceSDKCSharp.Device
              credentialSecret,
              astarteCryptoStore);
 
+            astartePropertyStorage = new AstartePropertyStorage(fullCryptoDirPath);
+
             List<string> allInterfaces = astarteInterfaceProvider.LoadAllInterfaces();
 
             foreach (var item in allInterfaces)
             {
-                AstarteInterface astarteInterface = AstarteInterface.FromString(item);
+                AstarteInterface astarteInterface = AstarteInterface.FromString(item, astartePropertyStorage);
                 _astarteInterfaces.Add(astarteInterface.GetInterfaceName(), astarteInterface);
             }
 
-            using (var _context = new AstarteDbContext())
+            using (var _context = new AstarteDbContext(fullCryptoDirPath))
             {
                 _context.Database.SetCommandTimeout(160);
                 _context.Database.Migrate();
@@ -110,10 +113,14 @@ namespace AstarteDeviceSDKCSharp.Device
         {
             astarteTransport.SetDevice(this);
 
-            if (_astarteTransport != null && _astarteMessagelistener != null)
+            if (_astarteTransport != null)
             {
                 _astarteTransport.SetAstarteTransportEventListener(this);
-                _astarteTransport.SetMessageListener(_astarteMessagelistener);
+                _astarteTransport.SetPropertyStorage(astartePropertyStorage);
+                if (_astarteMessagelistener != null)
+                {
+                    _astarteTransport.SetMessageListener(_astarteMessagelistener);
+                }
             }
 
             // Set transport on all interfaces
@@ -223,7 +230,7 @@ namespace AstarteDeviceSDKCSharp.Device
 
         public void AddInterface(string astarteInterfaceObject)
         {
-            AstarteInterface astarteInterface = AstarteInterface.FromString(astarteInterfaceObject);
+            AstarteInterface astarteInterface = AstarteInterface.FromString(astarteInterfaceObject, astartePropertyStorage);
 
             AstarteInterface? formerInterface = GetInterface(astarteInterface.GetInterfaceName());
 

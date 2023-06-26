@@ -60,7 +60,7 @@ namespace AstarteDeviceSDK.Protocol
             _astarteTransport = astarteTransport;
         }
 
-        public static AstarteInterface FromString(string astarteInterfaceObject)
+        public static AstarteInterface FromString(string astarteInterfaceObject, IAstartePropertyStorage astartePropertyStorage)
         {
             if (String.IsNullOrEmpty(astarteInterfaceObject))
             {
@@ -79,8 +79,6 @@ namespace AstarteDeviceSDK.Protocol
             string astarteInterfaceOwnership = astarteInterfaceModel.Ownership;
             string astarteInterfaceType = astarteInterfaceModel.Type;
             string astarteInterfaceAggregation;
-
-            IAstartePropertyStorage astartePropertyStorage = new AstartePropertyStorage();
 
             if (!string.IsNullOrEmpty(astarteInterfaceModel.Aggregation))
             {

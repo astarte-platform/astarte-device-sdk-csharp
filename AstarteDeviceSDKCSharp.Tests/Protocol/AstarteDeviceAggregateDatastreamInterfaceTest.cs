@@ -19,6 +19,7 @@
  */
 
 using AstarteDeviceSDK.Protocol;
+using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using System;
@@ -94,8 +95,8 @@ namespace AstarteDeviceSDKCSharp.Tests.Protocol
 
         public AstarteDeviceAggregateDatastreamInterfaceFixture()
         {
-            aInterface = (AstarteDeviceAggregateDatastreamInterface)AstarteInterface.FromString(json);
-            aInterfaceWArray = (AstarteDeviceAggregateDatastreamInterface)AstarteInterface.FromString(jsonWithArrayValues);
+            aInterface = (AstarteDeviceAggregateDatastreamInterface)AstarteInterface.FromString(json, new AstartePropertyStorage(""));
+            aInterfaceWArray = (AstarteDeviceAggregateDatastreamInterface)AstarteInterface.FromString(jsonWithArrayValues, new AstartePropertyStorage(""));
         }
     }
 

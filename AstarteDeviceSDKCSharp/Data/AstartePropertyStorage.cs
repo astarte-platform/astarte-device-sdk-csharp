@@ -29,9 +29,9 @@ namespace AstarteDeviceSDKCSharp.Data
 
         private readonly AstarteDbContext _astarteDbContext;
 
-        public AstartePropertyStorage()
+        public AstartePropertyStorage(string connectionString)
         {
-            this._astarteDbContext = new AstarteDbContext();
+            this._astarteDbContext = new AstarteDbContext(connectionString);
         }
 
         public List<string> GetStoredPathsForInterface(string interfaceName, int interfaceMajor)

@@ -19,6 +19,7 @@
  */
 
 using AstarteDeviceSDK.Protocol;
+using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Device;
 using AstarteDeviceSDKCSharp.Protocol;
 
@@ -31,6 +32,7 @@ namespace AstarteDeviceSDKCSharp.Transport
         public AstarteDevice? Device { get; set; }
         protected bool _introspectionSent = false;
         protected IAstarteMessageListener? _messageListener;
+        protected IAstartePropertyStorage? _astartePropertyStorage;
         protected AstarteTransport(AstarteProtocolType type)
         {
             astarteProtocolType = type;
@@ -76,6 +78,11 @@ namespace AstarteDeviceSDKCSharp.Transport
         public abstract Task Connect();
         public abstract void Disconnect();
         public abstract bool IsConnected();
+
+        public void SetPropertyStorage(IAstartePropertyStorage propertyStorage)
+        {
+            _astartePropertyStorage = propertyStorage;
+        }
 
     }
 }

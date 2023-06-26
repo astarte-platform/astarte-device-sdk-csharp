@@ -18,11 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace AstarteDeviceSDKCSharp.Data
 {
@@ -30,14 +27,19 @@ namespace AstarteDeviceSDKCSharp.Data
     {
         public DbSet<AstarteGenericPropertyEntry> AstarteGenericProperties
          => Set<AstarteGenericPropertyEntry>();
+        private readonly string _persistencyDir = string.Empty;
+
+        public AstarteDbContext(string persistencyDir)
+        {
+            _persistencyDir = persistencyDir;
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var connectionString = "Filename=AstarteDeviceDb";
 
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlite(connectionString, option =>
+                optionsBuilder.UseSqlite("Filename = " + _persistencyDir + "\\AstarteDeviceDb", option =>
             {
                 option.MigrationsAssembly(Assembly.GetExecutingAssembly().FullName);
             });

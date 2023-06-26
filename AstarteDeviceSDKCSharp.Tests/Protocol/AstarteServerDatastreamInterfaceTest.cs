@@ -19,6 +19,7 @@
  */
 
 using AstarteDeviceSDK.Protocol;
+using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteEvents;
 using System;
@@ -61,7 +62,7 @@ namespace AstarteDeviceSDKCSharp.Tests.Protocol
 
         public InterfaceFixture()
         {
-            datastreamInterface = (AstarteServerDatastreamInterface)AstarteInterface.FromString(dtInterface);
+            datastreamInterface = (AstarteServerDatastreamInterface)AstarteInterface.FromString(dtInterface, new AstartePropertyStorage(""));
         }
     }
 
