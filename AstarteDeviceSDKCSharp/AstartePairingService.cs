@@ -61,11 +61,15 @@ namespace AstarteDeviceSDKCSharp
 
             if (!response.IsSuccessStatusCode)
             {
+                string responseContent = await response.Content.ReadAsStringAsync();
+
+                responseContent = responseContent.IsNullOrEmpty() ? "empty" : responseContent;
+
                 throw new AstartePairingException(
                             "Request to Pairing API failed with "
                                 + response.StatusCode.ToString()
                                 + ". Returned body is "
-                                + response.Content.ToString());
+                                + responseContent);
             }
 
             var transportInfo = await response.Content.ReadAsStringAsync();
@@ -158,11 +162,15 @@ namespace AstarteDeviceSDKCSharp
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+
+                    responseContent = responseContent.IsNullOrEmpty() ? "empty" : responseContent;
+
                     throw new AstartePairingException(
                               "Request to Pairing API failed with "
                                   + response.StatusCode.ToString()
                                   + ". Returned body is "
-                                  + response.Content.ToString());
+                                  + responseContent);
                 }
 
                 var certificate = JsonConvert
@@ -346,13 +354,17 @@ namespace AstarteDeviceSDKCSharp
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
             HttpResponseMessage response = await client.PostAsync(_pairingUrl + $"/{_astarteRealm}/agent/devices", content);
 
-            if (!response.IsSuccessStatusCode || response.Content == null)
+            if (!response.IsSuccessStatusCode)
             {
+                string responseContent = await response.Content.ReadAsStringAsync();
+
+                responseContent = responseContent.IsNullOrEmpty() ? "empty" : responseContent;
+
                 throw new AstartePairingException(
                     "Request to device register API failed with "
                         + response.StatusCode
                         + ". Returned body is "
-                        + (response.Content != null ? await response.Content.ReadAsStringAsync() : "empty"));
+                        + responseContent);
             }
 
             dynamic? credential = JsonConvert.DeserializeObject<object>(await response.Content.ReadAsStringAsync());
