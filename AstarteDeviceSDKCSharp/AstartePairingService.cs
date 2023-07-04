@@ -52,12 +52,11 @@ namespace AstarteDeviceSDKCSharp
         {
             List<AstarteTransport> transports = new();
             // Prepare the Pairing API request
-            HttpClient client = new();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
             credentialSecret);
 
-            var response = await client
-                        .GetAsync(_pairingUrl + $"/{_astarteRealm}/devices/{deviceId}");
+            var response = await _httpClient.GetAsync(
+                _pairingUrl + $"/{_astarteRealm}/devices/{deviceId}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -133,8 +132,7 @@ namespace AstarteDeviceSDKCSharp
             }
 
             // Prepare the Pairing API request
-            HttpClient client = new();
-            client.DefaultRequestHeaders.Authorization =
+            _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", credentialSecret);
 
             try
@@ -156,7 +154,7 @@ namespace AstarteDeviceSDKCSharp
                 HttpContent content = new StringContent(json);
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-                var response = await client.PostAsync(_pairingUrl +
+                var response = await _httpClient.PostAsync(_pairingUrl +
                 $"/{_astarteRealm}/devices/{deviceId}/protocols/astarte_mqtt_v1/credentials",
                 content);
 
