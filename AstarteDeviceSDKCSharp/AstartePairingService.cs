@@ -52,20 +52,23 @@ namespace AstarteDeviceSDKCSharp
         {
             List<AstarteTransport> transports = new();
             // Prepare the Pairing API request
-            HttpClient client = new();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
             credentialSecret);
 
-            var response = await client
-                        .GetAsync(_pairingUrl + $"/{_astarteRealm}/devices/{deviceId}");
+            var response = await _httpClient.GetAsync(
+                _pairingUrl + $"/{_astarteRealm}/devices/{deviceId}");
 
             if (!response.IsSuccessStatusCode)
             {
+                string responseContent = await response.Content.ReadAsStringAsync();
+
+                responseContent = responseContent.IsNullOrEmpty() ? "empty" : responseContent;
+
                 throw new AstartePairingException(
                             "Request to Pairing API failed with "
                                 + response.StatusCode.ToString()
                                 + ". Returned body is "
-                                + response.Content.ToString());
+                                + responseContent);
             }
 
             var transportInfo = await response.Content.ReadAsStringAsync();
@@ -129,8 +132,7 @@ namespace AstarteDeviceSDKCSharp
             }
 
             // Prepare the Pairing API request
-            HttpClient client = new();
-            client.DefaultRequestHeaders.Authorization =
+            _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", credentialSecret);
 
             try
@@ -152,17 +154,21 @@ namespace AstarteDeviceSDKCSharp
                 HttpContent content = new StringContent(json);
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-                var response = await client.PostAsync(_pairingUrl +
+                var response = await _httpClient.PostAsync(_pairingUrl +
                 $"/{_astarteRealm}/devices/{deviceId}/protocols/astarte_mqtt_v1/credentials",
                 content);
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+
+                    responseContent = responseContent.IsNullOrEmpty() ? "empty" : responseContent;
+
                     throw new AstartePairingException(
                               "Request to Pairing API failed with "
                                   + response.StatusCode.ToString()
                                   + ". Returned body is "
-                                  + response.Content.ToString());
+                                  + responseContent);
                 }
 
                 var certificate = JsonConvert
@@ -346,13 +352,17 @@ namespace AstarteDeviceSDKCSharp
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
             HttpResponseMessage response = await client.PostAsync(_pairingUrl + $"/{_astarteRealm}/agent/devices", content);
 
-            if (!response.IsSuccessStatusCode || response.Content == null)
+            if (!response.IsSuccessStatusCode)
             {
+                string responseContent = await response.Content.ReadAsStringAsync();
+
+                responseContent = responseContent.IsNullOrEmpty() ? "empty" : responseContent;
+
                 throw new AstartePairingException(
                     "Request to device register API failed with "
                         + response.StatusCode
                         + ". Returned body is "
-                        + (response.Content != null ? await response.Content.ReadAsStringAsync() : "empty"));
+                        + responseContent);
             }
 
             dynamic? credential = JsonConvert.DeserializeObject<object>(await response.Content.ReadAsStringAsync());
