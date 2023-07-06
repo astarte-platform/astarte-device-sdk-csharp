@@ -9,3 +9,11 @@ License: CC0-1.0
 Files: CHANGELOG.md
 Copyright: 2023 SECO Mind Srl
 License: CC0-1.0
+
+Files: AstarteDeviceSDKCSharpE2E.Tests/Resources/standard-interfaces/*
+Copyright: SECO Mind Srl
+License: CC0-1.0
+
+Files: AstarteDeviceSDKCSharpE2E.Tests/xunit.runner.json
+Copyright: SECO Mind Srl
+License: CC0-1.0
