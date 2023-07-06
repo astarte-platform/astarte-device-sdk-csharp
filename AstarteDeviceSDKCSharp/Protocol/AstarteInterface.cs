@@ -23,6 +23,7 @@ using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using AstarteDeviceSDKCSharp.Transport;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 namespace AstarteDeviceSDK.Protocol
 {
@@ -220,6 +221,11 @@ namespace AstarteDeviceSDK.Protocol
                         matches = false;
                         break;
                     }
+                }
+                else if (mappingTokens[k].Contains("%{") && Regex.IsMatch(mappingTokens[k], "[/#\\+]"))
+                {
+                    matches = false;
+                    break;
                 }
             }
 
