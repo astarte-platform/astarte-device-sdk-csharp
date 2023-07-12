@@ -44,6 +44,30 @@ namespace AstarteDeviceSDKCSharp.Device
         private static int MIN_INCREMENT_INTERVAL = 5000;
         private static int MAX_INCREMENT_INTERVAL = 60000;
 
+        /// <summary>
+        /// Basic class defining an Astarte device.
+        /// Used for managing the device lifecycle and data. 
+        /// Users can instantiate a device by providing a set of credentials 
+        /// and connect it to the Astarte instance. 
+        /// </summary>
+        /// <param name="deviceId">The device ID for this device. 
+        /// It has to be a valid Astarte device ID.
+        /// </param>
+        /// <param name="astarteRealm">The realm this device will be connecting to.</param>
+        /// <param name="credentialSecret">The credentials secret for this device. 
+        ///  This class assumes your device has
+        ///  already been registered. If that is not the case register your device using either
+        ///  :py:func:`register_device_with_jwt_token` or
+        ///  :py:func:`register_device_with_private_key`.
+        /// </param>
+        /// <param name="astarteInterfaceProvider">Class for loading Astarte interfaces</param>
+        /// <param name="pairingBaseUrl">The base URL of the pairing API of the 
+        /// Astarte instance the device will connect to.</param>
+        /// <param name="cryptoStoreDirectory">Path to an existing directory which will be used
+        /// to store the persistent data of this device. (i.e. certificates, caching, and more). 
+        /// It can be a shared directory for multiple devices, a subdirectory for the given device 
+        /// ID will be created.
+        /// </param>
         public AstarteDevice(
             string deviceId,
             string astarteRealm,
@@ -164,16 +188,36 @@ namespace AstarteDeviceSDKCSharp.Device
             return false;
         }
 
+        /// <summary>
+        /// Method for getting a list of interfaces for the device
+        /// </summary>
+        /// <returns>List of available interfaces</returns>
         public List<AstarteInterface> GetAllInterfaces()
         {
             return _astarteInterfaces.Values.ToList();
         }
 
+        /// <summary>
+        /// Enable/Disable automatic reconnection
+        /// </summary>
+        /// <param name="alwaysReconnect"></param>
         public void SetAlwaysReconnect(bool alwaysReconnect)
         {
             _alwaysReconnect = alwaysReconnect;
         }
 
+        /// <summary>
+        /// Establishes a connection to the Astarte asynchronously.
+        /// </summary>
+        /// <remarks>
+        /// If the transport is not initialized, the method returns without performing any action. 
+        /// If a crypto exception occurs during the connection attempt, 
+        /// the method regenerates the certificate by requesting a new one from the pairing handler.
+        /// If an exception occurs during the pairing process, the method raises the transport
+        /// connection error event.<seealso cref="OnTransportConnectionError"/>
+        /// </remarks>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <exception cref="AstartePairingException"></exception>
         public async Task Connect()
         {
 
@@ -213,11 +257,18 @@ namespace AstarteDeviceSDKCSharp.Device
             }
         }
 
+        /// <summary>
+        /// Check if the device is currently connected.
+        /// </summary>
+        /// <returns>If device currently connected return true</returns>
         public bool IsConnected()
         {
             return _astarteTransport?.IsConnected() ?? false;
         }
 
+        /// <summary>
+        /// Disconnect device from Astarte
+        /// </summary>
         public void Disconnect()
         {
             lock (this)
@@ -231,6 +282,10 @@ namespace AstarteDeviceSDKCSharp.Device
             }
         }
 
+        /// <summary>
+        /// Adds an Interface to the Device.
+        /// </summary>
+        /// <param name="astarteInterfaceObject"></param>
         public void AddInterface(string astarteInterfaceObject)
         {
             AstarteInterface astarteInterface = AstarteInterface.FromString(astarteInterfaceObject, astartePropertyStorage);
@@ -291,6 +346,11 @@ namespace AstarteDeviceSDKCSharp.Device
             }
         }
 
+        /// <summary>
+        /// Getter function for an interface.
+        /// </summary>
+        /// <param name="interfaceName">Name of specific interface</param>
+        /// <returns>AstarteInterface with matching name when present, null otherwise.</returns>
         public AstarteInterface? GetInterface(string interfaceName)
         {
             if (_astarteInterfaces.ContainsKey(interfaceName))
@@ -300,17 +360,30 @@ namespace AstarteDeviceSDKCSharp.Device
             return null;
         }
 
+        /// <summary>
+        /// Setting up Astarte Transport
+        /// </summary>
+        /// <param><seealso cref="AstarteTransport"/>set by the user</param>
         public void SetAstarteTransport(AstarteTransport astarteTransport)
         {
             _astarteTransport = astarteTransport;
             ConfigureTransport(_astarteTransport);
         }
 
+        /// <summary>
+        /// Verify whether the interface has been added to the device.
+        /// </summary>
+        /// <param name="interfaceName">Name of specific interface</param>
+        /// <returns>If device contains interface returns true</returns>
         public bool HasInterface(string interfaceName)
         {
             return _astarteInterfaces.ContainsKey(interfaceName);
         }
 
+        /// <summary>
+        /// Method for getting message listener
+        /// </summary>
+        /// <returns><seealso cref="IAstarteMessageListener"/> set by the user</returns>
         public IAstarteMessageListener? GetAstarteMessageListener()
         {
             return _astarteMessagelistener == null ? null : _astarteMessagelistener;
@@ -426,6 +499,10 @@ namespace AstarteDeviceSDKCSharp.Device
             }
         }
 
+        /// <summary>
+        /// Add events for every interface on device
+        /// </summary>
+        /// <param name="eventListener">AstarteGlobalEventListener</param>
         public void AddGlobalEventListener(AstarteGlobalEventListener eventListener)
         {
             foreach (AstarteInterface astarteInterface in _astarteInterfaces.Values)
@@ -445,6 +522,10 @@ namespace AstarteDeviceSDKCSharp.Device
             }
         }
 
+        /// <summary>
+        /// Remove events for every interface on device
+        /// </summary>
+        /// <param name="eventListener">AstarteGlobalEventListener</param>
         public void RemoveGlobalEventListener(AstarteGlobalEventListener eventListener)
         {
             foreach (AstarteInterface astarteInterface in _astarteInterfaces.Values)

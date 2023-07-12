@@ -24,11 +24,37 @@ namespace AstarteDeviceSDK.Protocol
 {
     public interface IAstarteProtocol
     {
+        /// <summary>
+        /// Utility function used to send the introspection to Astarte.
+        /// </summary>
         Task SendIntrospection();
+
+        /// <summary>
+        /// Sends an aggregate message to an interface.
+        /// </summary>
+        /// <param name="astarteInterface">Astarte aggregate datastream interface</param>
+        /// <param name="path">Endpoint</param>
+        /// <param name="value">Payload for MQTT message</param>
+        /// <param name="timeStamp">UTC</param>
         Task SendAggregate(AstarteAggregateDatastreamInterface astarteInterface, string path,
         Dictionary<string, object> value, DateTime? timeStamp);
+
+        /// <summary>
+        /// Sends an individual message to an interface with timestamp. 
+        /// </summary>
+        /// <param name="astarteInterface">Astarte aggregate datastream interface</param>
+        /// <param name="path">Endpoint</param>
+        /// <param name="value">Payload for MQTT message</param>
+        /// <param name="timeStamp">UTC</param>
         Task SendIndividualValue(AstarteInterface astarteInterface, String path, Object? value,
         DateTime? timestamp);
+
+        /// <summary>
+        /// Sends an individual message to an interface.
+        /// </summary>
+        /// <param name="astarteInterface">Astarte aggregate data stream interface</param>
+        /// <param name="path">Endpoint</param>
+        /// <param name="value">Payload for MQTT message</param>
         Task SendIndividualValue(AstarteInterface astarteInterface, String path, Object? value);
         Task ResendAllProperties();
     }

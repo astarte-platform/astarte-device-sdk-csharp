@@ -22,8 +22,19 @@ namespace AstarteDeviceSDKCSharp.Protocol
 {
     public interface IAstarteDataStreamer
     {
+        /// <summary>
+        /// Method for sending individual values to Astarte
+        /// </summary>
+        /// <param name="path">Endpoint</param>
+        /// <param name="payload">Message for MQTT broker</param>
         void StreamData(String path, Object payload);
 
+        /// <summary>
+        /// Method for sending individual values to Astarte with timestamp
+        /// </summary>
+        /// <param name="path">Endpoint</param>
+        /// <param name="payload">Message for MQTT broker</param>
+        /// <param name="timestamp">UTC</param>
         void StreamData(String path, Object payload, DateTime? timestamp);
     }
 }

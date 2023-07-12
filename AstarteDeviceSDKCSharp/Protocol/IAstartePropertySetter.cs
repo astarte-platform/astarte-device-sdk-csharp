@@ -22,8 +22,17 @@ namespace AstarteDeviceSDKCSharp.Protocol
 {
     public interface IAstartePropertySetter
     {
+        /// <summary>
+        /// Set the specified property on an interface.
+        /// </summary>
+        /// <param name="path">Endpoint</param>
+        /// <param name="payload">Message for MQTT broker</param>
         public void SetProperty(String path, Object payload);
 
+        /// <summary>
+        /// Unset the specified property on an interface.
+        /// </summary>
+        /// <param name="path">Endpoint</param>
         public void UnsetProperty(String path);
     }
 }

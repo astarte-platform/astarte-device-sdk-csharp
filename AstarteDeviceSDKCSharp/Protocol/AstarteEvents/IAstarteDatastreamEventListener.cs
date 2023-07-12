@@ -22,6 +22,11 @@ namespace AstarteDeviceSDKCSharp.Protocol.AstarteEvents
 {
     public interface IAstarteDatastreamEventListener
     {
+        /// <summary>
+        /// Handles the event when a datastream value is received.
+        /// </summary>
+        /// <param name="e">The AstarteDatastreamEvent object containing information about 
+        /// the received datastream value.</param>
         void ValueReceived(AstarteDatastreamEvent e);
     }
 }
