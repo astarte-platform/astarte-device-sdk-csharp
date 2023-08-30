@@ -383,3 +383,4 @@ CleaSmartHMIsBackend/mosquitto/data/mosquitto.db
 
 #vscode 
 .vscode/*
+/docs/out
