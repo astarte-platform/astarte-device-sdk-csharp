@@ -55,7 +55,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
             }
             catch (AstartePropertyStorageException e)
             {
-                Trace.WriteLine(e.Message);
+                AstarteLogger.Error(e.Message, this.GetType().Name);
             }
 
             if (!(storedValue?.PayloadEquality(payload) ?? false))
