@@ -51,7 +51,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
         {
             if (serverValue is null)
             {
-                Trace.WriteLine("Unable to build AstarteServerValue, serverValue was empty");
+                AstarteLogger.Error("Unable to build AstarteServerValue, serverValue was empty", this.GetType().Name);
                 return null;
             }
 
@@ -63,7 +63,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
 
             if (astartePayload is null)
             {
-                Trace.WriteLine("Unable to build AstarteServerValue, astartePayload was empty");
+                AstarteLogger.Error("Unable to build AstarteServerValue, astartePayload was empty", this.GetType().Name);
                 return null;
             }
 
