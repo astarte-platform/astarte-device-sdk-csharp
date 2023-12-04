@@ -120,9 +120,6 @@ namespace AstarteDeviceSDKCSharpE2E.Tests
 
             Dictionary<string, object> data = astarteMockDevice.MockDataDictionary;
 
-            data.Remove("datetime_endpoint");
-            data.Remove("datetimearray_endpoint");
-
             Thread.Sleep(500);
 
             await astarteHttpRequestTest
@@ -140,12 +137,9 @@ namespace AstarteDeviceSDKCSharpE2E.Tests
             dynamic jsonInfo = JsonConvert.SerializeObject(e.GetValues());
 
             Dictionary<string, object> data = astarteMockDevice.MockDataDictionary;
-            data["datetime_endpoint"] = new DateTime();
-            data["datetimearray_endpoint"] = new DateTime[0];
 
             astarteAggregateData = JsonConvert.DeserializeObject
                     <MockDataDevice>(jsonInfo.ToString());
-
 
             Assert.True(AstarteMockDevice.MockData.Equals(astarteAggregateData));
         }
