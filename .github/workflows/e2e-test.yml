@@ -42,7 +42,7 @@ jobs:
         id: astarte
         uses: astarte-platform/astarte-cluster-action@v1
         with:
-          astarte_version: "1.0.4"
+          astarte_version: "1.1.1"
       - name: Checkout sources
         uses: actions/checkout@v3
       - name: Install interface
