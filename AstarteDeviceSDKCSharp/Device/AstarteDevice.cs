@@ -37,7 +37,7 @@ namespace AstarteDeviceSDKCSharp.Device
         private IAstarteMessageListener? _astarteMessagelistener;
         private IAstartePropertyStorage astartePropertyStorage;
         private AstarteFailedMessageStorage _astarteFailedMessageStorage;
-        private bool _initialized;
+        private bool _initialized = false;
         private const string _cryptoSubDir = "crypto";
         private bool _alwaysReconnect = false;
         private bool _explicitDisconnectionRequest;
@@ -117,9 +117,9 @@ namespace AstarteDeviceSDKCSharp.Device
             _astarteFailedMessageStorage = new(fullCryptoDirPath);
         }
 
-        private void Init()
+        private async Task Init()
         {
-            _pairingHandler.Init();
+            await _pairingHandler.Init();
 
             // Get and configure the first available transport
             SetFirstTransportFromPairingHandler();
@@ -221,10 +221,16 @@ namespace AstarteDeviceSDKCSharp.Device
         public async Task Connect()
         {
 
+            if (!_pairingHandler.IsCertificateAvailable())
+            {
+                await _pairingHandler.RequestNewCertificate();
+                _initialized = false;
+            }
+
             if (!_initialized)
             {
 
-                Init();
+                await Init();
                 _initialized = true;
             }
 

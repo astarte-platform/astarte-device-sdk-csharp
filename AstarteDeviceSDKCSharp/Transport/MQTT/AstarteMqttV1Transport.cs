@@ -79,13 +79,23 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                                 .WithRetainFlag(false)
                                 .Build();
 
-            MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
-
-            if (result.ReasonCode != MqttClientPublishReasonCode.Success)
+            try
             {
-                throw new AstarteTransportException
-                ($"Error publishing on MQTT. Code: {result.ReasonCode}");
+
+                MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
+
+                if (result.ReasonCode != MqttClientPublishReasonCode.Success)
+                {
+                    throw new AstarteTransportException
+                    ($"Error publishing on MQTT. Code: {result.ReasonCode}");
+                }
+
             }
+            catch (Exception)
+            {
+                _astarteTransportEventListener?.OnTransportDisconnected();
+            }
+
         }
 
         public override async Task SendIntrospection()
