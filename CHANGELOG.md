@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add option to ignore SSL errors in the AstarteDevice constructor.
 - Add a method to remove interface from device.
 
+### Fixed
+- Fix Connect method to handle certificate expiration.
+
 ## [0.5.4] - 2023-06-23
 ### Added
 - Expose an interface path from Astarte aggregate datastream event.

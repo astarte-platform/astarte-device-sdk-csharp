@@ -52,15 +52,15 @@ namespace AstarteDeviceSDKCSharp
 
         }
 
-        public void Init()
+        public async Task Init()
         {
-            ReloadTransports();
+            await ReloadTransports();
         }
 
-        private void ReloadTransports()
+        private async Task ReloadTransports()
         {
-            _transports = _AstartePairingService.ReloadTransports(_credentialSecret,
-            _cryptoStore, _deviceId).Result;
+            _transports = await _AstartePairingService.ReloadTransports(_credentialSecret,
+            _cryptoStore, _deviceId);
         }
 
         public List<AstarteTransport> GetTransports()
