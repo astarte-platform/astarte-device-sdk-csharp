@@ -46,7 +46,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         public override async Task SendIndividualValue(AstarteInterface astarteInterface,
         string path, object? value, DateTime? timestamp)
         {
-            AstarteInterfaceDatastreamMapping mapping;
+            AstarteInterfaceDatastreamMapping mapping = new();
             int qos = 2;
 
             if (astarteInterface.GetType() == (typeof(AstarteDeviceDatastreamInterface)))
@@ -67,7 +67,15 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             string topic = _baseTopic + "/" + astarteInterface.InterfaceName + path;
             byte[] payload = AstartePayload.Serialize(value, timestamp);
 
-            await DoSendMqttMessage(topic, payload, qos);
+            try
+            {
+                await DoSendMqttMessage(topic, payload, qos);
+            }
+            catch (MqttCommunicationException ex)
+            {
+                HandleDatastreamFailedPublish(ex, mapping, topic, payload, qos);
+            }
+
         }
 
         private async Task DoSendMqttMessage(string topic, byte[] payload, int qos)
@@ -94,6 +102,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             catch (Exception)
             {
                 _astarteTransportEventListener?.OnTransportDisconnected();
+                throw new MqttCommunicationException(topic);
             }
 
         }
@@ -156,7 +165,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
             catch (MqttCommunicationException e)
             {
-
                 HandleDatastreamFailedPublish(e, mapping, topic, payload, qos);
             }
         }
