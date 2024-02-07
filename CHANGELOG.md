@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.7.0] - Unreleased
 ### Added
 - Add a fallout strategy for individual failed messages.
+- Resend failed messages stored in the cache memory.
 
 ## [0.6.0] - 2023-12-18
 ### Added

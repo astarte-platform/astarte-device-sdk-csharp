@@ -201,6 +201,32 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 }
                 _failedMessageStorage.AckFirst();
             }
+
+            while (!_failedMessageStorage.IsCacheEmpty())
+            {
+                IAstarteFailedMessage? failedMessage = _failedMessageStorage.PeekFirstCache();
+                if (failedMessage is null)
+                {
+                    return;
+                }
+
+                if (failedMessage.IsExpired())
+                {
+                    // No need to send this anymore, drop it
+                    _failedMessageStorage.RejectFirstCache();
+                    continue;
+                }
+
+                try
+                {
+                    Task.Run(async () => await DoSendMessage(failedMessage));
+                }
+                catch (MqttCommunicationException e)
+                {
+                    throw new AstarteTransportException(e.Message);
+                }
+                _failedMessageStorage.AckFirstCache();
+            }
         }
 
         private async Task DoSendMessage(IAstarteFailedMessage failedMessage)
