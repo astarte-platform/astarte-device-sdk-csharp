@@ -106,5 +106,41 @@ namespace AstarteDeviceSDKCSharp.Data
 
             _astarteDbContext.SaveChanges();
         }
+
+        public bool IsCacheEmpty()
+        {
+            return !_astarteFailedMessageVolatile.Any();
+        }
+
+        public AstarteFailedMessageEntry? PeekFirstCache()
+        {
+            return _astarteFailedMessageVolatile
+            .OrderBy(x => x.Id)
+            .FirstOrDefault();
+        }
+
+        public void RejectFirstCache()
+        {
+            var failedMessages = _astarteFailedMessageVolatile
+            .OrderBy(x => x.Id)
+            .ToList();
+
+            if (failedMessages.Count() > 0)
+            {
+                _astarteDbContext.AstarteFailedMessages.Remove(failedMessages.First());
+            }
+        }
+
+        public void AckFirstCache()
+        {
+            var failedMessages = _astarteFailedMessageVolatile
+            .OrderBy(x => x.Id)
+            .ToList();
+
+            if (failedMessages.Count() > 0)
+            {
+                _astarteFailedMessageVolatile.Remove(failedMessages.First());
+            }
+        }
     }
 }

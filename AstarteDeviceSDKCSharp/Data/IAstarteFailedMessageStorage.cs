@@ -32,10 +32,18 @@ namespace AstarteDeviceSDKCSharp.Data
 
         bool IsEmpty();
 
+        bool IsCacheEmpty();
+
         AstarteFailedMessageEntry? PeekFirst();
+
+        AstarteFailedMessageEntry? PeekFirstCache();
 
         void AckFirst();
 
+        void AckFirstCache();
+
         void RejectFirst();
+
+        void RejectFirstCache();
     }
 }
