@@ -193,6 +193,9 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
                 try
                 {
+                    Console.WriteLine($"Resending fallback message from local database: " +
+                    $"{failedMessage.GetTopic()} : {failedMessage.GetPayload()}");
+
                     Task.Run(async () => await DoSendMessage(failedMessage));
                 }
                 catch (MqttCommunicationException e)
@@ -219,6 +222,9 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
                 try
                 {
+                    Console.WriteLine($"Resending fallback message from cache memory: " +
+                    $"{failedMessage.GetTopic()} : {failedMessage.GetPayload()}");
+
                     Task.Run(async () => await DoSendMessage(failedMessage));
                 }
                 catch (MqttCommunicationException e)

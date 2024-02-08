@@ -39,6 +39,11 @@ namespace AstarteDeviceSDKCSharp.Data
 
             if (failedMessages.Count() > 0)
             {
+                Console.WriteLine($"The message has been removed from "
+                + " the local database due to expiration.");
+                Console.WriteLine($"{failedMessages.First().GetTopic()}"
+                + $" : {failedMessages.First().GetPayload()}");
+
                 _astarteDbContext.AstarteFailedMessages.Remove(failedMessages.First());
             }
 
@@ -52,6 +57,9 @@ namespace AstarteDeviceSDKCSharp.Data
 
             _astarteDbContext.AstarteFailedMessages.Add(failedMessageEntry);
 
+            Console.WriteLine($"Insert fallback message in database: "
+            + $"{topic} : {payload}");
+
             _astarteDbContext.SaveChanges();
         }
 
@@ -62,6 +70,10 @@ namespace AstarteDeviceSDKCSharp.Data
 
             _astarteDbContext.AstarteFailedMessages.Add(failedMessageEntry);
 
+            Console.WriteLine($"Insert fallback message in database:"
+            + $"{topic} : {payload},"
+            + $" expiry time: {relativeExpiry}");
+
             _astarteDbContext.SaveChanges();
         }
 
@@ -70,6 +82,9 @@ namespace AstarteDeviceSDKCSharp.Data
             AstarteFailedMessageEntry failedMessageEntry
             = new AstarteFailedMessageEntry(qos, payload, topic);
 
+            Console.WriteLine($"Insert fallback message in cache memory: "
+            + $"{topic} : {payload}");
+
             _astarteFailedMessageVolatile.Add(failedMessageEntry);
         }
 
@@ -77,6 +92,10 @@ namespace AstarteDeviceSDKCSharp.Data
         {
             AstarteFailedMessageEntry failedMessageEntry
             = new AstarteFailedMessageEntry(qos, payload, topic, relativeExpiry);
+
+            Console.WriteLine($"Insert fallback message in cache memory: "
+            + $"{topic} : {payload},"
+            + $" expiry time: {relativeExpiry}");
 
             _astarteFailedMessageVolatile.Add(failedMessageEntry);
         }
@@ -101,6 +120,9 @@ namespace AstarteDeviceSDKCSharp.Data
 
             if (failedMessages.Count() > 0)
             {
+                Console.WriteLine($"Remove from local database "
+                + $"{failedMessages.First().GetTopic()} : "
+                + $"{failedMessages.First().GetPayload()}");
                 _astarteDbContext.AstarteFailedMessages.Remove(failedMessages.First());
             }
 
@@ -127,6 +149,9 @@ namespace AstarteDeviceSDKCSharp.Data
 
             if (failedMessages.Count() > 0)
             {
+                Console.WriteLine($"Remove from cache memory "
+                + $"{failedMessages.First().GetTopic()} : "
+                + $"{failedMessages.First().GetPayload()}");
                 _astarteDbContext.AstarteFailedMessages.Remove(failedMessages.First());
             }
         }
@@ -139,6 +164,11 @@ namespace AstarteDeviceSDKCSharp.Data
 
             if (failedMessages.Count() > 0)
             {
+                Console.WriteLine($"The message has been removed from"
+                + "the cache memory due to expiration.");
+                Console.WriteLine($"{failedMessages.First().GetTopic()} :"
+                + "{failedMessages.First().GetPayload()}");
+
                 _astarteFailedMessageVolatile.Remove(failedMessages.First());
             }
         }
