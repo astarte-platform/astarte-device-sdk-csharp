@@ -42,7 +42,7 @@ namespace AstarteDeviceSDKCSharp.Data
 
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlite("Filename = " + _persistencyDir + "\\AstarteDeviceDb", option =>
+                optionsBuilder.UseSqlite($"Filename = {_persistencyDir}{Path.DirectorySeparatorChar}AstarteDeviceDb", option =>
             {
                 option.MigrationsAssembly(Assembly.GetExecutingAssembly().FullName);
             });
