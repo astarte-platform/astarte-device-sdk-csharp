@@ -74,6 +74,13 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             catch (MqttCommunicationException ex)
             {
                 HandleDatastreamFailedPublish(ex, mapping, topic, payload, qos);
+                _astarteTransportEventListener?.OnTransportDisconnected();
+            }
+            catch (AstarteTransportException ex)
+            {
+                HandleDatastreamFailedPublish(new MqttCommunicationException(ex),
+                mapping, topic, payload, qos);
+                _astarteTransportEventListener?.OnTransportDisconnected();
             }
 
         }
@@ -101,7 +108,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
             catch (Exception)
             {
-                _astarteTransportEventListener?.OnTransportDisconnected();
                 throw new MqttCommunicationException(topic);
             }
 
@@ -166,6 +172,13 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             catch (MqttCommunicationException e)
             {
                 HandleDatastreamFailedPublish(e, mapping, topic, payload, qos);
+                _astarteTransportEventListener?.OnTransportDisconnected();
+            }
+            catch (AstarteTransportException ex)
+            {
+                HandleDatastreamFailedPublish(new MqttCommunicationException(ex),
+                mapping, topic, payload, qos);
+                _astarteTransportEventListener?.OnTransportDisconnected();
             }
         }
 
