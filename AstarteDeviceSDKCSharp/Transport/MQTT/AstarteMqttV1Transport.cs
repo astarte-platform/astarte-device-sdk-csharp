@@ -197,7 +197,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                     return;
                 }
 
-                if (failedMessage.IsExpired())
+                if (_failedMessageStorage.IsExpired(failedMessage.GetExpiry()))
                 {
                     // No need to send this anymore, drop it
                     _failedMessageStorage.RejectFirst();
@@ -218,7 +218,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 _failedMessageStorage.AckFirst();
             }
 
-            while (!_failedMessageStorage.IsCacheEmpty())
+            while (_failedMessageStorage.IsCacheEmpty())
             {
                 IAstarteFailedMessage? failedMessage = _failedMessageStorage.PeekFirstCache();
                 if (failedMessage is null)
@@ -226,7 +226,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                     return;
                 }
 
-                if (failedMessage.IsExpired())
+                if (_failedMessageStorage.IsExpired(failedMessage.GetExpiry()))
                 {
                     // No need to send this anymore, drop it
                     _failedMessageStorage.RejectFirstCache();

@@ -77,9 +77,5 @@ namespace AstarteDeviceSDKCSharp.Data
             return AbsoluteExpiry;
         }
 
-        public bool IsExpired()
-        {
-            return AbsoluteExpiry > (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-        }
     }
 }

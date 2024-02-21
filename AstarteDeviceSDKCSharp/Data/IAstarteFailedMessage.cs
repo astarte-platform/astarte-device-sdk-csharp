@@ -28,6 +28,6 @@ namespace AstarteDeviceSDKCSharp.Data
 
         int GetQos();
 
-        bool IsExpired();
+        long GetExpiry();
     }
 }
