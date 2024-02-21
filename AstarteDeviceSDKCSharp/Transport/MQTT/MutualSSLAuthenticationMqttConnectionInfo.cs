@@ -40,6 +40,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             .WithCleanSession(false)
             .WithCommunicationTimeout(TimeSpan.FromSeconds(60))
             .WithKeepAlivePeriod(TimeSpan.FromSeconds(60))
+            .WithSessionExpiryInterval(0)
             .Build();
 
             _clientId = $"{astarteRealm}/{deviceId}";
