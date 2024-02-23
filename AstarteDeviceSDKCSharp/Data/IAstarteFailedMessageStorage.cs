@@ -45,5 +45,7 @@ namespace AstarteDeviceSDKCSharp.Data
         void RejectFirst();
 
         void RejectFirstCache();
+
+        bool IsExpired(long expire);
     }
 }

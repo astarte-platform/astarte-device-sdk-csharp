@@ -3,6 +3,7 @@ using System;
 using AstarteDeviceSDKCSharp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AstarteDeviceSDKCSharp.Migrations
 {
     [DbContext(typeof(AstarteDbContext))]
-    partial class AstarteDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240221083848_AddColumnExpiry")]
+    partial class AddColumnExpiry
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.13");

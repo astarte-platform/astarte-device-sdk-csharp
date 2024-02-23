@@ -37,7 +37,7 @@ namespace AstarteDeviceSDKCSharp.Data
 
         [Column("absolute_expiry")]
         [Required]
-        protected long absoluteExpiry;
+        public long AbsoluteExpiry { get; set; }
 
 
         public AstarteFailedMessageEntry(int qos, byte[] payload, string topic)
@@ -45,7 +45,7 @@ namespace AstarteDeviceSDKCSharp.Data
             Qos = qos;
             Payload = payload;
             Topic = topic;
-            absoluteExpiry = 0;
+            AbsoluteExpiry = 0;
         }
 
         public AstarteFailedMessageEntry(int qos, byte[] payload, string topic,
@@ -54,7 +54,7 @@ namespace AstarteDeviceSDKCSharp.Data
             Qos = qos;
             Payload = payload;
             Topic = topic;
-            absoluteExpiry = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()) + relativeExpiry;
+            AbsoluteExpiry = (DateTimeOffset.UtcNow.ToUnixTimeSeconds()) + relativeExpiry;
         }
 
         public string GetTopic()
@@ -72,9 +72,10 @@ namespace AstarteDeviceSDKCSharp.Data
             return Qos;
         }
 
-        public bool IsExpired()
+        public long GetExpiry()
         {
-            return absoluteExpiry > (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            return AbsoluteExpiry;
         }
+
     }
 }

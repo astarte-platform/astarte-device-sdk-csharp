@@ -27,6 +27,10 @@ namespace AstarteDeviceSDKCSharp.Data
     {
         private readonly string _persistencyDir = string.Empty;
 
+        public AstarteDbContext()
+        {
+
+        }
         public AstarteDbContext(string persistencyDir)
         {
             _persistencyDir = persistencyDir;

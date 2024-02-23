@@ -172,5 +172,10 @@ namespace AstarteDeviceSDKCSharp.Data
                 _astarteFailedMessageVolatile.Remove(failedMessages.First());
             }
         }
+
+        public bool IsExpired(long expire)
+        {
+            return expire != 0 ? (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expire) : false;
+        }
     }
 }
