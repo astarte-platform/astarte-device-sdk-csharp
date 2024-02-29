@@ -249,7 +249,7 @@ namespace AstarteDeviceSDKCSharp.Device
             }
             catch (AstarteCryptoException)
             {
-                Trace.WriteLine("Regenerating the cert");
+                AstarteLogger.Info("Regenerating the cert", this.GetType().Name);
                 try
                 {
                     await _pairingHandler.RequestNewCertificate();
@@ -431,7 +431,7 @@ namespace AstarteDeviceSDKCSharp.Device
                     }
                     catch (AstarteTransportException e)
                     {
-                        Trace.WriteLine(e.Message);
+                        AstarteLogger.Warn(e.Message, this.GetType().Name);
                     }
                     EventualyReconnect();
                 }).Start();
@@ -445,7 +445,7 @@ namespace AstarteDeviceSDKCSharp.Device
             {
                 if (ex is AstarteCryptoException)
                 {
-                    Trace.WriteLine("Regenerating the cert");
+                    AstarteLogger.Info("Regenerating the cert", this.GetType().Name);
                     try
                     {
                         Task.Run(() => _pairingHandler.RequestNewCertificate());
@@ -458,7 +458,7 @@ namespace AstarteDeviceSDKCSharp.Device
 
                             _astarteMessagelistener?
                             .OnFailure(new AstarteMessageException(e.Message, e));
-                            Trace.WriteLine(e);
+                            AstarteLogger.Warn(e.Message, this.GetType().Name);
                         }
                         return;
                     }
