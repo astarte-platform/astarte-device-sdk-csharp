@@ -18,6 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+using Microsoft.EntityFrameworkCore.Storage;
+
 namespace AstarteDeviceSDKCSharp.Data
 {
     public class AstarteFailedMessageStorage : IAstarteFailedMessageStorage
@@ -31,23 +33,19 @@ namespace AstarteDeviceSDKCSharp.Data
             this._astarteDbContext = new AstarteDbContext(persistencyDir);
         }
 
-        public void AckFirst()
+        public void Ack(AstarteFailedMessageEntry failedMessages)
         {
-            var failedMessages = _astarteDbContext.AstarteFailedMessages
-            .OrderBy(x => x.Id)
-            .ToList();
-
-            if (failedMessages.Count() > 0)
+            if (failedMessages is not null)
             {
                 Console.WriteLine($"The message has been removed from "
                 + " the local database due to expiration.");
-                Console.WriteLine($"{failedMessages.First().GetTopic()}"
-                + $" : {failedMessages.First().GetPayload()}");
+                Console.WriteLine($"{failedMessages.GetTopic()}"
+                + $" : {failedMessages.GetPayload()}");
 
-                _astarteDbContext.AstarteFailedMessages.Remove(failedMessages.First());
+                _astarteDbContext.AstarteFailedMessages.Remove(failedMessages);
             }
 
-            _astarteDbContext.SaveChanges();
+            _astarteDbContext.SaveChangesAsync();
         }
 
         public void InsertStored(string topic, byte[] payload, int qos)
@@ -60,21 +58,34 @@ namespace AstarteDeviceSDKCSharp.Data
             Console.WriteLine($"Insert fallback message in database: "
             + $"{topic} : {payload}");
 
-            _astarteDbContext.SaveChanges();
+            _astarteDbContext.SaveChangesAsync();
         }
 
         public void InsertStored(string topic, byte[] payload, int qos, int relativeExpiry)
         {
-            AstarteFailedMessageEntry failedMessageEntry
-            = new AstarteFailedMessageEntry(qos, payload, topic, relativeExpiry);
+            using (IDbContextTransaction transaction = _astarteDbContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    AstarteFailedMessageEntry failedMessageEntry
+                        = new AstarteFailedMessageEntry(qos, payload, topic, relativeExpiry);
 
-            _astarteDbContext.AstarteFailedMessages.Add(failedMessageEntry);
+                    _astarteDbContext.AstarteFailedMessages.Add(failedMessageEntry);
 
-            Console.WriteLine($"Insert fallback message in database:"
-            + $"{topic} : {payload},"
-            + $" expiry time: {relativeExpiry}");
+                    Console.WriteLine($"Insert fallback message in database:"
+                    + $"{topic} : {payload},"
+                    + $" expiry time: {relativeExpiry}");
 
-            _astarteDbContext.SaveChanges();
+                    _astarteDbContext.SaveChangesAsync();
+
+                    transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    transaction.RollbackAsync();
+                    Console.WriteLine($"Failed to insert fallback message in database. Error message: {ex.Message}");
+                }
+            }
         }
 
         public void InsertVolatile(string topic, byte[] payload, int qos)
@@ -112,21 +123,18 @@ namespace AstarteDeviceSDKCSharp.Data
             .FirstOrDefault();
         }
 
-        public void RejectFirst()
+        public void Reject(AstarteFailedMessageEntry failedMessages)
         {
-            var failedMessages = _astarteDbContext.AstarteFailedMessages
-            .OrderBy(x => x.Id)
-            .ToList();
 
-            if (failedMessages.Count() > 0)
+            if (failedMessages is not null)
             {
                 Console.WriteLine($"Remove from local database "
-                + $"{failedMessages.First().GetTopic()} : "
-                + $"{failedMessages.First().GetPayload()}");
-                _astarteDbContext.AstarteFailedMessages.Remove(failedMessages.First());
+                + $"{failedMessages.GetTopic()} : "
+                + $"{failedMessages.GetPayload()}");
+                _astarteDbContext.AstarteFailedMessages.Remove(failedMessages);
             }
 
-            _astarteDbContext.SaveChanges();
+            _astarteDbContext.SaveChangesAsync();
         }
 
         public bool IsCacheEmpty()

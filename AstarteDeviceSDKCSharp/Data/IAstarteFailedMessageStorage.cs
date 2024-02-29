@@ -38,11 +38,11 @@ namespace AstarteDeviceSDKCSharp.Data
 
         AstarteFailedMessageEntry? PeekFirstCache();
 
-        void AckFirst();
+        void Ack(AstarteFailedMessageEntry failedMessages);
 
         void AckFirstCache();
 
-        void RejectFirst();
+        void Reject(AstarteFailedMessageEntry astarteFailedMessages);
 
         void RejectFirstCache();
 
