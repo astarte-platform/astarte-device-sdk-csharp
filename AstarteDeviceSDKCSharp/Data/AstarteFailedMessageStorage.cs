@@ -37,8 +37,7 @@ namespace AstarteDeviceSDKCSharp.Data
         {
             if (failedMessages is not null)
             {
-                Console.WriteLine($"The message has been removed from "
-                + " the local database due to expiration.");
+                Console.WriteLine($"The message has been removed from local database.");
                 Console.WriteLine($"{failedMessages.GetTopic()}"
                 + $" : {failedMessages.GetPayload()}");
 
@@ -172,8 +171,7 @@ namespace AstarteDeviceSDKCSharp.Data
 
             if (failedMessages.Count() > 0)
             {
-                Console.WriteLine($"The message has been removed from"
-                + "the cache memory due to expiration.");
+                Console.WriteLine($"The message has been removed from cache memory.");
                 Console.WriteLine($"{failedMessages.First().GetTopic()} :"
                 + "{failedMessages.First().GetPayload()}");
 
