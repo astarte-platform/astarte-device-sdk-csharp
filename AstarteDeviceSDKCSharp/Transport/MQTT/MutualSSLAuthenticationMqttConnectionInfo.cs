@@ -18,7 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
 {
@@ -26,7 +26,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
     {
 
         private readonly Uri _brokerUrl;
-        private readonly IMqttClientOptions _mqttConnectOptions;
+        private readonly MqttClientOptions _mqttConnectOptions;
         private readonly string _clientId = string.Empty;
 
         public MutualSSLAuthenticationMqttConnectionInfo(Uri brokerUrl, string astarteRealm,
@@ -38,7 +38,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             .WithTcpServer(_brokerUrl.Host, _brokerUrl.Port)
             .WithTls(tlsOptions)
             .WithCleanSession(false)
-            .WithCommunicationTimeout(TimeSpan.FromSeconds(60))
             .WithKeepAlivePeriod(TimeSpan.FromSeconds(60))
             .WithSessionExpiryInterval(0)
             .Build();
@@ -50,6 +49,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
         public string GetClientId() => _clientId;
 
-        public IMqttClientOptions GetMqttConnectOptions() => _mqttConnectOptions;
+        public MqttClientOptions GetMqttConnectOptions() => _mqttConnectOptions;
     }
 }

@@ -18,7 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
@@ -29,6 +29,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
         string GetClientId();
 
-        IMqttClientOptions GetMqttConnectOptions();
+        MqttClientOptions GetMqttConnectOptions();
     }
 }

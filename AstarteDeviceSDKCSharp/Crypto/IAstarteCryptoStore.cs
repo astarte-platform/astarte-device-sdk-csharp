@@ -18,7 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 using System.Security.Cryptography.X509Certificates;
 
 namespace AstarteDeviceSDKCSharp.Crypto

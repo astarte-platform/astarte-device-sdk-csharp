@@ -26,12 +26,10 @@ using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using AstarteDeviceSDKCSharp.Utilities;
 using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Publishing;
 using MQTTnet.Exceptions;
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
@@ -94,8 +92,17 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 Trace.WriteLine("Transport Connected");
             }
 
-            _client.UseApplicationMessageReceivedHandler(OnMessageReceive);
-            _client.UseDisconnectedHandler(OnDisconnectAsync);
+            if (_client is not null)
+            {
+                _client.ApplicationMessageReceivedAsync += e =>
+                {
+                    OnMessageReceive(e);
+                    return Task.CompletedTask;
+                };
+
+                _client.DisconnectedAsync += OnDisconnectAsync;
+
+            }
 
         }
 
@@ -114,8 +121,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 _client = await InitClientAsync();
             }
 
-            var result = await _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(),
-                    CancellationToken.None);
+            MqttClientConnectResult result = await _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(),
+                    CancellationToken.None).ConfigureAwait(false);
 
             if (result.ResultCode == MqttClientConnectResultCode.Success)
             {
@@ -192,6 +199,11 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                                   .WithRetainFlag(false)
                                   .Build();
 
+            if (_client is null)
+            {
+                return;
+            }
+
             MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
             if (result.ReasonCode != MqttClientPublishReasonCode.Success)
             {
@@ -200,7 +212,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
         }
 
-        private Task OnDisconnectAsync(MqttClientDisconnectedEventArgs e)
+        Task OnDisconnectAsync(MqttClientDisconnectedEventArgs e)
         {
             if (_astarteTransportEventListener != null)
             {

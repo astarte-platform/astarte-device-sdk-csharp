@@ -18,12 +18,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 using System.Security.Cryptography.X509Certificates;
 
 namespace AstarteDeviceSDKCSharp.Crypto
 {
-    public class AstarteMutualTLSParametersFactory : MqttClientOptionsBuilderTlsParameters
+    public class AstarteMutualTLSParametersFactory
     {
 
         private readonly MqttClientOptionsBuilderTlsParameters _tlsOptions;
@@ -33,14 +33,19 @@ namespace AstarteDeviceSDKCSharp.Crypto
             _tlsOptions = new MqttClientOptionsBuilderTlsParameters
             {
                 UseTls = true,
-                Certificates = new List<X509Certificate?>
+                Certificates = new List<X509Certificate2?>
                 {
                     cryptoStore.GetCertificate()
                 },
                 IgnoreCertificateChainErrors = cryptoStore.IgnoreSSLErrors,
                 IgnoreCertificateRevocationErrors = cryptoStore.IgnoreSSLErrors,
                 SslProtocol = System.Security.Authentication.SslProtocols.Tls12,
-                AllowUntrustedCertificates = cryptoStore.IgnoreSSLErrors
+                AllowUntrustedCertificates = cryptoStore.IgnoreSSLErrors,
+                CertificateValidationHandler = eventArgs =>
+                {
+                    eventArgs.Certificate = cryptoStore.GetCertificate();
+                    return true;
+                }
             };
         }
 
