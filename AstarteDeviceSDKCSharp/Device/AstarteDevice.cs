@@ -68,6 +68,7 @@ namespace AstarteDeviceSDKCSharp.Device
         /// It can be a shared directory for multiple devices, a subdirectory for the given device 
         /// ID will be created.
         /// </param>
+        /// <param name="timeOut">The timeout duration for the connection.</param>
         public AstarteDevice(
             string deviceId,
             string astarteRealm,
@@ -75,6 +76,7 @@ namespace AstarteDeviceSDKCSharp.Device
             IAstarteInterfaceProvider astarteInterfaceProvider,
             string pairingBaseUrl,
             string cryptoStoreDirectory,
+            TimeSpan? timeOut,
             bool ignoreSSLErrors = false)
         {
             if (!Directory.Exists(cryptoStoreDirectory))
@@ -91,12 +93,15 @@ namespace AstarteDeviceSDKCSharp.Device
             AstarteCryptoStore astarteCryptoStore = new AstarteCryptoStore(fullCryptoDirPath);
             astarteCryptoStore.IgnoreSSLErrors = ignoreSSLErrors;
 
+
+
             _pairingHandler = new AstartePairingHandler(
              pairingBaseUrl,
              astarteRealm,
              deviceId,
              credentialSecret,
-             astarteCryptoStore);
+             astarteCryptoStore,
+             (TimeSpan)(timeOut is null ? TimeSpan.FromSeconds(5) : timeOut));
 
             astartePropertyStorage = new AstartePropertyStorage(fullCryptoDirPath);
 
@@ -180,7 +185,18 @@ namespace AstarteDeviceSDKCSharp.Device
                     {
                         interval = MAX_INCREMENT_INTERVAL;
                     }
-                    Task.Run(async () => await Connect()).Wait(interval);
+
+                    try
+                    {
+                        Task.Run(async () => await Connect()).Wait(interval);
+                    }
+                    catch (AggregateException ex)
+                    {
+                        foreach (var innerException in ex.InnerExceptions)
+                        {
+                            Trace.WriteLine($"Inner Exception: {innerException.GetType().Name}: {innerException.Message}");
+                        }
+                    }
                 }
             }
 

@@ -69,7 +69,17 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             try
             {
-                await DoSendMqttMessage(topic, payload, (MqttQualityOfServiceLevel)qos);
+                if (_client.TryPingAsync().Result)
+                {
+                    await DoSendMqttMessage(topic, payload, (MqttQualityOfServiceLevel)qos);
+                }
+                else
+                {
+                    HandleDatastreamFailedPublish(
+                    new MqttCommunicationException("Broker is not available."),
+                    mapping, topic, payload, qos);
+                }
+
             }
             catch (MqttCommunicationException ex)
             {
@@ -143,7 +153,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             .Remove(introspectionStringBuilder.Length - 1, 1);
             string introspection = introspectionStringBuilder.ToString();
 
-            await DoSendMqttMessage(_baseTopic, Encoding.ASCII.GetBytes(introspection), (MqttQualityOfServiceLevel)2);
+            await DoSendMqttMessage(_baseTopic, Encoding.ASCII.GetBytes(introspection), MqttQualityOfServiceLevel.ExactlyOnce);
         }
 
         public override async Task SendIndividualValue(AstarteInterface astarteInterface,
@@ -170,11 +180,21 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             try
             {
-                await DoSendMqttMessage(topic, payload, (MqttQualityOfServiceLevel)qos);
+                if (_client.TryPingAsync().Result)
+                {
+                    await DoSendMqttMessage(topic, payload, (MqttQualityOfServiceLevel)qos);
+                }
+                else
+                {
+                    HandleDatastreamFailedPublish(
+                    new MqttCommunicationException("Broker is not available."),
+                    mapping, topic, payload, qos);
+                }
+
             }
-            catch (MqttCommunicationException e)
+            catch (MqttCommunicationException ex)
             {
-                HandleDatastreamFailedPublish(e, mapping, topic, payload, qos);
+                HandleDatastreamFailedPublish(ex, mapping, topic, payload, qos);
                 _astarteTransportEventListener?.OnTransportDisconnected();
             }
             catch (AstarteTransportException ex)

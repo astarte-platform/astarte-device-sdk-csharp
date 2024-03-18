@@ -39,16 +39,18 @@ namespace AstarteDeviceSDKCSharp
         private readonly string _astarteRealm;
         private readonly HttpClient _httpClient;
 
-        public AstartePairingService(string pairingUrl, string astarteRealm)
+        public AstartePairingService(string pairingUrl, string astarteRealm, TimeSpan timeOut)
         {
             _astarteRealm = astarteRealm;
             _pairingUrl = new Uri($"{pairingUrl.TrimEnd('/')}/v1");
-            _httpClient = new HttpClient();
-
+            _httpClient = new HttpClient
+            {
+                Timeout = timeOut
+            };
         }
 
         internal async Task<List<AstarteTransport>> ReloadTransports(string credentialSecret,
-        AstarteCryptoStore astarteCryptoStore, string deviceId)
+        AstarteCryptoStore astarteCryptoStore, string deviceId, TimeSpan timeOut)
         {
             List<AstarteTransport> transports = new();
             // Prepare the Pairing API request
@@ -101,7 +103,8 @@ namespace AstarteDeviceSDKCSharp
                            _astarteRealm,
                            deviceId,
                            item,
-                           astarteCryptoStore);
+                           astarteCryptoStore,
+                           timeOut);
 
                         transports.Add(supportedTransport);
                     }
@@ -134,6 +137,7 @@ namespace AstarteDeviceSDKCSharp
             // Prepare the Pairing API request
             _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", credentialSecret);
+
 
             try
             {

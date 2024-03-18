@@ -30,5 +30,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         string GetClientId();
 
         MqttClientOptions GetMqttConnectOptions();
+
+        TimeSpan GetTimeOut();
     }
 }

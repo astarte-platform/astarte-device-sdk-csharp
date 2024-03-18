@@ -71,7 +71,10 @@ namespace AstarteDeviceSDKExample
                 Guid nameSpace = Guid.NewGuid();
                 string macAdress = "0099112233";
                 deviceId = AstarteDeviceIdUtils.GenerateId(nameSpace, macAdress);
-                credentialsSecret = await new AstartePairingService(pairingUrl, realm)
+                credentialsSecret = await new AstartePairingService(
+                    pairingUrl,
+                    realm,
+                    TimeSpan.FromSeconds(1))
                     .RegisterDeviceWithJwtToken(deviceId, jwt);
             }
 
@@ -93,7 +96,9 @@ namespace AstarteDeviceSDKExample
                 credentialsSecret,
                 interfaceProvider,
                 pairingUrl,
-                cryptoStoreDir);
+                cryptoStoreDir,
+                TimeSpan.FromMilliseconds(500),
+                true);
 
             myDevice.SetAlwaysReconnect(true);
             myDevice.SetAstarteMessageListener(new ExampleMessageListener());

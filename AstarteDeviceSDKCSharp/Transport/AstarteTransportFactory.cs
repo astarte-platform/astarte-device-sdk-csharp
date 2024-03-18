@@ -29,7 +29,7 @@ namespace AstarteDeviceSDKCSharp.Transport
 
         public static AstarteTransport? CreateAstarteTransportFromPairing
         (AstarteProtocolType protocolType, string astarteRealm,
-        string deviceId, dynamic protocolData, AstarteCryptoStore astarteCryptoStore)
+        string deviceId, dynamic protocolData, AstarteCryptoStore astarteCryptoStore, TimeSpan timeOut)
         {
 
             switch (protocolType)
@@ -40,7 +40,8 @@ namespace AstarteDeviceSDKCSharp.Transport
                         new MutualSSLAuthenticationMqttConnectionInfo(brokerUrl,
                         astarteRealm,
                         deviceId,
-                        astarteCryptoStore.GetMqttClientOptionsBuilderTlsParameters())
+                        astarteCryptoStore.GetMqttClientOptionsBuilderTlsParameters(),
+                        timeOut)
                         );
                 default:
                     return null;

@@ -33,15 +33,17 @@ namespace AstarteDeviceSDKCSharp
         readonly AstarteCryptoStore _cryptoStore;
         private List<AstarteTransport>? _transports;
         private X509Certificate2? _certificate;
+        private TimeSpan _timeOut;
 
         public AstartePairingHandler(string pairingUrl, string astarteRealm, string deviceId,
-        string credentialSecret, AstarteCryptoStore astarteCryptoStore)
+        string credentialSecret, AstarteCryptoStore astarteCryptoStore, TimeSpan timeout)
         {
             _astarteRealm = astarteRealm;
             _deviceId = deviceId;
             _credentialSecret = credentialSecret;
             _cryptoStore = astarteCryptoStore;
-            _AstartePairingService = new AstartePairingService(pairingUrl, astarteRealm);
+            _timeOut = timeout;
+            _AstartePairingService = new AstartePairingService(pairingUrl, astarteRealm, timeout);
 
             _certificate = _cryptoStore.GetCertificate();
             if (_certificate == null)
@@ -60,7 +62,7 @@ namespace AstarteDeviceSDKCSharp
         private async Task ReloadTransports()
         {
             _transports = await _AstartePairingService.ReloadTransports(_credentialSecret,
-            _cryptoStore, _deviceId);
+            _cryptoStore, _deviceId, _timeOut);
         }
 
         public List<AstarteTransport> GetTransports()

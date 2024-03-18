@@ -49,7 +49,7 @@ namespace AstarteDeviceSDKCSharp.Tests
                   .WithHeader("Content-Type", "application/json; charset=utf-8")
               );
 
-            _service = new AstartePairingService($"{_server.Urls[0]}", "test");
+            _service = new AstartePairingService($"{_server.Urls[0]}", "test", TimeSpan.FromMilliseconds(500));
             //Assert
             _ = await Assert.ThrowsAsync<AstartePairingException>(() =>
             //Act
@@ -75,7 +75,7 @@ namespace AstarteDeviceSDKCSharp.Tests
                     + "}")
               ); ;
 
-            _service = new AstartePairingService($"{_server.Urls[0]}", "test");
+            _service = new AstartePairingService($"{_server.Urls[0]}", "test", TimeSpan.FromMilliseconds(500));
 
             //Assert
             _ = await Assert.ThrowsAsync<AstartePairingException>(() =>
@@ -116,7 +116,7 @@ namespace AstarteDeviceSDKCSharp.Tests
                   .WithHeader("Content-Type", "application/json; charset=utf-8")
                   .WithBody(responseBody)
               );
-            _service = new AstartePairingService($"{_server.Urls[0]}", "test");
+            _service = new AstartePairingService($"{_server.Urls[0]}", "test", TimeSpan.FromMilliseconds(500));
 
             //Act
             string credentialSecret = await _service.RegisterDeviceWithJwtToken(deviceId, expectedCredentialSecret);
@@ -151,7 +151,7 @@ namespace AstarteDeviceSDKCSharp.Tests
                   .WithHeader("Content-Type", "application/json; charset=utf-8")
               );
 
-            _service = new AstartePairingService($"{_server.Urls[0]}", "test");
+            _service = new AstartePairingService($"{_server.Urls[0]}", "test", TimeSpan.FromMilliseconds(500));
             //Assert
             _ = await Assert.ThrowsAsync<AstartePairingException>(() =>
             //Act
@@ -198,7 +198,7 @@ namespace AstarteDeviceSDKCSharp.Tests
                 "JdorKpZMgsh6rzLQ==");
             string privateKey = new(PemEncoding.Write("EC PRIVATE KEY", array).ToArray());
 
-            _service = new AstartePairingService($"{_server.Urls[0]}", "test");
+            _service = new AstartePairingService($"{_server.Urls[0]}", "test", TimeSpan.FromMilliseconds(500));
             var myPath = Path.GetDirectoryName(
                 System.Reflection.Assembly.GetExecutingAssembly().Location);
             myPath = Path.Combine(myPath, "key.pem");
@@ -242,7 +242,7 @@ namespace AstarteDeviceSDKCSharp.Tests
             Uri _expectedPairingUrl = new Uri("http://localhost:4003");
 
             //Act
-            _service = new AstartePairingService(_expectedPairingUrl.OriginalString, "test");
+            _service = new AstartePairingService(_expectedPairingUrl.OriginalString, "test", TimeSpan.FromMilliseconds(500));
 
             Uri _actualPairingUrl = _service.PairingUrl();
 
@@ -260,7 +260,7 @@ namespace AstarteDeviceSDKCSharp.Tests
             Uri _expectedPairingUrl = new Uri("https://astarte.instance.test/pairing");
 
             //Act
-            _service = new AstartePairingService(_expectedPairingUrl.OriginalString, "test");
+            _service = new AstartePairingService(_expectedPairingUrl.OriginalString, "test", TimeSpan.FromMilliseconds(500));
 
             Uri _actualPairingUrl = _service.PairingUrl();
 

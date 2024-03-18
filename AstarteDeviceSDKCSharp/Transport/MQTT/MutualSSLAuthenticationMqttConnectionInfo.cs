@@ -28,9 +28,10 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         private readonly Uri _brokerUrl;
         private readonly MqttClientOptions _mqttConnectOptions;
         private readonly string _clientId = string.Empty;
+        private readonly TimeSpan _timeOut;
 
         public MutualSSLAuthenticationMqttConnectionInfo(Uri brokerUrl, string astarteRealm,
-        string deviceId, MqttClientOptionsBuilderTlsParameters tlsOptions)
+        string deviceId, MqttClientOptionsBuilderTlsParameters tlsOptions, TimeSpan timeOut)
         {
             _brokerUrl = brokerUrl;
             _mqttConnectOptions = new MqttClientOptionsBuilder()
@@ -40,14 +41,18 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             .WithCleanSession(false)
             .WithKeepAlivePeriod(TimeSpan.FromSeconds(60))
             .WithSessionExpiryInterval(0)
+            .WithTimeout(timeOut)
             .Build();
 
+            _timeOut = timeOut;
             _clientId = $"{astarteRealm}/{deviceId}";
         }
 
         public Uri GetBrokerUrl() => _brokerUrl;
 
         public string GetClientId() => _clientId;
+
+        public TimeSpan GetTimeOut() => _timeOut;
 
         public MqttClientOptions GetMqttConnectOptions() => _mqttConnectOptions;
     }

@@ -121,18 +121,30 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 _client = await InitClientAsync();
             }
 
-            MqttClientConnectResult result = await _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(),
-                    CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                using (var timeoutToken = new CancellationTokenSource(_connectionInfo.GetTimeOut()))
+                {
+                    MqttClientConnectResult result = await _client.ConnectAsync(
+                    _connectionInfo.GetMqttConnectOptions(),
+                    timeoutToken.Token);
 
-            if (result.ResultCode == MqttClientConnectResultCode.Success)
-            {
-                await CompleteAstarteConnection(result.IsSessionPresent);
+                    if (result.ResultCode == MqttClientConnectResultCode.Success)
+                    {
+                        await CompleteAstarteConnection(result.IsSessionPresent);
+                    }
+                    else
+                    {
+                        throw new AstarteTransportException
+                        ($"Error connecting to MQTT. Code: {result.ResultCode}");
+                    }
+                }
             }
-            else
+            catch (OperationCanceledException)
             {
-                throw new AstarteTransportException
-                ($"Error connecting to MQTT. Code: {result.ResultCode}");
+                Trace.WriteLine("Timeout while connecting.");
             }
+
         }
 
         public override void Disconnect()
