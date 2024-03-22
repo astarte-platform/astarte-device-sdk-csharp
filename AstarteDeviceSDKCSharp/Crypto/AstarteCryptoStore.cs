@@ -18,7 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using MQTTnet.Client.Options;
+using MQTTnet.Client;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -55,13 +55,13 @@ namespace AstarteDeviceSDKCSharp.Crypto
 
         }
 
-        public void SaveCertificateIfNotExist(X509Certificate2 x509Certificate)
+        public void SaveCertificateIfNotExist(X509Certificate2 x509Certificate2)
         {
             //Save certificate to file
             try
             {
                 File.WriteAllText(Path.Combine(_cryptoStoreDir, "device.crt"),
-                new(PemEncoding.Write("CERTIFICATE", x509Certificate.GetRawCertData()).ToArray()));
+                new(PemEncoding.Write("CERTIFICATE", x509Certificate2.GetRawCertData()).ToArray()));
             }
             catch (DirectoryNotFoundException ex)
             {

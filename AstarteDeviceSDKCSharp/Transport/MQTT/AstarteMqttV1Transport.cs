@@ -26,8 +26,8 @@ using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using AstarteDeviceSDKCSharp.Utilities;
 using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet.Client.Publishing;
 using MQTTnet.Exceptions;
+using MQTTnet.Protocol;
 using System.Text;
 using static AstarteDeviceSDKCSharp.Protocol.AstarteInterfaceDatastreamMapping;
 
@@ -69,7 +69,17 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             try
             {
-                await DoSendMqttMessage(topic, payload, qos);
+                if (_client.TryPingAsync().Result)
+                {
+                    await DoSendMqttMessage(topic, payload, (MqttQualityOfServiceLevel)qos);
+                }
+                else
+                {
+                    HandleDatastreamFailedPublish(
+                    new MqttCommunicationException("Broker is not available."),
+                    mapping, topic, payload, qos);
+                }
+
             }
             catch (MqttCommunicationException ex)
             {
@@ -85,7 +95,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
         }
 
-        private async Task DoSendMqttMessage(string topic, byte[] payload, int qos)
+        private async Task DoSendMqttMessage(string topic, byte[] payload, MqttQualityOfServiceLevel qos)
         {
             var applicationMessage = new MqttApplicationMessageBuilder()
                                 .WithTopic(topic)
@@ -96,13 +106,16 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             try
             {
-
-                MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
-
-                if (result.ReasonCode != MqttClientPublishReasonCode.Success)
+                if (_client is not null)
                 {
-                    throw new AstarteTransportException
-                    ($"Error publishing on MQTT. Code: {result.ReasonCode}");
+                    MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
+
+                    if (result.ReasonCode != MqttClientPublishReasonCode.Success)
+                    {
+                        throw new AstarteTransportException
+                        ($"Error publishing on MQTT. Code: {result.ReasonCode}");
+                    }
+
                 }
 
             }
@@ -140,7 +153,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             .Remove(introspectionStringBuilder.Length - 1, 1);
             string introspection = introspectionStringBuilder.ToString();
 
-            await DoSendMqttMessage(_baseTopic, Encoding.ASCII.GetBytes(introspection), 2);
+            await DoSendMqttMessage(_baseTopic, Encoding.ASCII.GetBytes(introspection), MqttQualityOfServiceLevel.ExactlyOnce);
         }
 
         public override async Task SendIndividualValue(AstarteInterface astarteInterface,
@@ -167,11 +180,21 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             try
             {
-                await DoSendMqttMessage(topic, payload, qos);
+                if (_client.TryPingAsync().Result)
+                {
+                    await DoSendMqttMessage(topic, payload, (MqttQualityOfServiceLevel)qos);
+                }
+                else
+                {
+                    HandleDatastreamFailedPublish(
+                    new MqttCommunicationException("Broker is not available."),
+                    mapping, topic, payload, qos);
+                }
+
             }
-            catch (MqttCommunicationException e)
+            catch (MqttCommunicationException ex)
             {
-                HandleDatastreamFailedPublish(e, mapping, topic, payload, qos);
+                HandleDatastreamFailedPublish(ex, mapping, topic, payload, qos);
                 _astarteTransportEventListener?.OnTransportDisconnected();
             }
             catch (AstarteTransportException ex)
@@ -251,7 +274,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         private async Task DoSendMessage(IAstarteFailedMessage failedMessage)
         {
             await DoSendMqttMessage(failedMessage.GetTopic(), failedMessage.GetPayload(),
-            failedMessage.GetQos());
+            (MqttQualityOfServiceLevel)failedMessage.GetQos());
         }
 
         private int QosFromReliability(AstarteInterfaceDatastreamMapping mapping)
@@ -322,7 +345,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         {
             await DoSendMqttMessage(failedMessage.GetTopic(),
             failedMessage.GetPayload(),
-            failedMessage.GetQos());
+            (MqttQualityOfServiceLevel)failedMessage.GetQos());
         }
 
         private void HandleDatastreamFailedPublish(MqttCommunicationException e,

@@ -62,6 +62,7 @@ namespace AstarteDeviceSDKCSharpE2E.Tests.Utilities
                         new MockInterfaceProvider(),
                         astarteMockData.PairingUrl,
                         cryptoStoreDir,
+                        TimeSpan.FromMilliseconds(500),
                         true
                     );
                     astarteDevice.SetAlwaysReconnect(true);

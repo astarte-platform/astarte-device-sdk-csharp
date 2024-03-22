@@ -26,12 +26,10 @@ using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using AstarteDeviceSDKCSharp.Utilities;
 using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Publishing;
 using MQTTnet.Exceptions;
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
@@ -94,8 +92,17 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 Trace.WriteLine("Transport Connected");
             }
 
-            _client.UseApplicationMessageReceivedHandler(OnMessageReceive);
-            _client.UseDisconnectedHandler(OnDisconnectAsync);
+            if (_client is not null)
+            {
+                _client.ApplicationMessageReceivedAsync += e =>
+                {
+                    OnMessageReceive(e);
+                    return Task.CompletedTask;
+                };
+
+                _client.DisconnectedAsync += OnDisconnectAsync;
+
+            }
 
         }
 
@@ -114,18 +121,30 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 _client = await InitClientAsync();
             }
 
-            var result = await _client.ConnectAsync(_connectionInfo.GetMqttConnectOptions(),
-                    CancellationToken.None);
+            try
+            {
+                using (var timeoutToken = new CancellationTokenSource(_connectionInfo.GetTimeOut()))
+                {
+                    MqttClientConnectResult result = await _client.ConnectAsync(
+                    _connectionInfo.GetMqttConnectOptions(),
+                    timeoutToken.Token);
 
-            if (result.ResultCode == MqttClientConnectResultCode.Success)
-            {
-                await CompleteAstarteConnection(result.IsSessionPresent);
+                    if (result.ResultCode == MqttClientConnectResultCode.Success)
+                    {
+                        await CompleteAstarteConnection(result.IsSessionPresent);
+                    }
+                    else
+                    {
+                        throw new AstarteTransportException
+                        ($"Error connecting to MQTT. Code: {result.ResultCode}");
+                    }
+                }
             }
-            else
+            catch (OperationCanceledException)
             {
-                throw new AstarteTransportException
-                ($"Error connecting to MQTT. Code: {result.ResultCode}");
+                Trace.WriteLine("Timeout while connecting.");
             }
+
         }
 
         public override void Disconnect()
@@ -192,6 +211,11 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                                   .WithRetainFlag(false)
                                   .Build();
 
+            if (_client is null)
+            {
+                return;
+            }
+
             MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
             if (result.ReasonCode != MqttClientPublishReasonCode.Success)
             {
@@ -200,7 +224,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
         }
 
-        private Task OnDisconnectAsync(MqttClientDisconnectedEventArgs e)
+        Task OnDisconnectAsync(MqttClientDisconnectedEventArgs e)
         {
             if (_astarteTransportEventListener != null)
             {

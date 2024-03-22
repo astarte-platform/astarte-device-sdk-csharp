@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.0] - Unreleased
 ### Added
+- Add timeout to the `AstartePairingService` constructor.
+- Add device connection timeout to the `ÀstarteDevice` constructor.
+- Update version of MQTTNet libary from 3.1.2 to 4.1.4.563.
 - Add a fallout strategy for individual failed messages.
 - Resend failed messages stored in the cache memory.
 
