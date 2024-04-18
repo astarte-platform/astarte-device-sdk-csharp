@@ -88,9 +88,8 @@ namespace AstarteDeviceSDKCSharp.Transport
         }
 
         public abstract Task Connect();
-        public abstract void Disconnect();
+        public abstract Task Disconnect();
         public abstract bool IsConnected();
-        public abstract void RetryFailedMessages();
 
         public void SetPropertyStorage(IAstartePropertyStorage propertyStorage)
         {

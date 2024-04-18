@@ -18,34 +18,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+using MQTTnet.Extensions.ManagedClient;
+
 namespace AstarteDeviceSDKCSharp.Data
 {
-    public interface IAstarteFailedMessageStorage
+    public interface IAstarteFailedMessageStorage : IManagedMqttClientStorage
     {
-        void InsertVolatile(String topic, byte[] payload, int qos);
+        void InsertVolatile(String topic, byte[] payload, int qos, Guid guid);
 
-        void InsertVolatile(String topic, byte[] payload, int qos, int relativeExpiry);
+        void InsertVolatile(String topic, byte[] payload, int qos, Guid guid, int relativeExpiry);
 
-        void InsertStored(String topic, byte[] payload, int qos);
+        Task InsertStored(String topic, byte[] payload, int qos, Guid guid);
 
-        void InsertStored(String topic, byte[] payload, int qos, int relativeExpiry);
+        Task InsertStored(String topic, byte[] payload, int qos, Guid guid, int relativeExpiry);
 
-        bool IsEmpty();
+        Task Reject(AstarteFailedMessageEntry astarteFailedMessages);
 
-        bool IsCacheEmpty();
-
-        AstarteFailedMessageEntry? PeekFirst();
-
-        AstarteFailedMessageEntry? PeekFirstCache();
-
-        void Ack(AstarteFailedMessageEntry failedMessages);
-
-        void AckFirstCache();
-
-        void Reject(AstarteFailedMessageEntry astarteFailedMessages);
-
-        void RejectFirstCache();
+        void RejectCache(AstarteFailedMessageEntry astarteFailedMessages);
 
         bool IsExpired(long expire);
+
+        Task DeleteByGuidAsync(ManagedMqttApplicationMessage applicationMessage);
     }
 }

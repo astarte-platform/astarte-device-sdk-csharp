@@ -19,17 +19,14 @@
  */
 
 using AstarteDeviceSDK.Protocol;
-using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Device;
 using AstarteDeviceSDKCSharp.Protocol;
 using AstarteDeviceSDKCSharp.Protocol.AstarteException;
 using AstarteDeviceSDKCSharp.Utilities;
 using MQTTnet;
-using MQTTnet.Client;
-using MQTTnet.Exceptions;
+using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
 using System.Text;
-using static AstarteDeviceSDKCSharp.Protocol.AstarteInterfaceDatastreamMapping;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
 {
@@ -67,61 +64,35 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             string topic = _baseTopic + "/" + astarteInterface.InterfaceName + path;
             byte[] payload = AstartePayload.Serialize(value, timestamp);
 
-            try
-            {
-                if (_client.TryPingAsync().Result)
-                {
-                    await DoSendMqttMessage(topic, payload, (MqttQualityOfServiceLevel)qos);
-                }
-                else
-                {
-                    HandleDatastreamFailedPublish(
-                    new MqttCommunicationException("Broker is not available."),
-                    mapping, topic, payload, qos);
-                }
-
-            }
-            catch (MqttCommunicationException ex)
-            {
-                HandleDatastreamFailedPublish(ex, mapping, topic, payload, qos);
-                _astarteTransportEventListener?.OnTransportDisconnected();
-            }
-            catch (AstarteTransportException ex)
-            {
-                HandleDatastreamFailedPublish(new MqttCommunicationException(ex),
-                mapping, topic, payload, qos);
-                _astarteTransportEventListener?.OnTransportDisconnected();
-            }
+            await DoSendMqttMessage(topic, payload, (MqttQualityOfServiceLevel)qos, mapping);
 
         }
 
-        private async Task DoSendMqttMessage(string topic, byte[] payload, MqttQualityOfServiceLevel qos)
+        private async Task DoSendMqttMessage(string topic, byte[] payload, MqttQualityOfServiceLevel qos,
+        AstarteInterfaceDatastreamMapping? mapping = null)
         {
             var applicationMessage = new MqttApplicationMessageBuilder()
                                 .WithTopic(topic)
                                 .WithPayload(payload)
                                 .WithQualityOfServiceLevel(qos)
-                                .WithRetainFlag(false)
-                                .Build();
+                                .WithRetainFlag(false);
 
-            try
+            if (mapping is not null)
             {
-                if (_client is not null)
-                {
-                    MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
-
-                    if (result.ReasonCode != MqttClientPublishReasonCode.Success)
-                    {
-                        throw new AstarteTransportException
-                        ($"Error publishing on MQTT. Code: {result.ReasonCode}");
-                    }
-
-                }
-
+                applicationMessage
+                .WithMessageExpiryInterval((uint)mapping.GetExpiry())
+                .WithUserProperty("Retention", mapping.GetRetention().ToString());
             }
-            catch (Exception)
+
+            var managedApplicationMessage = new ManagedMqttApplicationMessage
             {
-                throw new MqttCommunicationException(topic);
+                ApplicationMessage = applicationMessage.Build(),
+                Id = Guid.NewGuid()
+            };
+
+            if (_client is not null)
+            {
+                await _client.EnqueueAsync(managedApplicationMessage);
             }
 
         }
@@ -178,103 +149,9 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             string topic = _baseTopic + "/" + astarteInterface.InterfaceName + path;
             byte[] payload = AstartePayload.Serialize(value, timeStamp);
 
-            try
-            {
-                if (_client.TryPingAsync().Result)
-                {
-                    await DoSendMqttMessage(topic, payload, (MqttQualityOfServiceLevel)qos);
-                }
-                else
-                {
-                    HandleDatastreamFailedPublish(
-                    new MqttCommunicationException("Broker is not available."),
-                    mapping, topic, payload, qos);
-                }
 
-            }
-            catch (MqttCommunicationException ex)
-            {
-                HandleDatastreamFailedPublish(ex, mapping, topic, payload, qos);
-                _astarteTransportEventListener?.OnTransportDisconnected();
-            }
-            catch (AstarteTransportException ex)
-            {
-                HandleDatastreamFailedPublish(new MqttCommunicationException(ex),
-                mapping, topic, payload, qos);
-                _astarteTransportEventListener?.OnTransportDisconnected();
-            }
-        }
+            await DoSendMqttMessage(topic, payload, (MqttQualityOfServiceLevel)qos, mapping);
 
-        public override void RetryFailedMessages()
-        {
-            if (_failedMessageStorage is null)
-            {
-                return;
-            }
-
-            while (!_failedMessageStorage.IsEmpty())
-            {
-                AstarteFailedMessageEntry? failedMessage = _failedMessageStorage.PeekFirst();
-                if (failedMessage is null)
-                {
-                    return;
-                }
-
-                if (_failedMessageStorage.IsExpired(failedMessage.GetExpiry()))
-                {
-                    // No need to send this anymore, drop it
-                    _failedMessageStorage.Reject(failedMessage);
-                    continue;
-                }
-
-                try
-                {
-                    Console.WriteLine($"Resending fallback message from local database: " +
-                    $"{failedMessage.GetTopic()} : {failedMessage.GetPayload()}");
-
-                    Task.Run(async () => await DoSendMessage(failedMessage));
-                }
-                catch (MqttCommunicationException e)
-                {
-                    throw new AstarteTransportException(e.Message);
-                }
-                _failedMessageStorage.Ack(failedMessage);
-            }
-
-            while (!_failedMessageStorage.IsCacheEmpty())
-            {
-                IAstarteFailedMessage? failedMessage = _failedMessageStorage.PeekFirstCache();
-                if (failedMessage is null)
-                {
-                    return;
-                }
-
-                if (_failedMessageStorage.IsExpired(failedMessage.GetExpiry()))
-                {
-                    // No need to send this anymore, drop it
-                    _failedMessageStorage.RejectFirstCache();
-                    continue;
-                }
-
-                try
-                {
-                    Console.WriteLine($"Resending fallback message from cache memory: " +
-                    $"{failedMessage.GetTopic()} : {failedMessage.GetPayload()}");
-
-                    Task.Run(async () => await DoSendMessage(failedMessage));
-                }
-                catch (MqttCommunicationException e)
-                {
-                    throw new AstarteTransportException(e.Message);
-                }
-                _failedMessageStorage.AckFirstCache();
-            }
-        }
-
-        private async Task DoSendMessage(IAstarteFailedMessage failedMessage)
-        {
-            await DoSendMqttMessage(failedMessage.GetTopic(), failedMessage.GetPayload(),
-            (MqttQualityOfServiceLevel)failedMessage.GetQos());
         }
 
         private int QosFromReliability(AstarteInterfaceDatastreamMapping mapping)
@@ -327,63 +204,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                         }
                     }
                 }
-            }
-        }
-        private void HandlePropertiesFailedPublish(MqttCommunicationException e, string topic,
-        byte[] payload, int qos)
-        {
-            if (_failedMessageStorage is null)
-            {
-                return;
-            }
-
-            // Properties are always stored and never expire
-            _failedMessageStorage.InsertStored(topic, payload, qos);
-        }
-
-        private async void DoSendMqttMessage(IAstarteFailedMessage failedMessage)
-        {
-            await DoSendMqttMessage(failedMessage.GetTopic(),
-            failedMessage.GetPayload(),
-            (MqttQualityOfServiceLevel)failedMessage.GetQos());
-        }
-
-        private void HandleDatastreamFailedPublish(MqttCommunicationException e,
-        AstarteInterfaceDatastreamMapping mapping, string topic, byte[] payload, int qos)
-        {
-            int expiry = mapping.GetExpiry();
-            switch (mapping.GetRetention())
-            {
-                case MappingRetention.DISCARD:
-                    throw new AstarteTransportException("Cannot send value", e);
-
-                case MappingRetention.VOLATILE:
-                    {
-                        if (expiry > 0)
-                        {
-                            _failedMessageStorage?.InsertVolatile(topic, payload, qos, expiry);
-                        }
-                        else
-                        {
-                            _failedMessageStorage?.InsertVolatile(topic, payload, qos);
-                        }
-                        break;
-                    }
-
-                case MappingRetention.STORED:
-                    {
-                        if (expiry > 0)
-                        {
-                            _failedMessageStorage?.InsertStored(topic, payload, qos, expiry);
-                        }
-                        else
-                        {
-                            _failedMessageStorage?.InsertStored(topic, payload, qos);
-                        }
-                        break;
-                    }
-                default:
-                    throw new AstarteTransportException("Invalid retention value", e);
             }
         }
 
