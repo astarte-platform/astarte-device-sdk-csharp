@@ -20,9 +20,11 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace AstarteDeviceSDKCSharp.Data
 {
+    [Index(nameof(Guid), Name = "Index_Guid")]
     public class AstarteFailedMessageEntry : IAstarteFailedMessage
     {
         [Key]
@@ -38,19 +40,24 @@ namespace AstarteDeviceSDKCSharp.Data
         [Column("absolute_expiry")]
         [Required]
         public long AbsoluteExpiry { get; set; }
+        [Required]
+        [Column("guid")]
+        public Guid Guid { get; set; }
 
 
-        public AstarteFailedMessageEntry(int qos, byte[] payload, string topic)
+        public AstarteFailedMessageEntry(int qos, byte[] payload, string topic, Guid guid)
         {
+            Guid = guid;
             Qos = qos;
             Payload = payload;
             Topic = topic;
             AbsoluteExpiry = 0;
         }
 
-        public AstarteFailedMessageEntry(int qos, byte[] payload, string topic,
+        public AstarteFailedMessageEntry(int qos, byte[] payload, string topic, Guid guid,
         int relativeExpiry)
         {
+            Guid = guid;
             Qos = qos;
             Payload = payload;
             Topic = topic;
@@ -77,5 +84,9 @@ namespace AstarteDeviceSDKCSharp.Data
             return AbsoluteExpiry;
         }
 
+        public Guid GetGuid()
+        {
+            return Guid;
+        }
     }
 }
