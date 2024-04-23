@@ -27,7 +27,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
         /// </summary>
         /// <param name="path">Endpoint</param>
         /// <param name="payload">Message for MQTT broker</param>
-        void StreamData(String path, Object payload);
+        Task StreamData(String path, Object payload);
 
         /// <summary>
         /// Method for sending individual values to Astarte with timestamp
@@ -35,6 +35,6 @@ namespace AstarteDeviceSDKCSharp.Protocol
         /// <param name="path">Endpoint</param>
         /// <param name="payload">Message for MQTT broker</param>
         /// <param name="timestamp">UTC</param>
-        void StreamData(String path, Object payload, DateTime? timestamp);
+        Task StreamData(String path, Object payload, DateTime? timestamp);
     }
 }

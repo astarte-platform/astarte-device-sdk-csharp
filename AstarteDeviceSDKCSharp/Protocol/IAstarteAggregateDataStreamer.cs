@@ -22,8 +22,8 @@ namespace AstarteDeviceSDKCSharp.Protocol
 {
     public interface IAstarteAggregateDataStreamer
     {
-        void StreamData(String path, Dictionary<String, Object> payload);
+        Task StreamData(String path, Dictionary<String, Object> payload);
 
-        void StreamData(String path, Dictionary<String, Object> payload, DateTime? timestamp);
+        Task StreamData(String path, Dictionary<String, Object> payload, DateTime? timestamp);
     }
 }

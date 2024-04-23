@@ -73,7 +73,7 @@ namespace AstarteDeviceSDKCSharpE2E.Tests
             (AstarteDeviceAggregateDatastreamInterface)astarteDevice
             .GetInterface(interfaceName);
 
-            astarteDeviceAggregateDatastream
+            await astarteDeviceAggregateDatastream
             .StreamData("/%{sensor_id}", astarteMockDevice.MockDataDictionary, DateTime.Now);
             Thread.Sleep(500);
 

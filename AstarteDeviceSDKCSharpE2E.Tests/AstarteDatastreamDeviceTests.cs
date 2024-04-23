@@ -78,7 +78,8 @@ namespace AstarteDeviceSDKCSharpE2E.Tests
 
             foreach (var item in astarteMockDevice.MockDataDictionary)
             {
-                astarteDatastreamInterface.StreamData($"/{item.Key}", item.Value, DateTime.Now);
+                await astarteDatastreamInterface
+                .StreamData($"/{item.Key}", item.Value, DateTime.Now);
                 Thread.Sleep(500);
             }
 

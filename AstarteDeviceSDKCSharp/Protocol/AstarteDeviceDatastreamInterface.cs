@@ -24,12 +24,12 @@ namespace AstarteDeviceSDKCSharp.Protocol
 {
     public class AstarteDeviceDatastreamInterface : AstarteDatastreamInterface, IAstarteDataStreamer
     {
-        public void StreamData(string path, object payload)
+        public async Task StreamData(string path, object payload)
         {
-            StreamData(path, payload, null);
+            await StreamData(path, payload, null);
         }
 
-        public void StreamData(string path, object payload, DateTime? timestamp)
+        public async Task StreamData(string path, object payload, DateTime? timestamp)
         {
             ValidatePayload(path, payload, timestamp);
             AstarteTransport? transport = GetAstarteTransport();
@@ -38,7 +38,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
                 throw new AstarteTransportException("No available transport");
             }
 
-            transport.SendIndividualValue(this, path, payload, timestamp);
+            await transport.SendIndividualValue(this, path, payload, timestamp);
         }
     }
 }
