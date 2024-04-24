@@ -151,7 +151,7 @@ namespace AstarteDeviceSDKExample
                 Console.WriteLine("Streaming value: " + value);
 
                 //Stream individual value
-                valuesInterface.StreamData($"/{sensorUuid}/value", value, DateTime.Now);
+                await valuesInterface.StreamData($"/{sensorUuid}/value", value, DateTime.Now);
 
                 Dictionary<string, object> gpsValues = new()
                 {
@@ -161,13 +161,13 @@ namespace AstarteDeviceSDKExample
                     { "accuracy", Random.Shared.NextDouble() },
                     { "altitudeAccuracy", Random.Shared.NextDouble() },
                     { "heading", Random.Shared.NextDouble() },
-                    { "speed", Random.Shared.NextDouble() * 100}
+                    { "speed", Random.Shared.NextDouble() * 100 }
                 };
 
                 Console.WriteLine("Streaming object:" + JsonConvert.SerializeObject(gpsValues));
 
                 //Stream aggregate object
-                aggregateInterface.StreamData($"/{sensorUuid}", gpsValues, DateTime.Now);
+                await aggregateInterface.StreamData($"/{sensorUuid}", gpsValues, DateTime.Now);
 
                 Thread.Sleep(1000);
 
