@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.0] - Unreleased
 ### Added
+- Add MQTTNet ManagedClient extension version 4.1.4.563.
+- `StreamData` change to `async StreamData` (BREAKING CHANGE!).
+- `Disconnect` change to `async Disconnect` (BREAKING CHANGE!).
 - Add timeout to the `AstartePairingService` constructor.
 - Add device connection timeout to the `ÀstarteDevice` constructor.
 - Update version of MQTTNet libary from 3.1.2 to 4.1.4.563.
