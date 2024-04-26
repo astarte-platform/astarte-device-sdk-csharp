@@ -40,9 +40,6 @@ namespace AstarteDeviceSDKCSharp.Device
         private bool _initialized = false;
         private const string _cryptoSubDir = "crypto";
         private bool _alwaysReconnect = false;
-        private bool _explicitDisconnectionRequest;
-        private static int MIN_INCREMENT_INTERVAL = 5000;
-        private static int MAX_INCREMENT_INTERVAL = 60000;
 
         /// <summary>
         /// Basic class defining an Astarte device.
@@ -163,47 +160,6 @@ namespace AstarteDeviceSDKCSharp.Device
 
         }
 
-        private bool EventualyReconnect()
-        {
-            if (_astarteTransport is null)
-            {
-                return false;
-            }
-            lock (this)
-            {
-                int x = 1;
-                int interval = 0;
-                while (_alwaysReconnect && !IsConnected())
-                {
-
-                    if (interval < MAX_INCREMENT_INTERVAL)
-                    {
-                        interval = MIN_INCREMENT_INTERVAL * x;
-                        x++;
-                    }
-                    else
-                    {
-                        interval = MAX_INCREMENT_INTERVAL;
-                    }
-
-                    try
-                    {
-                        Task.Run(async () => await Connect()).Wait(interval);
-                    }
-                    catch (AggregateException ex)
-                    {
-                        foreach (var innerException in ex.InnerExceptions)
-                        {
-                            Trace.WriteLine($"Inner Exception: {innerException.GetType().Name}: {innerException.Message}");
-                        }
-                    }
-                }
-            }
-
-            _explicitDisconnectionRequest = false;
-            return false;
-        }
-
         /// <summary>
         /// Method for getting a list of interfaces for the device
         /// </summary>
@@ -220,6 +176,11 @@ namespace AstarteDeviceSDKCSharp.Device
         public void SetAlwaysReconnect(bool alwaysReconnect)
         {
             _alwaysReconnect = alwaysReconnect;
+        }
+
+        public bool GetAlwaysReconnect()
+        {
+            return _alwaysReconnect;
         }
 
         /// <summary>
@@ -291,17 +252,16 @@ namespace AstarteDeviceSDKCSharp.Device
         /// <summary>
         /// Disconnect device from Astarte
         /// </summary>
-        public void Disconnect()
+        public async Task Disconnect()
         {
-            lock (this)
+
+            if (!IsConnected() || _astarteTransport is null)
             {
-                if (!IsConnected())
-                {
-                    return;
-                }
-                _explicitDisconnectionRequest = true;
-                _astarteTransport?.Disconnect();
+                return;
             }
+
+            await _astarteTransport.Disconnect();
+
         }
 
         /// <summary>
@@ -428,33 +388,6 @@ namespace AstarteDeviceSDKCSharp.Device
             }
         }
 
-        public void OnTransportConnectionInitializationError(Exception ex)
-        {
-            lock (this)
-            {
-
-                _astarteMessagelistener?.OnFailure(new AstarteMessageException(ex.Message, ex));
-
-                new Thread(delegate ()
-                {
-                    try
-                    {
-                        Disconnect();
-
-                        _astarteMessagelistener?
-                        .OnDisconnected(new AstarteMessageException(ex.Message, ex));
-
-                    }
-                    catch (AstarteTransportException e)
-                    {
-                        Trace.WriteLine(e.Message);
-                    }
-                    EventualyReconnect();
-                }).Start();
-
-            }
-        }
-
         public void OnTransportConnectionError(Exception ex)
         {
             lock (this)
@@ -468,38 +401,18 @@ namespace AstarteDeviceSDKCSharp.Device
                     }
                     catch (AstartePairingException e)
                     {
+                        _astarteMessagelistener?
+                        .OnFailure(new AstarteMessageException(e.Message, e));
+                        Trace.WriteLine(e);
 
-                        if (!EventualyReconnect())
-                        {
-
-                            _astarteMessagelistener?
-                            .OnFailure(new AstarteMessageException(e.Message, e));
-                            Trace.WriteLine(e);
-                        }
                         return;
                     }
 
-                    try
-                    {
-                        _astarteTransport?.Connect();
-                    }
-                    catch (AstarteTransportException e)
-                    {
-
-                        _astarteMessagelistener?
-                        .OnFailure(new AstarteMessageException(e.Message, e));
-
-                    }
                 }
                 else
                 {
-                    if (!EventualyReconnect())
-                    {
-
-                        _astarteMessagelistener?
-                        .OnFailure(new AstarteMessageException(ex.Message, ex));
-
-                    }
+                    _astarteMessagelistener?
+                    .OnFailure(new AstarteMessageException(ex.Message, ex));
                 }
             }
         }
@@ -508,17 +421,13 @@ namespace AstarteDeviceSDKCSharp.Device
         {
             lock (this)
             {
-
                 _astarteMessagelistener?
                 .OnDisconnected(new AstarteMessageException("Connection lost"));
-
-                if (_alwaysReconnect && !_explicitDisconnectionRequest)
-                {
-                    EventualyReconnect();
-                }
-                _explicitDisconnectionRequest = false;
-
             }
+        }
+        public void OnTransportConnectionInitializationError(Exception ex)
+        {
+            _astarteMessagelistener?.OnFailure(new AstarteMessageException(ex.Message, ex));
         }
 
         /// <summary>

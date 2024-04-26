@@ -18,170 +18,311 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-using Microsoft.EntityFrameworkCore.Storage;
+using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using MQTTnet;
+using MQTTnet.Extensions.ManagedClient;
+using MQTTnet.Packets;
 
 namespace AstarteDeviceSDKCSharp.Data
 {
     public class AstarteFailedMessageStorage : IAstarteFailedMessageStorage
     {
         private readonly AstarteDbContext _astarteDbContext;
+        private readonly AstarteDbContext _astarteDbContextDelete;
+        private readonly AstarteDbContext _astarteDbContextRead;
 
         private static List<AstarteFailedMessageEntry> _astarteFailedMessageVolatile = new();
+        readonly HashSet<ManagedMqttApplicationMessage> stored = new HashSet<ManagedMqttApplicationMessage>();
+
 
         public AstarteFailedMessageStorage(string persistencyDir)
         {
             this._astarteDbContext = new AstarteDbContext(persistencyDir);
+            this._astarteDbContextDelete = new AstarteDbContext(persistencyDir);
+            this._astarteDbContextRead = new AstarteDbContext(persistencyDir);
         }
 
-        public void Ack(AstarteFailedMessageEntry failedMessages)
-        {
-            if (failedMessages is not null)
-            {
-                Console.WriteLine($"The message has been removed from local database.");
-                Console.WriteLine($"{failedMessages.GetTopic()}"
-                + $" : {failedMessages.GetPayload()}");
-
-                _astarteDbContext.AstarteFailedMessages.Remove(failedMessages);
-            }
-
-            _astarteDbContext.SaveChangesAsync();
-        }
-
-        public void InsertStored(string topic, byte[] payload, int qos)
+        public async Task InsertStored(string topic, byte[] payload, int qos, Guid guid)
         {
             AstarteFailedMessageEntry failedMessageEntry
-            = new AstarteFailedMessageEntry(qos, payload, topic);
+            = new AstarteFailedMessageEntry(qos, payload, topic, guid);
 
             _astarteDbContext.AstarteFailedMessages.Add(failedMessageEntry);
 
-            Console.WriteLine($"Insert fallback message in database: "
-            + $"{topic} : {payload}");
+            Trace.WriteLine($"Insert fallback message in database: "
+            + $"{topic} : {guid}");
 
-            _astarteDbContext.SaveChangesAsync();
+            await _astarteDbContext.SaveChangesAsync();
         }
 
-        public void InsertStored(string topic, byte[] payload, int qos, int relativeExpiry)
+        public async Task InsertStored(string topic, byte[] payload, int qos, Guid guid, int relativeExpiry)
         {
-            using (IDbContextTransaction transaction = _astarteDbContext.Database.BeginTransaction())
+            try
             {
-                try
-                {
-                    AstarteFailedMessageEntry failedMessageEntry
-                        = new AstarteFailedMessageEntry(qos, payload, topic, relativeExpiry);
+                AstarteFailedMessageEntry failedMessageEntry
+                    = new AstarteFailedMessageEntry(qos, payload, topic, guid, relativeExpiry);
 
-                    _astarteDbContext.AstarteFailedMessages.Add(failedMessageEntry);
+                _astarteDbContext.AstarteFailedMessages.Add(failedMessageEntry);
 
-                    Console.WriteLine($"Insert fallback message in database:"
-                    + $"{topic} : {payload},"
-                    + $" expiry time: {relativeExpiry}");
+                Trace.WriteLine($"Insert fallback message in database:"
+                + $"{topic} : {guid},"
+                + $" expiry time: {relativeExpiry}");
 
-                    _astarteDbContext.SaveChangesAsync();
-
-                    transaction.CommitAsync();
-                }
-                catch (Exception ex)
-                {
-                    transaction.RollbackAsync();
-                    Console.WriteLine($"Failed to insert fallback message in database. Error message: {ex.Message}");
-                }
+                await _astarteDbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Failed to insert fallback message in database. Error message: {ex.Message}");
             }
         }
 
-        public void InsertVolatile(string topic, byte[] payload, int qos)
+        public void InsertVolatile(string topic, byte[] payload, int qos, Guid guid)
         {
             AstarteFailedMessageEntry failedMessageEntry
-            = new AstarteFailedMessageEntry(qos, payload, topic);
+            = new AstarteFailedMessageEntry(qos, payload, topic, guid);
 
-            Console.WriteLine($"Insert fallback message in cache memory: "
-            + $"{topic} : {payload}");
+            Trace.WriteLine($"Insert fallback message in cache memory: "
+            + $"{topic} : {guid}");
 
             _astarteFailedMessageVolatile.Add(failedMessageEntry);
         }
 
-        public void InsertVolatile(string topic, byte[] payload, int qos, int relativeExpiry)
+        public void InsertVolatile(string topic, byte[] payload, int qos, Guid guid, int relativeExpiry)
         {
             AstarteFailedMessageEntry failedMessageEntry
-            = new AstarteFailedMessageEntry(qos, payload, topic, relativeExpiry);
+            = new AstarteFailedMessageEntry(qos, payload, topic, guid, relativeExpiry);
 
-            Console.WriteLine($"Insert fallback message in cache memory: "
-            + $"{topic} : {payload},"
+            Trace.WriteLine($"Insert fallback message in cache memory: "
+            + $"{topic} : {guid},"
             + $" expiry time: {relativeExpiry}");
 
             _astarteFailedMessageVolatile.Add(failedMessageEntry);
         }
 
-        public bool IsEmpty()
-        {
-            return !_astarteDbContext.AstarteFailedMessages.Any();
-        }
-
-        public AstarteFailedMessageEntry? PeekFirst()
-        {
-            return _astarteDbContext.AstarteFailedMessages
-            .OrderBy(x => x.Id)
-            .FirstOrDefault();
-        }
-
-        public void Reject(AstarteFailedMessageEntry failedMessages)
+        public async Task Reject(AstarteFailedMessageEntry failedMessages)
         {
 
             if (failedMessages is not null)
             {
-                Console.WriteLine($"Remove from local database "
+                Trace.WriteLine($"Remove from local database "
                 + $"{failedMessages.GetTopic()} : "
                 + $"{failedMessages.GetPayload()}");
                 _astarteDbContext.AstarteFailedMessages.Remove(failedMessages);
             }
 
-            _astarteDbContext.SaveChangesAsync();
+            await _astarteDbContext.SaveChangesAsync();
         }
 
-        public bool IsCacheEmpty()
+        public void RejectCache(AstarteFailedMessageEntry failedMessages)
         {
-            return !_astarteFailedMessageVolatile.Any();
-        }
-
-        public AstarteFailedMessageEntry? PeekFirstCache()
-        {
-            return _astarteFailedMessageVolatile
-            .OrderBy(x => x.Id)
-            .FirstOrDefault();
-        }
-
-        public void RejectFirstCache()
-        {
-            var failedMessages = _astarteFailedMessageVolatile
-            .OrderBy(x => x.Id)
-            .ToList();
-
-            if (failedMessages.Count() > 0)
+            if (failedMessages is not null)
             {
-                Console.WriteLine($"Remove from cache memory "
-                + $"{failedMessages.First().GetTopic()} : "
-                + $"{failedMessages.First().GetPayload()}");
-                _astarteDbContext.AstarteFailedMessages.Remove(failedMessages.First());
-            }
-        }
-
-        public void AckFirstCache()
-        {
-            var failedMessages = _astarteFailedMessageVolatile
-            .OrderBy(x => x.Id)
-            .ToList();
-
-            if (failedMessages.Count() > 0)
-            {
-                Console.WriteLine($"The message has been removed from cache memory.");
-                Console.WriteLine($"{failedMessages.First().GetTopic()} :"
-                + "{failedMessages.First().GetPayload()}");
-
-                _astarteFailedMessageVolatile.Remove(failedMessages.First());
+                Trace.WriteLine($"Remove from cache memory "
+                + $"{failedMessages.GetTopic()} : "
+                + $"{failedMessages.GetGuid()}");
+                _astarteFailedMessageVolatile.Remove(failedMessages);
             }
         }
 
         public bool IsExpired(long expire)
         {
             return expire != 0 ? (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expire) : false;
+        }
+
+        public async Task SaveQueuedMessagesAsync(IList<ManagedMqttApplicationMessage> messages)
+        {
+            MqttUserProperty? retention = null;
+            foreach (var message in messages)
+            {
+
+                if (message.ApplicationMessage.UserProperties is null)
+                {
+                    continue;
+                }
+
+                if (!stored.Contains(message))
+                {
+                    retention = message.ApplicationMessage.UserProperties.Where(x => x.Name == "Retention").FirstOrDefault();
+
+                    if (retention == null || retention.Value == "DISCARD")
+                    {
+                        continue;
+                    }
+
+                    if (retention.Value == "STORED")
+                    {
+                        if (message.ApplicationMessage.MessageExpiryInterval > 0)
+                        {
+                            await InsertStored
+                              (
+                                  message.ApplicationMessage.Topic,
+                                  message.ApplicationMessage.Payload,
+                                  (int)message.ApplicationMessage.QualityOfServiceLevel,
+                                  message.Id,
+                                  (int)message.ApplicationMessage.MessageExpiryInterval
+                              );
+                        }
+                        else
+                        {
+                            await InsertStored
+                              (
+                                  message.ApplicationMessage.Topic,
+                                  message.ApplicationMessage.Payload,
+                                  (int)message.ApplicationMessage.QualityOfServiceLevel,
+                                  message.Id
+                              );
+                        }
+                    }
+                    else if (retention.Value == "VOLATILE")
+                    {
+
+                        if (message.ApplicationMessage.MessageExpiryInterval > 0)
+                        {
+                            InsertVolatile
+                            (
+                                message.ApplicationMessage.Topic,
+                                message.ApplicationMessage.Payload,
+                                (int)message.ApplicationMessage.QualityOfServiceLevel,
+                                message.Id,
+                                (int)message.ApplicationMessage.MessageExpiryInterval
+                            );
+                        }
+                        else
+                        {
+                            InsertVolatile
+                            (
+                                message.ApplicationMessage.Topic,
+                                message.ApplicationMessage.Payload,
+                                (int)message.ApplicationMessage.QualityOfServiceLevel,
+                                message.Id
+                            );
+                        }
+                    }
+                    stored.Add(message);
+                }
+            }
+        }
+
+        public async Task<IList<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync()
+        {
+            var result = new List<ManagedMqttApplicationMessage>();
+            foreach (var failedMessage in await _astarteDbContext.AstarteFailedMessages.ToListAsync())
+            {
+                if (IsExpired(failedMessage.GetExpiry()))
+                {
+                    await Reject(failedMessage);
+                    continue;
+                }
+
+                var item = new ManagedMqttApplicationMessage
+                {
+                    ApplicationMessage
+                   = new MqttApplicationMessage
+                   {
+                       ContentType = null,
+                       CorrelationData = null,
+                       Dup = false,
+                       MessageExpiryInterval = 0,
+                       Payload = failedMessage.GetPayload(),
+                       QualityOfServiceLevel = (MQTTnet.Protocol.MqttQualityOfServiceLevel)failedMessage.GetQos(),
+                       ResponseTopic = null,
+                       Retain = false,
+                       SubscriptionIdentifiers = null,
+                       Topic = failedMessage.GetTopic(),
+                       TopicAlias = 0,
+                       UserProperties = null
+                   },
+                    Id = failedMessage.GetGuid(),
+                };
+
+                result.Add(item);
+                stored.Add(item);
+            }
+
+            foreach (var messageVolatile in _astarteFailedMessageVolatile)
+            {
+                if (IsExpired(messageVolatile.GetExpiry()))
+                {
+                    RejectCache(messageVolatile);
+                    continue;
+                }
+
+                var item = new ManagedMqttApplicationMessage
+                {
+                    ApplicationMessage
+                   = new MqttApplicationMessage
+                   {
+                       ContentType = null,
+                       CorrelationData = null,
+                       Dup = false,
+                       MessageExpiryInterval = 0,
+                       Payload = messageVolatile.GetPayload(),
+                       QualityOfServiceLevel = (MQTTnet.Protocol.MqttQualityOfServiceLevel)messageVolatile.GetQos(),
+                       ResponseTopic = null,
+                       Retain = false,
+                       SubscriptionIdentifiers = null,
+                       Topic = messageVolatile.GetTopic(),
+                       TopicAlias = 0,
+                       UserProperties = null
+                   },
+                    Id = messageVolatile.GetGuid(),
+                };
+
+                result.Add(item);
+                stored.Add(item);
+            }
+
+            return result;
+
+        }
+
+        public async Task DeleteByGuidAsync(ManagedMqttApplicationMessage applicationMessage)
+        {
+            if (stored.Contains(applicationMessage))
+            {
+                stored.Remove(applicationMessage);
+
+                try
+                {
+                    var message = await GetAstarteFailedMessageStorage(applicationMessage.Id);
+
+                    if (message is not null)
+                    {
+                        _astarteDbContextDelete.AstarteFailedMessages.Remove(message);
+                    }
+
+                    if (_astarteFailedMessageVolatile is not null)
+                    {
+                        var messageVolatile = _astarteFailedMessageVolatile
+                            .Where(x => x.Guid == applicationMessage.Id)
+                            .FirstOrDefault();
+                        if (messageVolatile is not null)
+                        {
+                            _astarteFailedMessageVolatile.Remove(messageVolatile);
+                        }
+
+                    }
+
+                    await _astarteDbContextDelete.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"Failed to delete fallback message from database. Error message: {ex.Message}");
+                }
+
+            }
+
+        }
+
+        private async Task<AstarteFailedMessageEntry?> GetAstarteFailedMessageStorage(Guid guid)
+        {
+            var response = await _astarteDbContextRead.AstarteFailedMessages
+                .Where(x => x.Guid.ToString() == guid.ToString().ToUpper())
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+            return response is not null ? response : null;
         }
     }
 }

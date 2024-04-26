@@ -27,16 +27,16 @@ using AstarteDeviceSDKCSharp.Utilities;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Exceptions;
+using MQTTnet.Extensions.ManagedClient;
 using System.Diagnostics;
 using System.IO.Compression;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
 {
     public abstract class AstarteMqttTransport : AstarteTransport
     {
-        protected IMqttClient? _client;
+        protected IManagedMqttClient? _client;
         private readonly IMqttConnectionInfo _connectionInfo;
 
         protected AstarteMqttTransport(AstarteProtocolType type,
@@ -45,13 +45,13 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             _connectionInfo = connectionInfo;
         }
 
-        private async Task<IMqttClient> InitClientAsync()
+        private async Task<IManagedMqttClient> InitClientAsync()
         {
             if (_client != null)
             {
                 try
                 {
-                    await _client.DisconnectAsync();
+                    await _client.StopAsync();
                 }
                 catch (MqttCommunicationException ex)
                 {
@@ -60,7 +60,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
 
             MqttFactory mqttFactory = new();
-            return mqttFactory.CreateMqttClient();
+            return mqttFactory.CreateManagedMqttClient();
         }
 
         private async Task CompleteAstarteConnection(bool IsSessionPresent)
@@ -74,15 +74,53 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 _introspectionSent = true;
             }
 
-            try
+            if (_client is not null)
             {
-                RetryFailedMessages();
-            }
-            catch (AstarteTransportException e)
-            {
-                throw new AstarteTransportException("Message redelivery failed", e);
+                _client.ApplicationMessageReceivedAsync += e =>
+                {
+                    OnMessageReceive(e);
+                    return Task.CompletedTask;
+                };
+
+                _client.ConnectedAsync += e =>
+                {
+                    OnConnectedAsync(e);
+                    return Task.CompletedTask;
+                };
+
+                _client.ConnectingFailedAsync += e =>
+                {
+                    OnConnectingFailAsync(e);
+                    return Task.CompletedTask;
+                };
+
+                _client.DisconnectedAsync += OnDisconnectAsync;
+                _client.ApplicationMessageProcessedAsync += OnMessageProcessedAsync;
+
             }
 
+        }
+
+        void OnConnectingFailAsync(ConnectingFailedEventArgs args)
+        {
+
+            if (_astarteTransportEventListener != null)
+            {
+                _astarteTransportEventListener.OnTransportConnectionInitializationError(args.Exception);
+            }
+            else
+            {
+                Trace.WriteLine("Transport Connecting failed");
+            }
+
+        }
+
+        async void OnConnectedAsync(MqttClientConnectedEventArgs args)
+        {
+            if (!args.ConnectResult.IsSessionPresent)
+            {
+                await CompleteAstarteConnection(false);
+            }
             if (_astarteTransportEventListener != null)
             {
                 _astarteTransportEventListener.OnTransportConnected();
@@ -92,18 +130,24 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 Trace.WriteLine("Transport Connected");
             }
 
-            if (_client is not null)
+        }
+
+        async Task OnMessageProcessedAsync(ApplicationMessageProcessedEventArgs eventArgs)
+        {
+
+            if (eventArgs.Exception is null)
             {
-                _client.ApplicationMessageReceivedAsync += e =>
+                if (_failedMessageStorage is not null)
                 {
-                    OnMessageReceive(e);
-                    return Task.CompletedTask;
-                };
-
-                _client.DisconnectedAsync += OnDisconnectAsync;
-
+                    await _failedMessageStorage.DeleteByGuidAsync(eventArgs.ApplicationMessage);
+                }
+            }
+            else
+            {
+                Trace.WriteLine(eventArgs.ApplicationMessage.Id + " " + eventArgs.Exception);
             }
 
+            await Task.CompletedTask;
         }
 
         public override async Task Connect()
@@ -121,39 +165,29 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 _client = await InitClientAsync();
             }
 
-            try
-            {
-                using (var timeoutToken = new CancellationTokenSource(_connectionInfo.GetTimeOut()))
-                {
-                    MqttClientConnectResult result = await _client.ConnectAsync(
-                    _connectionInfo.GetMqttConnectOptions(),
-                    timeoutToken.Token);
+            var managedMqttClientOptions = new ManagedMqttClientOptionsBuilder()
+                .WithClientOptions(_connectionInfo.GetMqttConnectOptions())
+                .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
+                .WithStorage(_failedMessageStorage)
+                .WithPendingMessagesOverflowStrategy(
+                    MQTTnet.Server.MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
+                .Build();
 
-                    if (result.ResultCode == MqttClientConnectResultCode.Success)
-                    {
-                        await CompleteAstarteConnection(result.IsSessionPresent);
-                    }
-                    else
-                    {
-                        throw new AstarteTransportException
-                        ($"Error connecting to MQTT. Code: {result.ResultCode}");
-                    }
-                }
-            }
-            catch (OperationCanceledException)
+            if (!_client.IsStarted)
             {
-                Trace.WriteLine("Timeout while connecting.");
+                await _client.StartAsync(managedMqttClientOptions);
+                await CompleteAstarteConnection(true);
             }
 
         }
 
-        public override void Disconnect()
+        public override async Task Disconnect()
         {
             if (_client != null)
             {
                 if (_client.IsConnected)
                 {
-                    _client.DisconnectAsync();
+                    await _client.StopAsync();
                 }
             }
         }
@@ -216,18 +250,23 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 return;
             }
 
-            MqttClientPublishResult result = await _client.PublishAsync(applicationMessage);
-            if (result.ReasonCode != MqttClientPublishReasonCode.Success)
-            {
-                throw new AstarteTransportException($"Error publishing on MQTT. Code: " +
-                "{" + result.ReasonCode + "}");
-            }
+            await _client.EnqueueAsync(applicationMessage);
         }
 
-        Task OnDisconnectAsync(MqttClientDisconnectedEventArgs e)
+        async Task OnDisconnectAsync(MqttClientDisconnectedEventArgs e)
         {
+            if (Device is not null && _client is not null)
+            {
+                if (!Device.GetAlwaysReconnect())
+                {
+                    await _client.StopAsync();
+                }
+
+            }
+
             if (_astarteTransportEventListener != null)
             {
+                Trace.WriteLine("The Connection was lost.");
                 _astarteTransportEventListener.OnTransportDisconnected();
             }
             else
@@ -235,7 +274,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 Trace.WriteLine("The Connection was lost.");
             }
 
-            return Task.CompletedTask;
         }
 
         private void OnMessageReceive(MqttApplicationMessageReceivedEventArgs e)

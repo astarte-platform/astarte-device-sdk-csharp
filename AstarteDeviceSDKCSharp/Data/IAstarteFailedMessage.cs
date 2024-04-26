@@ -29,5 +29,7 @@ namespace AstarteDeviceSDKCSharp.Data
         int GetQos();
 
         long GetExpiry();
+
+        Guid GetGuid();
     }
 }

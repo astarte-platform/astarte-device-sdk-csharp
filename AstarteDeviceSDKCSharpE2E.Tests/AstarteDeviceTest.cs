@@ -70,11 +70,11 @@ public class AstarteDeviceTest
     /// Test disconnect device from Astarte
     /// </summary>
     [Fact, TestPriority(9)]
-    public void DisconnectDeviceFromAstarte()
+    public async Task DisconnectDeviceFromAstarte()
     {
         Console.WriteLine("Test disconnect device to Astarte");
 
-        astarteDevice.Disconnect();
+        await astarteDevice.Disconnect();
         Assert.False(astarteDevice.IsConnected());
     }
 }
