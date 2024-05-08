@@ -27,6 +27,7 @@ namespace AstarteDeviceSDK.Protocol
         [Description("")]
         UNKNOWN_PROTOCOL,
         [Description("astarte_mqtt_v1")]
-        ASTARTE_MQTT_V1
+        ASTARTE_MQTT_V1,
+        OFFLINE
     }
 }
