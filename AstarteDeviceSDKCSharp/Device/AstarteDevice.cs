@@ -117,6 +117,30 @@ namespace AstarteDeviceSDKCSharp.Device
             }
 
             _astarteFailedMessageStorage = new(fullCryptoDirPath);
+
+            if (!_pairingHandler.PingAstartePairing().Result)
+            {
+                _astarteTransport = AstarteTransportFactory.CreateAstarteTransportOfflineAstarteTransport
+                    (AstarteProtocolType.OFFLINE,
+                           astarteRealm,
+                           deviceId,
+                           "Offline",
+                           astarteCryptoStore,
+                           (TimeSpan)(timeOut is null ? TimeSpan.FromSeconds(5) : timeOut),
+                           _astarteFailedMessageStorage);
+
+                if (_astarteTransport is null)
+                {
+                    throw new AstarteTransportException("No supported transports for the device !");
+                }
+
+                foreach (AstarteInterface astarteInterface in GetAllInterfaces())
+                {
+                    astarteInterface.SetAstarteTransport(_astarteTransport);
+                }
+                _astarteTransport.SetDevice(this);
+                _astarteTransport.SendIntrospection();
+            }
         }
 
         private async Task Init()
@@ -197,45 +221,47 @@ namespace AstarteDeviceSDKCSharp.Device
         /// <exception cref="AstartePairingException"></exception>
         public async Task Connect()
         {
-
-            if (!_pairingHandler.IsCertificateAvailable())
+            if (_pairingHandler.PingAstartePairing().Result)
             {
-                await _pairingHandler.RequestNewCertificate();
-                _initialized = false;
-            }
-
-            if (!_initialized)
-            {
-
-                await Init();
-                _initialized = true;
-            }
-
-            if (IsConnected())
-            {
-                return;
-            }
-
-            try
-            {
-                if (_astarteTransport is null)
-                {
-                    return;
-                }
-                await _astarteTransport.Connect();
-            }
-            catch (AstarteCryptoException)
-            {
-                Trace.WriteLine("Regenerating the cert");
-                try
+                if (!_pairingHandler.IsCertificateAvailable())
                 {
                     await _pairingHandler.RequestNewCertificate();
                     _initialized = false;
                 }
-                catch (AstartePairingException ex)
+
+                if (!_initialized)
                 {
-                    OnTransportConnectionError(ex);
+
+                    await Init();
+                    _initialized = true;
+                }
+
+                if (IsConnected())
+                {
                     return;
+                }
+
+                try
+                {
+                    if (_astarteTransport is null)
+                    {
+                        return;
+                    }
+                    await _astarteTransport.Connect();
+                }
+                catch (AstarteCryptoException)
+                {
+                    Trace.WriteLine("Regenerating the cert");
+                    try
+                    {
+                        await _pairingHandler.RequestNewCertificate();
+                        _initialized = false;
+                    }
+                    catch (AstartePairingException ex)
+                    {
+                        OnTransportConnectionError(ex);
+                        return;
+                    }
                 }
             }
         }
@@ -244,7 +270,8 @@ namespace AstarteDeviceSDKCSharp.Device
         /// Check if the device is currently connected.
         /// </summary>
         /// <returns>If device currently connected return true</returns>
-        public bool IsConnected()
+        public bool
+        IsConnected()
         {
             return _astarteTransport?.IsConnected() ?? false;
         }
