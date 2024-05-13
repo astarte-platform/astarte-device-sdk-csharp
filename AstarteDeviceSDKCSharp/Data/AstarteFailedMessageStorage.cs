@@ -18,8 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+using System.Data;
 using System.Diagnostics;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using MQTTnet;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Packets;
@@ -28,48 +29,91 @@ namespace AstarteDeviceSDKCSharp.Data
 {
     public class AstarteFailedMessageStorage : IAstarteFailedMessageStorage
     {
-        private readonly AstarteDbContext _astarteDbContext;
-        private readonly AstarteDbContext _astarteDbContextDelete;
-        private readonly AstarteDbContext _astarteDbContextRead;
+        private readonly object _storeLock = new();
+        private readonly string _dbConnectionString;
 
+        SqliteConnection sqliteConnection = new SqliteConnection();
+        SqliteConnection sqliteReadConnection = new SqliteConnection();
         private static List<AstarteFailedMessageEntry> _astarteFailedMessageVolatile = new();
         readonly HashSet<ManagedMqttApplicationMessage> stored = new HashSet<ManagedMqttApplicationMessage>();
 
-
         public AstarteFailedMessageStorage(string persistencyDir)
         {
-            this._astarteDbContext = new AstarteDbContext(persistencyDir);
-            this._astarteDbContextDelete = new AstarteDbContext(persistencyDir);
-            this._astarteDbContextRead = new AstarteDbContext(persistencyDir);
+
+            _dbConnectionString = $"Filename = {persistencyDir}{Path.DirectorySeparatorChar}AstarteDeviceDb";
+
+            sqliteConnection = new SqliteConnection(_dbConnectionString);
+            sqliteConnection.Open();
+
+            sqliteReadConnection = new SqliteConnection(_dbConnectionString);
+            sqliteReadConnection.Open();
+
         }
 
         public async Task InsertStored(string topic, byte[] payload, int qos, Guid guid)
         {
-            AstarteFailedMessageEntry failedMessageEntry
-            = new AstarteFailedMessageEntry(qos, payload, topic, guid);
+            try
+            {
 
-            _astarteDbContext.AstarteFailedMessages.Add(failedMessageEntry);
+                if (sqliteConnection.State != ConnectionState.Open)
+                {
+                    sqliteConnection = new SqliteConnection(_dbConnectionString);
+                    sqliteConnection.Open();
+                }
 
-            Trace.WriteLine($"Insert fallback message in database: "
-            + $"{topic} : {guid}");
+                using (SqliteCommand insertCommand = new SqliteCommand())
+                {
+                    insertCommand.Connection = sqliteConnection;
+                    insertCommand.CommandText = "INSERT INTO AstarteFailedMessages (Qos, Payload, Topic, absolute_expiry, guid) " +
+                                                "VALUES (@qos,@payload,@topic,@absolute_expiry,@guid);";
+                    insertCommand.Parameters.AddWithValue("@qos", qos);
+                    insertCommand.Parameters.AddWithValue("@payload", payload);
+                    insertCommand.Parameters.AddWithValue("@topic", topic);
+                    insertCommand.Parameters.AddWithValue("@absolute_expiry", 0);
+                    insertCommand.Parameters.AddWithValue("@guid", guid);
 
-            await _astarteDbContext.SaveChangesAsync();
+                    await insertCommand.ExecuteNonQueryAsync();
+                }
+
+                Trace.WriteLine($"Insert fallback message in database:"
+                + $"{topic} : {guid}");
+
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Failed to insert fallback message in database. Error message: {ex.Message}");
+            }
         }
 
         public async Task InsertStored(string topic, byte[] payload, int qos, Guid guid, int relativeExpiry)
         {
             try
             {
-                AstarteFailedMessageEntry failedMessageEntry
-                    = new AstarteFailedMessageEntry(qos, payload, topic, guid, relativeExpiry);
 
-                _astarteDbContext.AstarteFailedMessages.Add(failedMessageEntry);
+                if (sqliteConnection.State != ConnectionState.Open)
+                {
+                    sqliteConnection = new SqliteConnection(_dbConnectionString);
+                    sqliteConnection.Open();
+                }
+
+                using (SqliteCommand insertCommand = new SqliteCommand())
+                {
+                    insertCommand.Connection = sqliteConnection;
+                    insertCommand.CommandText = "INSERT INTO AstarteFailedMessages (Qos, Payload, Topic, absolute_expiry, guid) " +
+                                                "VALUES (@qos,@payload,@topic,@absolute_expiry,@guid);";
+                    insertCommand.Parameters.AddWithValue("@qos", qos);
+                    insertCommand.Parameters.AddWithValue("@payload", payload);
+                    insertCommand.Parameters.AddWithValue("@topic", topic);
+                    insertCommand.Parameters.AddWithValue("@absolute_expiry", relativeExpiry);
+                    insertCommand.Parameters.AddWithValue("@guid", guid);
+
+                    await insertCommand.ExecuteNonQueryAsync();
+                }
 
                 Trace.WriteLine($"Insert fallback message in database:"
                 + $"{topic} : {guid},"
                 + $" expiry time: {relativeExpiry}");
 
-                await _astarteDbContext.SaveChangesAsync();
             }
             catch (Exception ex)
             {
@@ -108,10 +152,22 @@ namespace AstarteDeviceSDKCSharp.Data
                 Trace.WriteLine($"Remove from local database "
                 + $"{failedMessages.GetTopic()} : "
                 + $"{failedMessages.GetPayload()}");
-                _astarteDbContext.AstarteFailedMessages.Remove(failedMessages);
+
+                if (sqliteConnection.State != ConnectionState.Open)
+                {
+                    sqliteConnection = new SqliteConnection(_dbConnectionString);
+                    sqliteConnection.Open();
+                }
+                using (SqliteCommand cmd = new SqliteCommand(
+                    "DELETE FROM AstarteFailedMessages WHERE guid = @guid;", sqliteConnection))
+                {
+
+                    cmd.Parameters.AddWithValue("@guid", failedMessages.Id);
+
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
 
-            await _astarteDbContext.SaveChangesAsync();
         }
 
         public void RejectCache(AstarteFailedMessageEntry failedMessages)
@@ -132,17 +188,26 @@ namespace AstarteDeviceSDKCSharp.Data
 
         public async Task SaveQueuedMessagesAsync(IList<ManagedMqttApplicationMessage> messages)
         {
-            MqttUserProperty? retention = null;
-            foreach (var message in messages)
+
+            if (messages.Count == 0)
             {
+                return;
+            }
 
-                if (message.ApplicationMessage.UserProperties is null)
-                {
-                    continue;
-                }
+            lock (_storeLock)
+            {
+                var newMessages = messages
+                    .ExceptBy(stored.Select(x => x.Id), y => y.Id).ToList();
 
-                if (!stored.Contains(message))
+                MqttUserProperty? retention = null;
+                foreach (var message in newMessages)
                 {
+
+                    if (message.ApplicationMessage.UserProperties is null)
+                    {
+                        continue;
+                    }
+
                     retention = message.ApplicationMessage.UserProperties.Where(x => x.Name == "Retention").FirstOrDefault();
 
                     if (retention == null || retention.Value == "DISCARD")
@@ -154,24 +219,24 @@ namespace AstarteDeviceSDKCSharp.Data
                     {
                         if (message.ApplicationMessage.MessageExpiryInterval > 0)
                         {
-                            await InsertStored
-                              (
-                                  message.ApplicationMessage.Topic,
-                                  message.ApplicationMessage.Payload,
-                                  (int)message.ApplicationMessage.QualityOfServiceLevel,
-                                  message.Id,
-                                  (int)message.ApplicationMessage.MessageExpiryInterval
-                              );
+                            InsertStored
+                             (
+                                 message.ApplicationMessage.Topic,
+                                 message.ApplicationMessage.Payload,
+                                 (int)message.ApplicationMessage.QualityOfServiceLevel,
+                                 message.Id,
+                                 (int)message.ApplicationMessage.MessageExpiryInterval
+                             ).Wait();
                         }
                         else
                         {
-                            await InsertStored
-                              (
-                                  message.ApplicationMessage.Topic,
-                                  message.ApplicationMessage.Payload,
-                                  (int)message.ApplicationMessage.QualityOfServiceLevel,
-                                  message.Id
-                              );
+                            InsertStored
+                             (
+                                 message.ApplicationMessage.Topic,
+                                 message.ApplicationMessage.Payload,
+                                 (int)message.ApplicationMessage.QualityOfServiceLevel,
+                                 message.Id
+                             ).Wait();
                         }
                     }
                     else if (retention.Value == "VOLATILE")
@@ -200,14 +265,16 @@ namespace AstarteDeviceSDKCSharp.Data
                         }
                     }
                     stored.Add(message);
+
                 }
             }
+            await Task.CompletedTask;
         }
 
         public async Task<IList<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync()
         {
             var result = new List<ManagedMqttApplicationMessage>();
-            foreach (var failedMessage in await _astarteDbContext.AstarteFailedMessages.ToListAsync())
+            foreach (var failedMessage in await GetAstarteFailedMessageStorage())
             {
                 if (IsExpired(failedMessage.GetExpiry()))
                 {
@@ -279,50 +346,84 @@ namespace AstarteDeviceSDKCSharp.Data
 
         public async Task DeleteByGuidAsync(ManagedMqttApplicationMessage applicationMessage)
         {
-            if (stored.Contains(applicationMessage))
+
+            lock (_storeLock)
             {
-                stored.Remove(applicationMessage);
-
-                try
+                if (stored.Contains(applicationMessage))
                 {
-                    var message = await GetAstarteFailedMessageStorage(applicationMessage.Id);
+                    stored.Remove(applicationMessage);
 
-                    if (message is not null)
+                    try
                     {
-                        _astarteDbContextDelete.AstarteFailedMessages.Remove(message);
-                    }
-
-                    if (_astarteFailedMessageVolatile is not null)
-                    {
-                        var messageVolatile = _astarteFailedMessageVolatile
-                            .Where(x => x.Guid == applicationMessage.Id)
-                            .FirstOrDefault();
-                        if (messageVolatile is not null)
+                        if (sqliteConnection.State != ConnectionState.Open)
                         {
-                            _astarteFailedMessageVolatile.Remove(messageVolatile);
+                            sqliteConnection = new SqliteConnection(_dbConnectionString);
+                            sqliteConnection.Open();
+                        }
+                        using (SqliteCommand cmd = new SqliteCommand(
+                            "DELETE FROM AstarteFailedMessages WHERE guid = @guid;", sqliteConnection))
+                        {
+                            cmd.Parameters.AddWithValue("@guid", applicationMessage.Id);
+                            cmd.ExecuteNonQueryAsync();
                         }
 
+                        if (_astarteFailedMessageVolatile is not null)
+                        {
+                            var messageVolatile = _astarteFailedMessageVolatile
+                                .Where(x => x.Guid == applicationMessage.Id)
+                                .FirstOrDefault();
+                            if (messageVolatile is not null)
+                            {
+                                _astarteFailedMessageVolatile.Remove(messageVolatile);
+                            }
+                        }
                     }
-
-                    await _astarteDbContextDelete.SaveChangesAsync();
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"Failed to delete fallback message from database. Error message: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Trace.WriteLine($"Failed to delete fallback message from database. Error message: {ex.Message}");
-                }
+            }
+            await Task.CompletedTask;
+        }
 
+        private async Task<IList<AstarteFailedMessageEntry>> GetAstarteFailedMessageStorage()
+        {
+
+            List<AstarteFailedMessageEntry> response = new List<AstarteFailedMessageEntry>();
+
+            if (sqliteReadConnection.State != ConnectionState.Open)
+            {
+                sqliteReadConnection = new SqliteConnection(_dbConnectionString);
+                sqliteReadConnection.Open();
             }
 
+            using (SqliteCommand cmd = new SqliteCommand("SELECT * FROM AstarteFailedMessages;", sqliteReadConnection))
+            {
+
+                var dt = new DataTable();
+
+                using (SqliteDataReader dr = await cmd.ExecuteReaderAsync())
+                {
+                    dt.BeginLoadData();
+                    dt.Load(dr);
+                    dt.EndLoadData();
+
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        AstarteFailedMessageEntry entry = new AstarteFailedMessageEntry(
+                            Convert.ToInt32(row["Qos"]),
+                            (byte[])row["Payload"],
+                            row["Topic"].ToString()!,
+                            Guid.Parse(row["guid"].ToString()!),
+                            Convert.ToInt32(row["absolute_expiry"]));
+
+                        response.Add(entry);
+                    }
+                }
+            }
+            return response;
         }
 
-        private async Task<AstarteFailedMessageEntry?> GetAstarteFailedMessageStorage(Guid guid)
-        {
-            var response = await _astarteDbContextRead.AstarteFailedMessages
-                .Where(x => x.Guid.ToString() == guid.ToString().ToUpper())
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
-
-            return response is not null ? response : null;
-        }
     }
 }
