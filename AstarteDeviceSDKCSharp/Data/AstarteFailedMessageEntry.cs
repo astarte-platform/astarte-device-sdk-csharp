@@ -24,7 +24,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AstarteDeviceSDKCSharp.Data
 {
-    [Index(nameof(Guid), Name = "Index_Guid")]
+    [Index(nameof(Guid), Name = "Index_Guid", IsUnique = true)]
     public class AstarteFailedMessageEntry : IAstarteFailedMessage
     {
         [Key]

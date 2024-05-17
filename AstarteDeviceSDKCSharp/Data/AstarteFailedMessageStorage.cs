@@ -35,7 +35,6 @@ namespace AstarteDeviceSDKCSharp.Data
         SqliteConnection sqliteConnection = new SqliteConnection();
         SqliteConnection sqliteReadConnection = new SqliteConnection();
         private static List<AstarteFailedMessageEntry> _astarteFailedMessageVolatile = new();
-        readonly HashSet<ManagedMqttApplicationMessage> stored = new HashSet<ManagedMqttApplicationMessage>();
 
         public AstarteFailedMessageStorage(string persistencyDir)
         {
@@ -54,25 +53,27 @@ namespace AstarteDeviceSDKCSharp.Data
         {
             try
             {
-
-                if (sqliteConnection.State != ConnectionState.Open)
+                lock (_storeLock)
                 {
-                    sqliteConnection = new SqliteConnection(_dbConnectionString);
-                    sqliteConnection.Open();
-                }
+                    if (sqliteConnection.State != ConnectionState.Open)
+                    {
+                        sqliteConnection = new SqliteConnection(_dbConnectionString);
+                        sqliteConnection.Open();
+                    }
 
-                using (SqliteCommand insertCommand = new SqliteCommand())
-                {
-                    insertCommand.Connection = sqliteConnection;
-                    insertCommand.CommandText = "INSERT INTO AstarteFailedMessages (Qos, Payload, Topic, absolute_expiry, guid) " +
-                                                "VALUES (@qos,@payload,@topic,@absolute_expiry,@guid);";
-                    insertCommand.Parameters.AddWithValue("@qos", qos);
-                    insertCommand.Parameters.AddWithValue("@payload", payload);
-                    insertCommand.Parameters.AddWithValue("@topic", topic);
-                    insertCommand.Parameters.AddWithValue("@absolute_expiry", 0);
-                    insertCommand.Parameters.AddWithValue("@guid", guid);
+                    using (SqliteCommand insertCommand = new SqliteCommand())
+                    {
+                        insertCommand.Connection = sqliteConnection;
+                        insertCommand.CommandText = "INSERT INTO AstarteFailedMessages (Qos, Payload, Topic, absolute_expiry, guid) " +
+                                                    "VALUES (@qos,@payload,@topic,@absolute_expiry,@guid) ON CONFLICT DO NOTHING;";
+                        insertCommand.Parameters.AddWithValue("@qos", qos);
+                        insertCommand.Parameters.AddWithValue("@payload", payload);
+                        insertCommand.Parameters.AddWithValue("@topic", topic);
+                        insertCommand.Parameters.AddWithValue("@absolute_expiry", 0);
+                        insertCommand.Parameters.AddWithValue("@guid", guid);
 
-                    await insertCommand.ExecuteNonQueryAsync();
+                        insertCommand.ExecuteNonQueryAsync().Wait();
+                    }
                 }
 
                 Trace.WriteLine($"Insert fallback message in database:"
@@ -83,31 +84,34 @@ namespace AstarteDeviceSDKCSharp.Data
             {
                 Trace.WriteLine($"Failed to insert fallback message in database. Error message: {ex.Message}");
             }
+            await Task.CompletedTask;
         }
 
         public async Task InsertStored(string topic, byte[] payload, int qos, Guid guid, int relativeExpiry)
         {
             try
             {
-
-                if (sqliteConnection.State != ConnectionState.Open)
+                lock (_storeLock)
                 {
-                    sqliteConnection = new SqliteConnection(_dbConnectionString);
-                    sqliteConnection.Open();
-                }
+                    if (sqliteConnection.State != ConnectionState.Open)
+                    {
+                        sqliteConnection = new SqliteConnection(_dbConnectionString);
+                        sqliteConnection.Open();
+                    }
 
-                using (SqliteCommand insertCommand = new SqliteCommand())
-                {
-                    insertCommand.Connection = sqliteConnection;
-                    insertCommand.CommandText = "INSERT INTO AstarteFailedMessages (Qos, Payload, Topic, absolute_expiry, guid) " +
-                                                "VALUES (@qos,@payload,@topic,@absolute_expiry,@guid);";
-                    insertCommand.Parameters.AddWithValue("@qos", qos);
-                    insertCommand.Parameters.AddWithValue("@payload", payload);
-                    insertCommand.Parameters.AddWithValue("@topic", topic);
-                    insertCommand.Parameters.AddWithValue("@absolute_expiry", relativeExpiry);
-                    insertCommand.Parameters.AddWithValue("@guid", guid);
+                    using (SqliteCommand insertCommand = new SqliteCommand())
+                    {
+                        insertCommand.Connection = sqliteConnection;
+                        insertCommand.CommandText = "INSERT INTO AstarteFailedMessages (Qos, Payload, Topic, absolute_expiry, guid) " +
+                                                    "VALUES (@qos,@payload,@topic,@absolute_expiry,@guid) ON CONFLICT DO NOTHING;";
+                        insertCommand.Parameters.AddWithValue("@qos", qos);
+                        insertCommand.Parameters.AddWithValue("@payload", payload);
+                        insertCommand.Parameters.AddWithValue("@topic", topic);
+                        insertCommand.Parameters.AddWithValue("@absolute_expiry", relativeExpiry);
+                        insertCommand.Parameters.AddWithValue("@guid", guid);
 
-                    await insertCommand.ExecuteNonQueryAsync();
+                        insertCommand.ExecuteNonQueryAsync().Wait();
+                    }
                 }
 
                 Trace.WriteLine($"Insert fallback message in database:"
@@ -119,6 +123,7 @@ namespace AstarteDeviceSDKCSharp.Data
             {
                 Trace.WriteLine($"Failed to insert fallback message in database. Error message: {ex.Message}");
             }
+            await Task.CompletedTask;
         }
 
         public void InsertVolatile(string topic, byte[] payload, int qos, Guid guid)
@@ -194,81 +199,71 @@ namespace AstarteDeviceSDKCSharp.Data
                 return;
             }
 
-            lock (_storeLock)
+            ManagedMqttApplicationMessage message = messages.Last();
+
+            MqttUserProperty? retention = null;
+
+            if (message.ApplicationMessage.UserProperties is null)
             {
-                var newMessages = messages
-                    .ExceptBy(stored.Select(x => x.Id), y => y.Id).ToList();
+                return;
+            }
 
-                MqttUserProperty? retention = null;
-                foreach (var message in newMessages)
+            retention = message.ApplicationMessage.UserProperties.Where(x => x.Name == "Retention").FirstOrDefault();
+
+            if (retention == null || retention.Value == "DISCARD")
+            {
+                return;
+            }
+
+            if (retention.Value == "STORED")
+            {
+                if (message.ApplicationMessage.MessageExpiryInterval > 0)
                 {
-
-                    if (message.ApplicationMessage.UserProperties is null)
-                    {
-                        continue;
-                    }
-
-                    retention = message.ApplicationMessage.UserProperties.Where(x => x.Name == "Retention").FirstOrDefault();
-
-                    if (retention == null || retention.Value == "DISCARD")
-                    {
-                        continue;
-                    }
-
-                    if (retention.Value == "STORED")
-                    {
-                        if (message.ApplicationMessage.MessageExpiryInterval > 0)
-                        {
-                            InsertStored
-                             (
-                                 message.ApplicationMessage.Topic,
-                                 message.ApplicationMessage.Payload,
-                                 (int)message.ApplicationMessage.QualityOfServiceLevel,
-                                 message.Id,
-                                 (int)message.ApplicationMessage.MessageExpiryInterval
-                             ).Wait();
-                        }
-                        else
-                        {
-                            InsertStored
-                             (
-                                 message.ApplicationMessage.Topic,
-                                 message.ApplicationMessage.Payload,
-                                 (int)message.ApplicationMessage.QualityOfServiceLevel,
-                                 message.Id
-                             ).Wait();
-                        }
-                    }
-                    else if (retention.Value == "VOLATILE")
-                    {
-
-                        if (message.ApplicationMessage.MessageExpiryInterval > 0)
-                        {
-                            InsertVolatile
-                            (
-                                message.ApplicationMessage.Topic,
-                                message.ApplicationMessage.Payload,
-                                (int)message.ApplicationMessage.QualityOfServiceLevel,
-                                message.Id,
-                                (int)message.ApplicationMessage.MessageExpiryInterval
-                            );
-                        }
-                        else
-                        {
-                            InsertVolatile
-                            (
-                                message.ApplicationMessage.Topic,
-                                message.ApplicationMessage.Payload,
-                                (int)message.ApplicationMessage.QualityOfServiceLevel,
-                                message.Id
-                            );
-                        }
-                    }
-                    stored.Add(message);
-
+                    await InsertStored
+                        (
+                            message.ApplicationMessage.Topic,
+                            message.ApplicationMessage.Payload,
+                            (int)message.ApplicationMessage.QualityOfServiceLevel,
+                            message.Id,
+                            (int)message.ApplicationMessage.MessageExpiryInterval
+                        );
+                }
+                else
+                {
+                    await InsertStored
+                        (
+                            message.ApplicationMessage.Topic,
+                            message.ApplicationMessage.Payload,
+                            (int)message.ApplicationMessage.QualityOfServiceLevel,
+                            message.Id
+                        );
                 }
             }
-            await Task.CompletedTask;
+            else if (retention.Value == "VOLATILE")
+            {
+
+                if (message.ApplicationMessage.MessageExpiryInterval > 0)
+                {
+                    InsertVolatile
+                    (
+                        message.ApplicationMessage.Topic,
+                        message.ApplicationMessage.Payload,
+                        (int)message.ApplicationMessage.QualityOfServiceLevel,
+                        message.Id,
+                        (int)message.ApplicationMessage.MessageExpiryInterval
+                    );
+                }
+                else
+                {
+                    InsertVolatile
+                    (
+                        message.ApplicationMessage.Topic,
+                        message.ApplicationMessage.Payload,
+                        (int)message.ApplicationMessage.QualityOfServiceLevel,
+                        message.Id
+                    );
+                }
+            }
         }
 
         public async Task<IList<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync()
@@ -304,7 +299,6 @@ namespace AstarteDeviceSDKCSharp.Data
                 };
 
                 result.Add(item);
-                stored.Add(item);
             }
 
             foreach (var messageVolatile in _astarteFailedMessageVolatile)
@@ -337,7 +331,6 @@ namespace AstarteDeviceSDKCSharp.Data
                 };
 
                 result.Add(item);
-                stored.Add(item);
             }
 
             return result;
@@ -347,42 +340,38 @@ namespace AstarteDeviceSDKCSharp.Data
         public async Task DeleteByGuidAsync(ManagedMqttApplicationMessage applicationMessage)
         {
 
-            lock (_storeLock)
+            try
             {
-                if (stored.Contains(applicationMessage))
+                lock (_storeLock)
                 {
-                    stored.Remove(applicationMessage);
-
-                    try
+                    if (sqliteConnection.State != ConnectionState.Open)
                     {
-                        if (sqliteConnection.State != ConnectionState.Open)
-                        {
-                            sqliteConnection = new SqliteConnection(_dbConnectionString);
-                            sqliteConnection.Open();
-                        }
-                        using (SqliteCommand cmd = new SqliteCommand(
-                            "DELETE FROM AstarteFailedMessages WHERE guid = @guid;", sqliteConnection))
-                        {
-                            cmd.Parameters.AddWithValue("@guid", applicationMessage.Id);
-                            cmd.ExecuteNonQueryAsync();
-                        }
-
-                        if (_astarteFailedMessageVolatile is not null)
-                        {
-                            var messageVolatile = _astarteFailedMessageVolatile
-                                .Where(x => x.Guid == applicationMessage.Id)
-                                .FirstOrDefault();
-                            if (messageVolatile is not null)
-                            {
-                                _astarteFailedMessageVolatile.Remove(messageVolatile);
-                            }
-                        }
+                        sqliteConnection = new SqliteConnection(_dbConnectionString);
+                        sqliteConnection.Open();
                     }
-                    catch (Exception ex)
+
+                    using (SqliteCommand cmd = new SqliteCommand(
+                        "DELETE FROM AstarteFailedMessages WHERE guid = @guid;", sqliteConnection))
                     {
-                        Trace.WriteLine($"Failed to delete fallback message from database. Error message: {ex.Message}");
+                        cmd.Parameters.AddWithValue("@guid", applicationMessage.Id);
+                        cmd.ExecuteNonQueryAsync().Wait();
                     }
                 }
+
+                if (_astarteFailedMessageVolatile is not null)
+                {
+                    var messageVolatile = _astarteFailedMessageVolatile
+                        .Where(x => x.Guid == applicationMessage.Id)
+                        .FirstOrDefault();
+                    if (messageVolatile is not null)
+                    {
+                        _astarteFailedMessageVolatile.Remove(messageVolatile);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Failed to delete fallback message from database. Error message: {ex.Message}");
             }
             await Task.CompletedTask;
         }
