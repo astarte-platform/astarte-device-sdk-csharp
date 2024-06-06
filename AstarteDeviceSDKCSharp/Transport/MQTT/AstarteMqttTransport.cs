@@ -38,6 +38,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
     {
         protected IManagedMqttClient? _client;
         private readonly IMqttConnectionInfo _connectionInfo;
+        public bool _resendingInProgress = false;
 
         protected AstarteMqttTransport(AstarteProtocolType type,
         IMqttConnectionInfo connectionInfo) : base(type)
@@ -65,14 +66,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
         private async Task CompleteAstarteConnection(bool IsSessionPresent)
         {
-            if (!IsSessionPresent || !_introspectionSent)
-            {
-                await SetupSubscriptions();
-                await SendIntrospection();
-                await SendEmptyCacheAsync();
-                await ResendAllProperties();
-                _introspectionSent = true;
-            }
 
             if (_client is not null)
             {
@@ -82,10 +75,9 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                     return Task.CompletedTask;
                 };
 
-                _client.ConnectedAsync += e =>
+                _client.ConnectedAsync += async e =>
                 {
-                    OnConnectedAsync(e);
-                    return Task.CompletedTask;
+                    await OnConnectedAsync(e);
                 };
 
                 _client.ConnectingFailedAsync += e =>
@@ -97,6 +89,15 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 _client.DisconnectedAsync += OnDisconnectAsync;
                 _client.ApplicationMessageProcessedAsync += OnMessageProcessedAsync;
 
+            }
+
+            if (!IsSessionPresent || !_introspectionSent)
+            {
+                await SetupSubscriptions();
+                await SendIntrospection();
+                await SendEmptyCacheAsync();
+                await ResendAllProperties();
+                _introspectionSent = true;
             }
 
         }
@@ -115,7 +116,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
         }
 
-        async void OnConnectedAsync(MqttClientConnectedEventArgs args)
+        async Task OnConnectedAsync(MqttClientConnectedEventArgs args)
         {
             if (!args.ConnectResult.IsSessionPresent)
             {
@@ -139,7 +140,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             {
                 if (_failedMessageStorage is not null)
                 {
-                    await _failedMessageStorage.DeleteByGuidAsync(eventArgs.ApplicationMessage);
+                    await _failedMessageStorage.DeleteByGuidAsync(eventArgs.ApplicationMessage.Id);
                 }
             }
             else
@@ -168,7 +169,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             var managedMqttClientOptions = new ManagedMqttClientOptionsBuilder()
                 .WithClientOptions(_connectionInfo.GetMqttConnectOptions())
                 .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
-                .WithStorage(_failedMessageStorage)
+                .WithMaxPendingMessages(10000)
                 .WithPendingMessagesOverflowStrategy(
                     MQTTnet.Server.MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
                 .Build();

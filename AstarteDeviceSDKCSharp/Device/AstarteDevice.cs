@@ -385,6 +385,7 @@ namespace AstarteDeviceSDKCSharp.Device
             lock (this)
             {
                 _astarteMessagelistener?.OnConnected();
+                _astarteTransport?.StartResenderTask();
             }
         }
 

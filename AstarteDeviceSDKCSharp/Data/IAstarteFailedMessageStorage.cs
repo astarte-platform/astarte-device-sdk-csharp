@@ -22,7 +22,7 @@ using MQTTnet.Extensions.ManagedClient;
 
 namespace AstarteDeviceSDKCSharp.Data
 {
-    public interface IAstarteFailedMessageStorage : IManagedMqttClientStorage
+    public interface IAstarteFailedMessageStorage
     {
         void InsertVolatile(String topic, byte[] payload, int qos, Guid guid);
 
@@ -38,6 +38,10 @@ namespace AstarteDeviceSDKCSharp.Data
 
         bool IsExpired(long expire);
 
-        Task DeleteByGuidAsync(ManagedMqttApplicationMessage applicationMessage);
+        Task DeleteByGuidAsync(Guid applicationMessage);
+
+        Task<IList<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync();
+        Task SaveQueuedMessageAsync(ManagedMqttApplicationMessage message);
+
     }
 }

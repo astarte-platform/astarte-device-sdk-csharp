@@ -26,6 +26,7 @@ using AstarteDeviceSDKCSharp.Utilities;
 using MQTTnet;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Protocol;
+using System.Diagnostics;
 using System.Text;
 
 namespace AstarteDeviceSDKCSharp.Transport.MQTT
@@ -92,7 +93,17 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             if (_client is not null)
             {
-                await _client.EnqueueAsync(managedApplicationMessage);
+                if (_failedMessageStorage is not null)
+                {
+                    await _failedMessageStorage.SaveQueuedMessageAsync(managedApplicationMessage);
+                }
+
+                if (!_resendingInProgress ||
+                mapping is null ||
+                mapping.GetRetention() == AstarteInterfaceDatastreamMapping.MappingRetention.DISCARD)
+                {
+                    await _client.EnqueueAsync(managedApplicationMessage);
+                }
             }
 
         }
@@ -204,6 +215,75 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                         }
                     }
                 }
+            }
+        }
+
+        public override void StartResenderTask()
+        {
+
+            CancellationTokenSource _resenderCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = _resenderCancellationTokenSource.Token;
+
+            Task.Run(async () =>
+           {
+               if (!_resendingInProgress)
+               {
+                   await ResendFailedMessages(cancellationToken);
+               }
+           });
+        }
+
+        private async Task ResendFailedMessages(CancellationToken cancellationToken = default)
+        {
+            Trace.WriteLine("Resending stored messages in progress.");
+            _resendingInProgress = true;
+
+            try
+            {
+                if (_client == null || _failedMessageStorage == null)
+                {
+                    Trace.WriteLine("Client or failed message storage is null.");
+                    _resendingInProgress = false;
+                    return;
+                }
+
+                await WaitForPendingMessagesToClear(_client);
+
+                var storedMessages = await _failedMessageStorage.LoadQueuedMessagesAsync();
+                if (storedMessages.Count == 0)
+                {
+                    Trace.WriteLine("No more stored messages to resend.");
+                    _resendingInProgress = false;
+                    return;
+                }
+
+                foreach (var message in storedMessages)
+                {
+                    await _client.EnqueueAsync(message);
+                }
+
+                await WaitForPendingMessagesToClear(_client);
+                await ResendFailedMessages(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                Trace.WriteLine("Resending stored messages was canceled.");
+            }
+            finally
+            {
+                _resendingInProgress = false;
+                Trace.WriteLine("Resending stored messages finished.");
+            }
+        }
+
+        private static async Task WaitForPendingMessagesToClear(IManagedMqttClient _client)
+        {
+            var timeout = _client.Options.ClientOptions.Timeout * 10000;
+            await Task.Run(() => SpinWait.SpinUntil(() => _client.PendingApplicationMessagesCount == 0, timeout));
+
+            if (_client.PendingApplicationMessagesCount > 0)
+            {
+                throw new AstarteTransportException("Timeout while resending stored messages.");
             }
         }
 
