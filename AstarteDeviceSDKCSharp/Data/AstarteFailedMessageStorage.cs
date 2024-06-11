@@ -191,15 +191,8 @@ namespace AstarteDeviceSDKCSharp.Data
             return expire != 0 ? (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expire) : false;
         }
 
-        public async Task SaveQueuedMessagesAsync(IList<ManagedMqttApplicationMessage> messages)
+        public async Task SaveQueuedMessageAsync(ManagedMqttApplicationMessage message)
         {
-
-            if (messages.Count == 0)
-            {
-                return;
-            }
-
-            ManagedMqttApplicationMessage message = messages.Last();
 
             MqttUserProperty? retention = null;
 
@@ -337,31 +330,28 @@ namespace AstarteDeviceSDKCSharp.Data
 
         }
 
-        public async Task DeleteByGuidAsync(ManagedMqttApplicationMessage applicationMessage)
+        public async Task DeleteByGuidAsync(Guid applicationMessageId)
         {
 
             try
             {
-                lock (_storeLock)
+                if (sqliteReadConnection.State != ConnectionState.Open)
                 {
-                    if (sqliteConnection.State != ConnectionState.Open)
-                    {
-                        sqliteConnection = new SqliteConnection(_dbConnectionString);
-                        sqliteConnection.Open();
-                    }
-
-                    using (SqliteCommand cmd = new SqliteCommand(
-                        "DELETE FROM AstarteFailedMessages WHERE guid = @guid;", sqliteConnection))
-                    {
-                        cmd.Parameters.AddWithValue("@guid", applicationMessage.Id);
-                        cmd.ExecuteNonQueryAsync().Wait();
-                    }
+                    sqliteReadConnection = new SqliteConnection(_dbConnectionString);
+                    sqliteReadConnection.Open();
                 }
+
+                SqliteCommand cmd = new SqliteCommand(
+                    "DELETE FROM AstarteFailedMessages WHERE guid = @guid ;", sqliteReadConnection);
+
+                cmd.Parameters.AddWithValue("@guid", applicationMessageId);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
 
                 if (_astarteFailedMessageVolatile is not null)
                 {
                     var messageVolatile = _astarteFailedMessageVolatile
-                        .Where(x => x.Guid == applicationMessage.Id)
+                        .Where(x => x.Guid == applicationMessageId)
                         .FirstOrDefault();
                     if (messageVolatile is not null)
                     {
@@ -373,7 +363,6 @@ namespace AstarteDeviceSDKCSharp.Data
             {
                 Trace.WriteLine($"Failed to delete fallback message from database. Error message: {ex.Message}");
             }
-            await Task.CompletedTask;
         }
 
         private async Task<IList<AstarteFailedMessageEntry>> GetAstarteFailedMessageStorage()
@@ -387,29 +376,19 @@ namespace AstarteDeviceSDKCSharp.Data
                 sqliteReadConnection.Open();
             }
 
-            using (SqliteCommand cmd = new SqliteCommand("SELECT * FROM AstarteFailedMessages;", sqliteReadConnection))
+            string query = @"SELECT Qos, Payload, Topic, guid, absolute_expiry 
+                FROM AstarteFailedMessages ORDER BY ID LIMIT 10000;";
+            using SqliteCommand cmd = new SqliteCommand(query, sqliteReadConnection);
+            using SqliteDataReader dr = await cmd.ExecuteReaderAsync();
+
+            while (await dr.ReadAsync())
             {
-
-                var dt = new DataTable();
-
-                using (SqliteDataReader dr = await cmd.ExecuteReaderAsync())
-                {
-                    dt.BeginLoadData();
-                    dt.Load(dr);
-                    dt.EndLoadData();
-
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        AstarteFailedMessageEntry entry = new AstarteFailedMessageEntry(
-                            Convert.ToInt32(row["Qos"]),
-                            (byte[])row["Payload"],
-                            row["Topic"].ToString()!,
-                            Guid.Parse(row["guid"].ToString()!),
-                            Convert.ToInt32(row["absolute_expiry"]));
-
-                        response.Add(entry);
-                    }
-                }
+                response.Add(new AstarteFailedMessageEntry(
+                    dr.GetInt32(0),
+                    (byte[])dr["Payload"],
+                    dr.GetString(2),
+                    dr.GetGuid(3),
+                    dr.GetInt32(4)));
             }
             return response;
         }
