@@ -238,15 +238,15 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             Trace.WriteLine("Resending stored messages in progress.");
             _resendingInProgress = true;
 
+            if (_client == null || _failedMessageStorage == null)
+            {
+                Trace.WriteLine("Client or failed message storage is null.");
+                _resendingInProgress = false;
+                return;
+            }
+
             try
             {
-                if (_client == null || _failedMessageStorage == null)
-                {
-                    Trace.WriteLine("Client or failed message storage is null.");
-                    _resendingInProgress = false;
-                    return;
-                }
-
                 await WaitForPendingMessagesToClear(_client);
 
                 var storedMessages = await _failedMessageStorage.LoadQueuedMessagesAsync();
@@ -263,7 +263,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 }
 
                 await WaitForPendingMessagesToClear(_client);
-                await ResendFailedMessages(cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -274,6 +273,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 _resendingInProgress = false;
                 Trace.WriteLine("Resending stored messages finished.");
             }
+
+            await ResendFailedMessages(cancellationToken);
         }
 
         private static async Task WaitForPendingMessagesToClear(IManagedMqttClient _client)
