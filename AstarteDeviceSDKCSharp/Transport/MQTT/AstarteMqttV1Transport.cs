@@ -229,6 +229,10 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                if (!_resendingInProgress)
                {
                    await ResendFailedMessages(cancellationToken);
+                   if (_failedMessageStorage is not null)
+                   {
+                       await _failedMessageStorage.DeleteProcessed();
+                   }
                }
            });
         }

@@ -64,8 +64,8 @@ namespace AstarteDeviceSDKCSharp.Data
                     using (SqliteCommand insertCommand = new SqliteCommand())
                     {
                         insertCommand.Connection = sqliteConnection;
-                        insertCommand.CommandText = "INSERT INTO AstarteFailedMessages (Qos, Payload, Topic, absolute_expiry, guid) " +
-                                                    "VALUES (@qos,@payload,@topic,@absolute_expiry,@guid) ON CONFLICT DO NOTHING;";
+                        insertCommand.CommandText = "INSERT INTO AstarteFailedMessages (Qos, Payload, Topic, absolute_expiry, guid, processed) " +
+                                                    "VALUES (@qos,@payload,@topic,@absolute_expiry,@guid, 0) ON CONFLICT DO NOTHING;";
                         insertCommand.Parameters.AddWithValue("@qos", qos);
                         insertCommand.Parameters.AddWithValue("@payload", payload);
                         insertCommand.Parameters.AddWithValue("@topic", topic);
@@ -102,8 +102,8 @@ namespace AstarteDeviceSDKCSharp.Data
                     using (SqliteCommand insertCommand = new SqliteCommand())
                     {
                         insertCommand.Connection = sqliteConnection;
-                        insertCommand.CommandText = "INSERT INTO AstarteFailedMessages (Qos, Payload, Topic, absolute_expiry, guid) " +
-                                                    "VALUES (@qos,@payload,@topic,@absolute_expiry,@guid) ON CONFLICT DO NOTHING;";
+                        insertCommand.CommandText = "INSERT INTO AstarteFailedMessages (Qos, Payload, Topic, absolute_expiry, guid, processed) " +
+                                                    "VALUES (@qos,@payload,@topic,@absolute_expiry,@guid, 0) ON CONFLICT DO NOTHING;";
                         insertCommand.Parameters.AddWithValue("@qos", qos);
                         insertCommand.Parameters.AddWithValue("@payload", payload);
                         insertCommand.Parameters.AddWithValue("@topic", topic);
@@ -167,7 +167,7 @@ namespace AstarteDeviceSDKCSharp.Data
                     "DELETE FROM AstarteFailedMessages WHERE guid = @guid;", sqliteConnection))
                 {
 
-                    cmd.Parameters.AddWithValue("@guid", failedMessages.Id);
+                    cmd.Parameters.AddWithValue("@guid", failedMessages.Guid);
 
                     await cmd.ExecuteNonQueryAsync();
                 }
@@ -365,6 +365,64 @@ namespace AstarteDeviceSDKCSharp.Data
             }
         }
 
+        public async Task MarkAsProcessed(Guid applicationMessageId)
+        {
+
+            try
+            {
+                if (sqliteReadConnection.State != ConnectionState.Open)
+                {
+                    sqliteReadConnection = new SqliteConnection(_dbConnectionString);
+                    sqliteReadConnection.Open();
+                }
+
+                SqliteCommand cmd = new SqliteCommand(
+                    "UPDATE AstarteFailedMessages SET processed = 1 WHERE guid = @guid ;", sqliteReadConnection);
+
+                cmd.Parameters.AddWithValue("@guid", applicationMessageId);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+
+                if (_astarteFailedMessageVolatile is not null)
+                {
+                    var messageVolatile = _astarteFailedMessageVolatile
+                        .Where(x => x.Guid == applicationMessageId)
+                        .FirstOrDefault();
+                    if (messageVolatile is not null)
+                    {
+                        _astarteFailedMessageVolatile.Remove(messageVolatile);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Failed to mark processed fallback message in database. Error message: {ex.Message}");
+            }
+        }
+
+        public async Task DeleteProcessed()
+        {
+
+            try
+            {
+                if (sqliteReadConnection.State != ConnectionState.Open)
+                {
+                    sqliteReadConnection = new SqliteConnection(_dbConnectionString);
+                    sqliteReadConnection.Open();
+                }
+
+                SqliteCommand cmd = new SqliteCommand(
+                    "DELETE FROM AstarteFailedMessages WHERE processed = 1;", sqliteReadConnection);
+                await cmd.ExecuteNonQueryAsync();
+                cmd.Dispose();
+
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Failed to delete fallback message from database. Error message: {ex.Message}");
+            }
+        }
+
         private async Task<IList<AstarteFailedMessageEntry>> GetAstarteFailedMessageStorage()
         {
 
@@ -377,7 +435,7 @@ namespace AstarteDeviceSDKCSharp.Data
             }
 
             string query = @"SELECT Qos, Payload, Topic, guid, absolute_expiry 
-                FROM AstarteFailedMessages ORDER BY ID LIMIT 10000;";
+                FROM AstarteFailedMessages WHERE processed = 0 ORDER BY ID LIMIT 10000;";
             using SqliteCommand cmd = new SqliteCommand(query, sqliteReadConnection);
             using SqliteDataReader dr = await cmd.ExecuteReaderAsync();
 

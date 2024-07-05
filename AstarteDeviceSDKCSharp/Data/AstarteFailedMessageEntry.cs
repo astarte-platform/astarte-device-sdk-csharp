@@ -43,6 +43,7 @@ namespace AstarteDeviceSDKCSharp.Data
         [Required]
         [Column("guid")]
         public Guid Guid { get; set; }
+        public bool Processed { get; set; }
 
 
         public AstarteFailedMessageEntry(int qos, byte[] payload, string topic, Guid guid)

@@ -140,7 +140,14 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             {
                 if (_failedMessageStorage is not null)
                 {
-                    await _failedMessageStorage.DeleteByGuidAsync(eventArgs.ApplicationMessage.Id);
+                    if (_resendingInProgress)
+                    {
+                        await _failedMessageStorage.MarkAsProcessed(eventArgs.ApplicationMessage.Id);
+                    }
+                    else
+                    {
+                        await _failedMessageStorage.DeleteByGuidAsync(eventArgs.ApplicationMessage.Id);
+                    }
                 }
             }
             else
