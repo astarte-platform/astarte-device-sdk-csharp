@@ -171,7 +171,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
                 .WithMaxPendingMessages(10000)
                 .WithPendingMessagesOverflowStrategy(
-                    MQTTnet.Server.MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage)
+                    MQTTnet.Server.MqttPendingMessagesOverflowStrategy.DropNewMessage)
                 .Build();
 
             if (!_client.IsStarted)

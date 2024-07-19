@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a fallout strategy for individual failed messages.
 - Resend failed messages stored in the cache memory.
 
+### Fixed
+- Resend stored messages in the order in which they were streamed
+by the user
+
 ## [0.6.0] - 2023-12-18
 ### Added
 - Add the capability to update the introspection dynamically.
