@@ -39,6 +39,8 @@ namespace AstarteDeviceSDKCSharp.Data
         bool IsExpired(long expire);
 
         Task DeleteByGuidAsync(Guid applicationMessage);
+        Task MarkAsProcessed(Guid applicationMessage);
+        Task DeleteProcessed();
 
         Task<IList<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync();
         Task SaveQueuedMessageAsync(ManagedMqttApplicationMessage message);
