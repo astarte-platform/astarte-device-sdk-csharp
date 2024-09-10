@@ -429,6 +429,13 @@ namespace AstarteDeviceSDKCSharp.Device
         public void OnTransportConnectionInitializationError(Exception ex)
         {
             _astarteMessagelistener?.OnFailure(new AstarteMessageException(ex.Message, ex));
+
+            if (!_pairingHandler.IsCertificateAvailable())
+            {
+                _ = _astarteTransport?.Disconnect();
+                _ = Connect();
+            }
+
         }
 
         /// <summary>

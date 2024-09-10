@@ -193,10 +193,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         {
             if (_client != null)
             {
-                if (_client.IsConnected)
-                {
-                    await _client.StopAsync();
-                }
+                await _client.StopAsync();
             }
         }
 
