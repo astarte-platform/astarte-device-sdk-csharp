@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Resend stored messages in the order in which they were streamed
 by the user
+- Regenerate client certificate after expiration
 
 ## [0.6.0] - 2023-12-18
 ### Added
