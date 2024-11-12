@@ -226,7 +226,7 @@ namespace AstarteDeviceSDKCSharp.Device
             }
             catch (AstarteCryptoException)
             {
-                Trace.WriteLine("Regenerating the cert");
+                AstarteLogger.Debug("Regenerating the cert", this.GetType().Name);
                 try
                 {
                     await _pairingHandler.RequestNewCertificate();
@@ -395,7 +395,7 @@ namespace AstarteDeviceSDKCSharp.Device
             {
                 if (ex is AstarteCryptoException)
                 {
-                    Trace.WriteLine("Regenerating the cert");
+                    AstarteLogger.Debug("Regenerating the cert", this.GetType().Name);
                     try
                     {
                         Task.Run(() => _pairingHandler.RequestNewCertificate());

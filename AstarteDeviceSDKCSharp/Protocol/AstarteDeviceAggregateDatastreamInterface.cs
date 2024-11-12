@@ -84,9 +84,9 @@ namespace AstarteDeviceSDKCSharp.Protocol
 
                 if (astarteInterfaceMapping.Path is null)
                 {
-                    Trace.WriteLine("Astarte mapping path " +
+                    AstarteLogger.Warn("Astarte mapping path " +
                     "{" + astarteInterfaceMapping.Path + " } "
-                    + " is null.");
+                    + " is null.", this.GetType().Name);
                     continue;
                 }
                 if (!payload.ContainsKey(

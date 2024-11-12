@@ -128,7 +128,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
             else
             {
-                Trace.WriteLine("Transport Connected");
+                AstarteLogger.Info("Transport Connected", this.GetType().Name);
             }
 
         }
@@ -276,7 +276,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
             else
             {
-                Trace.WriteLine("The Connection was lost.");
+                AstarteLogger.Error("The Connection was lost.", this.GetType().Name);
             }
 
         }
@@ -285,8 +285,8 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         {
             object? payload = null;
 
-            Trace.WriteLine("Incoming message: "
-                + Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0]));
+            AstarteLogger.Debug("Incoming message: "
+                + Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0]), this.GetType().Name);
 
             if (!e.ApplicationMessage.Topic.Contains(_connectionInfo.GetClientId())
             || _messageListener == null)
@@ -313,7 +313,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 }
                 else
                 {
-                    Trace.WriteLine("Unhandled control message!" + path);
+                    AstarteLogger.Error("Unhandled control message!" + path, this.GetType().Name);
                 }
                 return;
             }
@@ -323,7 +323,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             if (!astarteDevice.HasInterface(astarteInterface))
             {
-                Trace.WriteLine("Got an unexpected interface!" + astarteInterface);
+                AstarteLogger.Warn("Got an unexpected interface!" + astarteInterface, this.GetType().Name);
                 return;
             }
 
@@ -335,7 +335,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 decodedMessage = AstartePayload.Deserialize(e.ApplicationMessage.Payload);
                 if (decodedMessage is null)
                 {
-                    Trace.WriteLine("Unable to get payload, decodedMessage was null");
+                    AstarteLogger.Warn("Unable to get payload, decodedMessage was null ", this.GetType().Name);
                     return;
                 }
                 payload = decodedMessage.GetPayload();
@@ -362,7 +362,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             if (astarteServerValue == null)
             {
-                Trace.WriteLine("Unable to get value, astarteServerValue was null");
+                AstarteLogger.Error("Unable to get value, astarteServerValue was null", this.GetType().Name);
                 return;
             }
 
@@ -389,7 +389,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
                 }
                 catch (AstartePropertyStorageException ex)
                 {
-                    Trace.WriteLine(ex.Message);
+                    AstarteLogger.Error(ex.Message, this.GetType().Name);
                 }
             }
 
@@ -434,7 +434,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
             catch (IOException e)
             {
-                Trace.WriteLine(e.Message);
+                AstarteLogger.Error(e.Message, this.GetType().Name);
             }
 
             string purgePropertiesPayload = result.ToString();

@@ -58,7 +58,7 @@ namespace AstarteDeviceSDKCSharp.Protocol
             AstarteInterfaceMapping? targetMapping = null;
             if (serverValue is null)
             {
-                Trace.WriteLine($"Unable to build AstarteServerValue, astartePayload was empty");
+                AstarteLogger.Error("Unable to build AstarteServerValue, astartePayload was empty", this.GetType().Name);
                 return null;
             }
 
@@ -87,8 +87,9 @@ namespace AstarteDeviceSDKCSharp.Protocol
             }
             else
             {
-                Trace.WriteLine($"Got an unexpected path {interfacePath}"
-                + "for interface {GetInterfaceName()}");
+                AstarteLogger.Warn($"Got an unexpected path {interfacePath}"
+                + "for interface {GetInterfaceName()}", this.GetType().Name);
+
             }
             return astarteServerValue;
         }
