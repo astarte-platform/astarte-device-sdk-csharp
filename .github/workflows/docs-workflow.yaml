@@ -97,7 +97,7 @@ jobs:
         id: cmp-and-copy-get-started
         if: steps.check-release-branch.outputs.RESULT == 'OK'
         run: |
-          our_get_started="./astarte-device-sdk-csharp/GET_SARTED.md"
+          our_get_started="./astarte-device-sdk-csharp/GET_STARTED.md"
           their_get_started="./sdk-doc/source/get_started/csharp.md"
           if cmp -s "$our_get_started" "$their_get_started"; then
             echo "Get started are identical, no need for substitution"
