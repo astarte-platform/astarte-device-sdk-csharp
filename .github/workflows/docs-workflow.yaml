@@ -28,7 +28,7 @@ on:
     - 'release-*'
 
 jobs:
-  docs:
+  api-docs:
     runs-on: ubuntu-latest
     steps:
     # Checkout the source
@@ -65,3 +65,59 @@ jobs:
       working-directory: ./docs
       run: |
         git push origin master
+  get-started-docs:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the source
+      - uses: actions/checkout@v4
+        with:
+          path: astarte-device-sdk-csharp
+          fetch-depth: 0
+      # Checkout the sdk-doc repository
+      - uses: actions/checkout@v4
+        with:
+          repository: astarte-platform/sdk-doc
+          ssh-key: ${{ secrets.SDK_DOC_DEPLOY_KEY }}
+          path: sdk-doc
+      - name: Check release branch
+        id: check-release-branch
+        working-directory: ./astarte-device-sdk-csharp
+        shell: bash
+        run: |
+          latest_release=$(git branch -r | grep "release-*" | sort -t '-' -k 2,2n | tail -n 1 | cut -d '/' -f 2)
+          current_branch=$(git branch --show-current)
+          if [[ "$current_branch" == "$latest_release" ]]; then
+            echo "Current branch is the latest release branch"
+            echo "RESULT=OK" >> $GITHUB_OUTPUT
+          else
+            echo "Current branch is not the latest release branch"
+            echo "RESULT=FAILED" >> $GITHUB_OUTPUT
+          fi
+      - name: Compare and copy get started
+        id: cmp-and-copy-get-started
+        if: steps.check-release-branch.outputs.RESULT == 'OK'
+        run: |
+          our_get_started="./astarte-device-sdk-csharp/GET_SARTED.md"
+          their_get_started="./sdk-doc/source/get_started/csharp.md"
+          if cmp -s "$our_get_started" "$their_get_started"; then
+            echo "Get started are identical, no need for substitution"
+            echo "RESULT=NO_SUBSTITUTION" >> $GITHUB_OUTPUT
+          else
+            echo "Our get started is different, substituting theirs"
+            cp "$our_get_started" "$their_get_started"
+            echo "RESULT=SUBSTITUTION" >> $GITHUB_OUTPUT
+          fi
+      - name: Commit changes
+        id: commit-changes
+        if: steps.cmp-and-copy-get-started.outputs.RESULT == 'SUBSTITUTION'
+        working-directory: ./sdk-doc
+        run: |
+          git config --local user.email "astarte-machine@ispirata.com"
+          git config --local user.name "Astarte Bot"
+          git add .
+          git diff-index --quiet HEAD || git commit -m "Update CSharp SDK get started"
+      - name: Push changes
+        if: steps.commit-changes.conclusion == 'success'
+        working-directory: ./sdk-doc
+        run: |
+          git push origin master
