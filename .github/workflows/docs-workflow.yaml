@@ -54,6 +54,13 @@ jobs:
         rm -rf docs/$DOCS_DIRNAME
         mkdir -p docs/$DOCS_DIRNAME
         cp -r astarte-device-sdk-csharp/docs/out/html/* docs/$DOCS_DIRNAME/
+    - name: Update symlink
+      working-directory: ./docs/device-sdks/csharp
+      run: |
+        rm -f "latest"
+        latest_version=$(ls -d * | grep -v snapshot | sort -V | tail -n 1)
+        if [ -z $latest_version ]; then latest_version="snapshot"; fi
+        ln -sf "$latest_version" latest    
     - name: Commit files
       working-directory: ./docs
       run: |
