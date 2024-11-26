@@ -34,10 +34,12 @@ namespace AstarteDeviceSDKCSharp
         private List<AstarteTransport>? _transports;
         private X509Certificate2? _certificate;
         private TimeSpan _timeOut;
+        private string _baseUrl;
 
         public AstartePairingHandler(string pairingUrl, string astarteRealm, string deviceId,
         string credentialSecret, AstarteCryptoStore astarteCryptoStore, TimeSpan timeout)
         {
+            _baseUrl = pairingUrl;
             _astarteRealm = astarteRealm;
             _deviceId = deviceId;
             _credentialSecret = credentialSecret;
@@ -45,11 +47,14 @@ namespace AstarteDeviceSDKCSharp
             _timeOut = timeout;
             _AstartePairingService = new AstartePairingService(pairingUrl, astarteRealm, timeout);
 
-            _certificate = _cryptoStore.GetCertificate();
-            if (_certificate == null)
+            if (PingAstartePairing().Result)
             {
-                _ = _AstartePairingService.RequestNewCertificate(credentialSecret,
-                _cryptoStore, deviceId).Result;
+                _certificate = _cryptoStore.GetCertificate();
+                if (_certificate == null)
+                {
+                    _ = _AstartePairingService.RequestNewCertificate(credentialSecret,
+                    _cryptoStore, deviceId).Result;
+                }
             }
 
         }
@@ -92,6 +97,31 @@ namespace AstarteDeviceSDKCSharp
         {
             _certificate = await _AstartePairingService.RequestNewCertificate(
                 _credentialSecret, _cryptoStore, _deviceId);
+
+        }
+
+        public async Task<bool> PingAstartePairing()
+        {
+            if (!_baseUrl.EndsWith("/"))
+            {
+                _baseUrl += "/";
+            }
+
+            string url = $"{_baseUrl}health";
+            using var httpClient = new HttpClient();
+
+            try
+            {
+                // Send a GET request to the server
+                var response = await httpClient.GetAsync(url);
+
+                return response.IsSuccessStatusCode;
+
+            }
+            catch (Exception)
+            {
+                return false;
+            }
 
         }
 
