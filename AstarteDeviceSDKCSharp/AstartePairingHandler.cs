@@ -1,7 +1,7 @@
 ﻿/*
  * This file is part of Astarte.
  *
- * Copyright 2023 SECO Mind Srl
+ * Copyright 2025 SECO Mind Srl
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,14 +36,14 @@ namespace AstarteDeviceSDKCSharp
         private TimeSpan _timeOut;
 
         public AstartePairingHandler(string pairingUrl, string astarteRealm, string deviceId,
-        string credentialSecret, AstarteCryptoStore astarteCryptoStore, TimeSpan timeout)
+        string credentialSecret, AstarteCryptoStore astarteCryptoStore, TimeSpan timeout, bool ignoreSSLErrors = false)
         {
             _astarteRealm = astarteRealm;
             _deviceId = deviceId;
             _credentialSecret = credentialSecret;
             _cryptoStore = astarteCryptoStore;
             _timeOut = timeout;
-            _AstartePairingService = new AstartePairingService(pairingUrl, astarteRealm, timeout);
+            _AstartePairingService = new AstartePairingService(pairingUrl, astarteRealm, timeout, ignoreSSLErrors);
 
             _certificate = _cryptoStore.GetCertificate();
             if (_certificate == null)
