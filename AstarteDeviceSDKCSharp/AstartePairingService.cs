@@ -1,7 +1,7 @@
 ﻿/*
  * This file is part of Astarte.
  *
- * Copyright 2023 SECO Mind Srl
+ * Copyright 2025 SECO Mind Srl
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,14 +39,27 @@ namespace AstarteDeviceSDKCSharp
         private readonly string _astarteRealm;
         private readonly HttpClient _httpClient;
 
-        public AstartePairingService(string pairingUrl, string astarteRealm, TimeSpan timeOut)
+        public AstartePairingService(string pairingUrl, string astarteRealm, TimeSpan timeOut, bool ignoreSSLErrors = false)
         {
             _astarteRealm = astarteRealm;
             _pairingUrl = new Uri($"{pairingUrl.TrimEnd('/')}/v1");
-            _httpClient = new HttpClient
+
+            if (ignoreSSLErrors)
             {
-                Timeout = timeOut
-            };
+                var httpHandler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+                };
+                _httpClient = new HttpClient(httpHandler);
+
+            }
+            else
+            {
+                _httpClient = new HttpClient();
+            }
+
+            _httpClient.Timeout = timeOut;
+
         }
 
         internal async Task<List<AstarteTransport>> ReloadTransports(string credentialSecret,
