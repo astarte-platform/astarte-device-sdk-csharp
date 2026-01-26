@@ -11,7 +11,20 @@ SPDX-License-Identifier: Apache-2.0 -->
     <RootNamespace>AstarteDeviceSDKCSharp</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.7.1</Version>
+    <Version>0.7.2</Version>
+    <PackageId>Astarte.Device.SDK</PackageId>
+    <RepositoryType>git</RepositoryType>
+    <Description>The Astarte Device SDK for C# is a ready-to-use library that provides communication and pairing primitives to an Astarte Cluster.</Description>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Copyright>Copyright 2025 Seco Mind Srl</Copyright>
+    <PackageProjectUrl>https://docs.astarte-platform.org/device-sdks/common/get_started/csharp.html</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/astarte-platform/astarte-device-sdk-csharp.git</RepositoryUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageTags>astarte iot sdk</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>nuget_icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,6 +52,18 @@ SPDX-License-Identifier: Apache-2.0 -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.25.1" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="../Images/nuget_icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -17,3 +17,7 @@ License: CC0-1.0
 Files: AstarteDeviceSDKCSharpE2E.Tests/xunit.runner.json
 Copyright: SECO Mind Srl
 License: CC0-1.0
+
+Files: Images/*
+Copyright: SECO Mind Srl
+License: CC0-1.0
