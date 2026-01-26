@@ -130,16 +130,6 @@ namespace AstarteDeviceSDKCSharp.Tests.Protocol
         }
 
         [Fact]
-        public void ValidateAggregateLTooFewPayloadTest()
-        {
-            Dictionary<string, object> payload = new Dictionary<string, object>();
-            payload.Add("one", 1);
-
-            Assert.Throws<AstarteInvalidValueException>(() =>
-            aInterface.ValidatePayload("/test", payload, new DateTime()));
-        }
-
-        [Fact]
         public void ValidateAggregateTooMuchPayloadTest()
         {
             Dictionary<string, object> payload = new Dictionary<string, object>();
@@ -187,5 +177,19 @@ namespace AstarteDeviceSDKCSharp.Tests.Protocol
             Assert.Throws<AstarteInvalidValueException>(() =>
             aInterfaceWArray.ValidatePayload("/test", payload, new DateTime()));
         }
+
+        [Fact]
+        public void ValidateAggregateWithMissingValueTest()
+        {
+            Dictionary<string, object> payload = new Dictionary<string, object>();
+            payload.Add("int", 1);
+            payload.Add("intArray", new int[] { 1, 2, -4 });
+
+            var exception = Record.Exception(() =>
+            aInterfaceWArray.ValidatePayload("/test", payload, new DateTime()));
+
+            Assert.Null(exception);
+        }
+
     }
 }

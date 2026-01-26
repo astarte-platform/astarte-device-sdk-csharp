@@ -89,12 +89,6 @@ namespace AstarteDeviceSDKCSharp.Protocol
                     + " is null.", this.GetType().Name);
                     continue;
                 }
-                if (!payload.ContainsKey(
-                    astarteInterfaceMapping.Path[formattedPath.Length..]))
-                {
-                    throw new AstarteInvalidValueException(
-                         $"Value not found for {astarteInterfaceMapping.Path}");
-                }
             }
 
             foreach (var data in payload)
