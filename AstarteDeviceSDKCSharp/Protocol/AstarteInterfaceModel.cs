@@ -73,5 +73,8 @@ namespace AstarteDeviceSDK.Protocol
         [JsonProperty("expiry")]
         public int? Expiry { get; set; }
 
+        [JsonProperty("allow_unset")]
+        public bool AllowUnset { get; set; } = false;
+
     }
 }

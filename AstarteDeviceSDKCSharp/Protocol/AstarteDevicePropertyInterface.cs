@@ -84,15 +84,25 @@ namespace AstarteDeviceSDKCSharp.Protocol
                 throw new AstarteTransportException("No available transport");
             }
 
-            transport.SendIndividualValue(this, path, null);
+            bool allowUnset = this.FindMappingInInterface(path).AllowUnset;
 
-            try
+            if (allowUnset)
             {
-                propertyStorage.RemoveStoredPath(GetInterfaceName(), path, GetMajorVersion());
+                transport.SendIndividualValue(this, path, null);
+
+                try
+                {
+                    propertyStorage.RemoveStoredPath(GetInterfaceName(), path, GetMajorVersion());
+                }
+                catch (AstartePropertyStorageException e)
+                {
+                    throw new AstarteTransportException("Property storage failure", e);
+                }
             }
-            catch (AstartePropertyStorageException e)
+            else
             {
-                throw new AstarteTransportException("Property storage failure", e);
+                throw new AstarteInvalidValueException(
+                    $"Unset operation not allowed for path {path}");
             }
         }
     }

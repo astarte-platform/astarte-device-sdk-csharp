@@ -11,12 +11,14 @@
             "endpoint": "/%{sensor_id}/name",
             "type": "string",
             "description": "Sensor name.",
+            "allow_unset": true,
             "doc": "An arbitrary sensor name."
         },
         {
             "endpoint": "/%{sensor_id}/unit",
             "type": "string",
             "description": "Sample data measurement unit.",
+            "allow_unset": true,
             "doc": "SI unit such as m, kg, K, etc..."
         }
     ]

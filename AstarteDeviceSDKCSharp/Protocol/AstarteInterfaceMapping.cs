@@ -27,6 +27,7 @@ namespace AstarteDeviceSDK.Protocol
         public string? Path { get; set; }
         public Type? MapType { get; set; }
         public Type? PrimitiveArrayType { get; set; }
+        public bool AllowUnset { get; set; } = false;
 
         public static AstarteInterfaceMapping FromAstarteInterfaceMapping(Mapping astarteMapping)
         {
@@ -40,6 +41,7 @@ namespace AstarteDeviceSDK.Protocol
             Path = astarteMappingObject.Endpoint;
             MapType = StringToCSharpType(astarteMappingObject.Type);
             PrimitiveArrayType = StringToPrimitiveArrayCSharpType(astarteMappingObject.Type);
+            AllowUnset = astarteMappingObject.AllowUnset;
         }
 
         public string? GetPath()
