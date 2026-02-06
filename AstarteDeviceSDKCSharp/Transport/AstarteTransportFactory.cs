@@ -20,7 +20,9 @@
 
 using AstarteDeviceSDK.Protocol;
 using AstarteDeviceSDKCSharp.Crypto;
+using AstarteDeviceSDKCSharp.Data;
 using AstarteDeviceSDKCSharp.Transport.MQTT;
+using AstarteDeviceSDKCSharp.Transport.Offline;
 
 namespace AstarteDeviceSDKCSharp.Transport
 {
@@ -46,6 +48,19 @@ namespace AstarteDeviceSDKCSharp.Transport
                 default:
                     return null;
             }
+        }
+
+        public static AstarteTransport? CreateAstarteTransportOfflineAstarteTransport
+        (AstarteProtocolType protocolType, string astarteRealm,
+        string deviceId, dynamic protocolData, AstarteCryptoStore astarteCryptoStore,
+        TimeSpan timeOut, AstarteFailedMessageStorage astarteFailedMessageStorage)
+        {
+            return new AstarteTransportOffline(new MutualSSLAuthenticationMqttConnectionInfo(
+                new Uri("about:blank"),
+                astarteRealm,
+                deviceId,
+                astarteCryptoStore.GetMqttClientOptionsBuilderTlsParameters(),
+                timeOut), astarteFailedMessageStorage);
         }
     }
 }
