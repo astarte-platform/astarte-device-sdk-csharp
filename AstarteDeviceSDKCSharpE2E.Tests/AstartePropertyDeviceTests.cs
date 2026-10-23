@@ -52,7 +52,7 @@ namespace AstarteDeviceSDKCSharpE2E.Tests
 
         [Fact]
         [MyBeforeAfterTest]
-        public async void TestBeforeShouldRunBeforeTest()
+        public async Task TestBeforeShouldRunBeforeTest()
         {
             await astarteDevice.Connect();
         }

@@ -50,7 +50,7 @@ public class AstarteDeviceTest
 
     [Fact]
     [MyBeforeAfterTestAttribute]
-    public async void TestBeforeShouldRunBeforeTest()
+    public async Task TestBeforeShouldRunBeforeTest()
     {
         await astarteDevice.Connect();
     }
