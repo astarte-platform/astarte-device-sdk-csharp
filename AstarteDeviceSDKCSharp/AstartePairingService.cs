@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of Astarte.
  *
  * Copyright 2025 SECO Mind Srl
@@ -77,7 +77,7 @@ namespace AstarteDeviceSDKCSharp
             {
                 string responseContent = await response.Content.ReadAsStringAsync();
 
-                responseContent = responseContent.IsNullOrEmpty() ? "empty" : responseContent;
+                responseContent = string.IsNullOrEmpty(responseContent) ? "empty" : responseContent;
 
                 throw new AstartePairingException(
                             "Request to Pairing API failed with "
@@ -179,7 +179,7 @@ namespace AstarteDeviceSDKCSharp
                 {
                     string responseContent = await response.Content.ReadAsStringAsync();
 
-                    responseContent = responseContent.IsNullOrEmpty() ? "empty" : responseContent;
+                    responseContent = string.IsNullOrEmpty(responseContent) ? "empty" : responseContent;
 
                     throw new AstartePairingException(
                               "Request to Pairing API failed with "
@@ -195,7 +195,7 @@ namespace AstarteDeviceSDKCSharp
                 {
                     if (certificate != null)
                     {
-                        X509Certificate2 newCertificate = new X509Certificate2
+                        X509Certificate2 newCertificate = X509CertificateLoader.LoadCertificate
                         (Convert.FromBase64String(certificate.Data.ClientCrt
                         .Replace("-----BEGIN CERTIFICATE-----", "")
                         .Replace("-----END CERTIFICATE-----", "")
@@ -373,7 +373,7 @@ namespace AstarteDeviceSDKCSharp
             {
                 string responseContent = await response.Content.ReadAsStringAsync();
 
-                responseContent = responseContent.IsNullOrEmpty() ? "empty" : responseContent;
+                responseContent = string.IsNullOrEmpty(responseContent) ? "empty" : responseContent;
 
                 throw new AstartePairingException(
                     "Request to device register API failed with "
