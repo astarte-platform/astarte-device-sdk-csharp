@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of Astarte.
  *
  * Copyright 2023 SECO Mind Srl
@@ -48,9 +48,9 @@ namespace AstarteDeviceSDKCSharp.Crypto
                 ecdsa = GenerateKey();
 
                 //Set certificate
-                X509Certificate2 caCert = new(File.ReadAllBytes(Path.Combine(_cryptoStoreDir, "device.crt")));
+                X509Certificate2 caCert = X509CertificateLoader.LoadCertificate(File.ReadAllBytes(Path.Combine(_cryptoStoreDir, "device.crt")));
                 X509Certificate2 caCertWithKey = caCert.CopyWithPrivateKey(ecdsa);
-                _certificate = new(caCertWithKey.Export(X509ContentType.Pfx));
+                _certificate = X509CertificateLoader.LoadPkcs12(caCertWithKey.Export(X509ContentType.Pfx), null);
             }
 
         }
@@ -173,7 +173,7 @@ namespace AstarteDeviceSDKCSharp.Crypto
             return _certificate;
         }
 
-        public MqttClientOptionsBuilderTlsParameters GetMqttClientOptionsBuilderTlsParameters()
+        public MqttClientTlsOptions GetMqttClientOptionsBuilderTlsParameters()
         {
             _parametersFactory = new AstarteMutualTLSParametersFactory(this);
 

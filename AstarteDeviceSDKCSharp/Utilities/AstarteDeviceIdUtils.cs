@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of Astarte.
  *
  * Copyright 2023 SECO Mind Srl
@@ -37,7 +37,7 @@ namespace AstarteDeviceSDKCSharp.Utilities
             var stream = new MemoryStream();
             var buffer = new BinaryWriter(stream);
             buffer.Write(randomUUID.ToByteArray());
-            var encoded = Convert.ToBase64String(stream.ToArray()).TrimEnd('=');
+            var encoded = Base64UrlEncoder.Encode(stream.ToArray());
             return encoded;
         }
 

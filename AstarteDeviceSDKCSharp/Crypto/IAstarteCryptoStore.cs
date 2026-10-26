@@ -29,7 +29,7 @@ namespace AstarteDeviceSDKCSharp.Crypto
         X509Certificate2? GetCertificate();
         void SetAstarteCertificate(X509Certificate2 astarteCertificate);
         string GenerateCSR(string commonName);
-        MqttClientOptionsBuilderTlsParameters GetMqttClientOptionsBuilderTlsParameters();
+        MqttClientTlsOptions GetMqttClientOptionsBuilderTlsParameters();
         bool IgnoreSSLErrors { get; set; }
     }
 }

@@ -31,13 +31,13 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
         private readonly TimeSpan _timeOut;
 
         public MutualSSLAuthenticationMqttConnectionInfo(Uri brokerUrl, string astarteRealm,
-        string deviceId, MqttClientOptionsBuilderTlsParameters tlsOptions, TimeSpan timeOut)
+        string deviceId, MqttClientTlsOptions tlsOptions, TimeSpan timeOut)
         {
             _brokerUrl = brokerUrl;
             _mqttConnectOptions = new MqttClientOptionsBuilder()
             .WithClientId(Guid.NewGuid().ToString())
             .WithTcpServer(_brokerUrl.Host, _brokerUrl.Port)
-            .WithTls(tlsOptions)
+            .WithTlsOptions(tlsOptions)
             .WithCleanSession(false)
             .WithKeepAlivePeriod(TimeSpan.FromSeconds(60))
             .WithSessionExpiryInterval(0)

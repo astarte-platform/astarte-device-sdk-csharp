@@ -13,7 +13,7 @@ device registration and exposes a high-level API to enable device data publicati
 For an example showing how to send data look [here](/AstarteDeviceSDKExample/README.md).
 
 ## Requirements
-- Dotnet 6
+- Dotnet 10
 
 If you have a problem using `Astarte Device SDK for CSharp`, please [open an
 issue](https://github.com/secomind/astarte-device-sdk-csharp/issues).

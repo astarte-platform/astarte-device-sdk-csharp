@@ -215,7 +215,7 @@ namespace AstarteDeviceSDKCSharp.Data
                     await InsertStored
                         (
                             message.ApplicationMessage.Topic,
-                            message.ApplicationMessage.Payload,
+                            message.ApplicationMessage.PayloadSegment.ToArray(),
                             (int)message.ApplicationMessage.QualityOfServiceLevel,
                             message.Id,
                             (int)message.ApplicationMessage.MessageExpiryInterval
@@ -226,7 +226,7 @@ namespace AstarteDeviceSDKCSharp.Data
                     await InsertStored
                         (
                             message.ApplicationMessage.Topic,
-                            message.ApplicationMessage.Payload,
+                            message.ApplicationMessage.PayloadSegment.ToArray(),
                             (int)message.ApplicationMessage.QualityOfServiceLevel,
                             message.Id
                         );
@@ -240,7 +240,7 @@ namespace AstarteDeviceSDKCSharp.Data
                     InsertVolatile
                     (
                         message.ApplicationMessage.Topic,
-                        message.ApplicationMessage.Payload,
+                        message.ApplicationMessage.PayloadSegment.ToArray(),
                         (int)message.ApplicationMessage.QualityOfServiceLevel,
                         message.Id,
                         (int)message.ApplicationMessage.MessageExpiryInterval
@@ -251,7 +251,7 @@ namespace AstarteDeviceSDKCSharp.Data
                     InsertVolatile
                     (
                         message.ApplicationMessage.Topic,
-                        message.ApplicationMessage.Payload,
+                        message.ApplicationMessage.PayloadSegment.ToArray(),
                         (int)message.ApplicationMessage.QualityOfServiceLevel,
                         message.Id
                     );
@@ -279,7 +279,7 @@ namespace AstarteDeviceSDKCSharp.Data
                        CorrelationData = null,
                        Dup = false,
                        MessageExpiryInterval = 0,
-                       Payload = failedMessage.GetPayload(),
+                       PayloadSegment = failedMessage.GetPayload(),
                        QualityOfServiceLevel = (MQTTnet.Protocol.MqttQualityOfServiceLevel)failedMessage.GetQos(),
                        ResponseTopic = null,
                        Retain = false,
@@ -311,7 +311,7 @@ namespace AstarteDeviceSDKCSharp.Data
                        CorrelationData = null,
                        Dup = false,
                        MessageExpiryInterval = 0,
-                       Payload = messageVolatile.GetPayload(),
+                       PayloadSegment = messageVolatile.GetPayload(),
                        QualityOfServiceLevel = (MQTTnet.Protocol.MqttQualityOfServiceLevel)messageVolatile.GetQos(),
                        ResponseTopic = null,
                        Retain = false,
