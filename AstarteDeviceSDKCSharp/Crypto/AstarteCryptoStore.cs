@@ -173,7 +173,7 @@ namespace AstarteDeviceSDKCSharp.Crypto
             return _certificate;
         }
 
-        public MqttClientOptionsBuilderTlsParameters GetMqttClientOptionsBuilderTlsParameters()
+        public MqttClientTlsOptions GetMqttClientOptionsBuilderTlsParameters()
         {
             _parametersFactory = new AstarteMutualTLSParametersFactory(this);
 
