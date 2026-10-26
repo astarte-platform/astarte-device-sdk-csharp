@@ -54,9 +54,14 @@ namespace AstarteDeviceSDKCSharpE2E.Tests
 
         [Fact]
         [MyBeforeAfterTestAttribute]
-        public async void TestBeforeShouldRunBeforeTest()
+        public async Task TestBeforeShouldRunBeforeTest()
         {
             await astarteDevice.Connect();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            while (!astarteDevice.IsConnected() && !cts.IsCancellationRequested)
+            {
+                await Task.Delay(100);
+            }
         }
 
         /// <summary>
@@ -106,7 +111,7 @@ namespace AstarteDeviceSDKCSharpE2E.Tests
         /// </summary>
         /// <returns></returns>
         [Fact, TestPriority(5)]
-        public async void AggregateFromServerToDevice()
+        public async Task AggregateFromServerToDevice()
         {
             Console.WriteLine("Test for aggregated object datastreams"
             + " in the direction from server to device.");

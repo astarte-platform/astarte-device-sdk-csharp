@@ -28,6 +28,7 @@ namespace AstarteDeviceSDKCSharp.Data
     {
 
         private readonly AstarteDbContext _astarteDbContext;
+        private readonly object _lock = new();
 
         public AstartePropertyStorage(string connectionString)
         {
@@ -36,78 +37,90 @@ namespace AstarteDeviceSDKCSharp.Data
 
         public List<string> GetStoredPathsForInterface(string interfaceName, int interfaceMajor)
         {
-            var astartePropretisList = _astarteDbContext.AstarteGenericProperties
-                            .Where(x => x.InterfaceName == interfaceName
-                            && x.InterfaceMajor == interfaceMajor)
-                            .Select(x => x.Path)
-                            .ToList();
-
-            if (astartePropretisList.Count == 0)
+            lock (_lock)
             {
-                return new List<string>();
-            }
+                var astartePropretisList = _astarteDbContext.AstarteGenericProperties
+                                .Where(x => x.InterfaceName == interfaceName
+                                && x.InterfaceMajor == interfaceMajor)
+                                .Select(x => x.Path)
+                                .ToList();
 
-            return astartePropretisList;
+                if (astartePropretisList.Count == 0)
+                {
+                    return new List<string>();
+                }
+
+                return astartePropretisList;
+            }
         }
 
         public DecodedMessage? GetStoredValue(AstarteInterface astarteInterface, string path,
         int interfaceMajor)
         {
-            var astarteProprety = _astarteDbContext.AstarteGenericProperties
-                            .Where(x => x.InterfaceName == astarteInterface.InterfaceName
-                                   && x.Path.EndsWith(path) && x.InterfaceMajor == interfaceMajor)
-                            .FirstOrDefault();
-
-            if (astarteProprety == null)
+            lock (_lock)
             {
-                return null;
-            }
+                var astarteProprety = _astarteDbContext.AstarteGenericProperties
+                                .Where(x => x.InterfaceName == astarteInterface.InterfaceName
+                                       && x.Path.EndsWith(path) && x.InterfaceMajor == interfaceMajor)
+                                .FirstOrDefault();
 
-            return AstartePayload.Deserialize(astarteProprety.BsonValue);
+                if (astarteProprety == null)
+                {
+                    return null;
+                }
+
+                return AstartePayload.Deserialize(astarteProprety.BsonValue);
+            }
         }
 
         public Dictionary<string, object> GetStoredValuesForInterface
         (AstarteInterface astarteInterface)
         {
-            Dictionary<string, object> returnedValues = new();
-
-            var astartePropretisList = _astarteDbContext.AstarteGenericProperties
-                            .Where(x => x.InterfaceName == astarteInterface.InterfaceName
-                            && x.InterfaceMajor == astarteInterface.GetMajorVersion())
-                            .ToList();
-
-            foreach (var property in astartePropretisList)
+            lock (_lock)
             {
-                DecodedMessage? decodedMessage = AstartePayload.Deserialize(property.BsonValue);
+                Dictionary<string, object> returnedValues = new();
 
-                if (decodedMessage is null)
+                var astartePropretisList = _astarteDbContext.AstarteGenericProperties
+                                .Where(x => x.InterfaceName == astarteInterface.InterfaceName
+                                && x.InterfaceMajor == astarteInterface.GetMajorVersion())
+                                .ToList();
+
+                foreach (var property in astartePropretisList)
                 {
-                    return returnedValues;
+                    DecodedMessage? decodedMessage = AstartePayload.Deserialize(property.BsonValue);
+
+                    if (decodedMessage is null)
+                    {
+                        return returnedValues;
+                    }
+
+                    Object? value = decodedMessage.GetPayload();
+                    if (value is not null)
+                    {
+                        returnedValues.Add(property.Path, value);
+                    }
+
                 }
 
-                Object? value = decodedMessage.GetPayload();
-                if (value is not null)
-                {
-                    returnedValues.Add(property.Path, value);
-                }
-
+                return returnedValues;
             }
-
-            return returnedValues;
         }
 
         public void PurgeProperties(Dictionary<AstarteInterfaceHelper,
         List<string>> availableProperties)
         {
-            foreach (var entry in availableProperties)
+            lock (_lock)
             {
-                foreach (String storedPath in GetStoredPathsForInterface(entry.Key.InterfaceName,
-                entry.Key.InterfaceMajor))
+                foreach (var entry in availableProperties)
                 {
-                    if (!entry.Value.Contains(storedPath))
+                    foreach (String storedPath in GetStoredPathsForInterface(entry.Key.InterfaceName,
+                    entry.Key.InterfaceMajor))
                     {
-                        RemoveStoredPath(entry.Key.InterfaceName, storedPath,
-                        entry.Key.InterfaceMajor);
+                        if (!entry.Value.Contains(storedPath))
+                        {
+                            RemoveStoredPath(entry.Key.InterfaceName, storedPath,
+                            entry.Key.InterfaceMajor);
+                        }
                     }
                 }
             }
@@ -115,47 +128,52 @@ namespace AstarteDeviceSDKCSharp.Data
 
         public void RemoveStoredPath(string interfaceName, string path, int interfaceMajor)
         {
-
-            var astarteProperty = _astarteDbContext.AstarteGenericProperties
-                            .Where(x => x.Id == interfaceName + "/" + path
-                            && x.InterfaceMajor == interfaceMajor)
-                            .SingleOrDefault();
-
-            if (astarteProperty == null)
+            lock (_lock)
             {
-                throw new AstartePropertyStorageException("Error local database is empty.");
+                var astarteProperty = _astarteDbContext.AstarteGenericProperties
+                                .Where(x => x.Id == interfaceName + "/" + path
+                                && x.InterfaceMajor == interfaceMajor)
+                                .SingleOrDefault();
+
+                if (astarteProperty == null)
+                {
+                    throw new AstartePropertyStorageException("Error local database is empty.");
+                }
+                _astarteDbContext.Remove(astarteProperty);
+                _astarteDbContext.SaveChanges();
             }
-            _astarteDbContext.Remove(astarteProperty);
-            _astarteDbContext.SaveChanges();
         }
 
         public void SetStoredValue(string interfaceName, string path, object? value,
         int interfaceMajor)
         {
-            var astarteProp = _astarteDbContext.AstarteGenericProperties
-                            .Where(x => x.InterfaceName == interfaceName && x.Path == path
-                            && x.InterfaceMajor == interfaceMajor)
-                            .FirstOrDefault();
-
-            byte[] bsonValue = AstartePayload.Serialize(value, null);
-
-            if (astarteProp == null)
+            lock (_lock)
             {
-                AstarteGenericPropertyEntry astarteProperty =
-                    new AstarteGenericPropertyEntry
-                    (interfaceName,
-                    path,
-                    bsonValue,
-                    interfaceMajor);
+                var astarteProp = _astarteDbContext.AstarteGenericProperties
+                                .Where(x => x.InterfaceName == interfaceName && x.Path == path
+                                && x.InterfaceMajor == interfaceMajor)
+                                .FirstOrDefault();
 
-                _astarteDbContext.AstarteGenericProperties.Add(astarteProperty);
-            }
-            else
-            {
-                astarteProp.BsonValue = bsonValue;
-            }
+                byte[] bsonValue = AstartePayload.Serialize(value, null);
 
-            _astarteDbContext.SaveChanges();
+                if (astarteProp == null)
+                {
+                    AstarteGenericPropertyEntry astarteProperty =
+                        new AstarteGenericPropertyEntry
+                        (interfaceName,
+                        path,
+                        bsonValue,
+                        interfaceMajor);
+
+                    _astarteDbContext.AstarteGenericProperties.Add(astarteProperty);
+                }
+                else
+                {
+                    astarteProp.BsonValue = bsonValue;
+                }
+
+                _astarteDbContext.SaveChanges();
+            }
         }
     }
 }

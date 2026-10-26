@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of Astarte.
  *
  * Copyright 2023 SECO Mind Srl
@@ -61,36 +61,33 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
 
             MqttFactory mqttFactory = new();
-            return mqttFactory.CreateManagedMqttClient();
+            var client = mqttFactory.CreateManagedMqttClient();
+
+            client.ApplicationMessageReceivedAsync += e =>
+            {
+                OnMessageReceive(e);
+                return Task.CompletedTask;
+            };
+
+            client.ConnectedAsync += async e =>
+            {
+                await OnConnectedAsync(e);
+            };
+
+            client.ConnectingFailedAsync += e =>
+            {
+                OnConnectingFailAsync(e);
+                return Task.CompletedTask;
+            };
+
+            client.DisconnectedAsync += OnDisconnectAsync;
+            client.ApplicationMessageProcessedAsync += OnMessageProcessedAsync;
+
+            return client;
         }
 
         private async Task CompleteAstarteConnection(bool IsSessionPresent)
         {
-
-            if (_client is not null)
-            {
-                _client.ApplicationMessageReceivedAsync += e =>
-                {
-                    OnMessageReceive(e);
-                    return Task.CompletedTask;
-                };
-
-                _client.ConnectedAsync += async e =>
-                {
-                    await OnConnectedAsync(e);
-                };
-
-                _client.ConnectingFailedAsync += e =>
-                {
-                    OnConnectingFailAsync(e);
-                    return Task.CompletedTask;
-                };
-
-                _client.DisconnectedAsync += OnDisconnectAsync;
-                _client.ApplicationMessageProcessedAsync += OnMessageProcessedAsync;
-
-            }
-
             if (!IsSessionPresent || !_introspectionSent)
             {
                 await SetupSubscriptions();
@@ -118,10 +115,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
         async Task OnConnectedAsync(MqttClientConnectedEventArgs args)
         {
-            if (!args.ConnectResult.IsSessionPresent)
-            {
-                await CompleteAstarteConnection(false);
-            }
+            await CompleteAstarteConnection(args.ConnectResult.IsSessionPresent);
             if (_astarteTransportEventListener != null)
             {
                 _astarteTransportEventListener.OnTransportConnected();
@@ -184,7 +178,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             if (!_client.IsStarted)
             {
                 await _client.StartAsync(managedMqttClientOptions);
-                await CompleteAstarteConnection(true);
             }
 
         }
@@ -194,6 +187,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             if (_client != null)
             {
                 await _client.StopAsync();
+                _introspectionSent = false;
             }
         }
 
@@ -203,7 +197,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             {
                 return false;
             }
-            return _client.IsConnected;
+            return _client.IsConnected && _introspectionSent;
         }
 
         public IMqttConnectionInfo GetConnectionInfo()
@@ -286,7 +280,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             object? payload = null;
 
             AstarteLogger.Debug("Incoming message: "
-                + Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0]), this.GetType().Name);
+                + Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment), this.GetType().Name);
 
             if (!e.ApplicationMessage.Topic.Contains(_connectionInfo.GetClientId())
             || _messageListener == null)
@@ -307,9 +301,9 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             if (path.StartsWith("control"))
             {
-                if (path == "control/consumer/properties" && e.ApplicationMessage.Payload != null)
+                if (path == "control/consumer/properties" && e.ApplicationMessage.PayloadSegment.Array != null)
                 {
-                    HandlePurgeProperties(e.ApplicationMessage.Payload, astarteDevice);
+                    HandlePurgeProperties(e.ApplicationMessage.PayloadSegment.ToArray(), astarteDevice);
                 }
                 else
                 {
@@ -329,10 +323,10 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             DateTime? timestamp = DateTime.MinValue;
             DecodedMessage? decodedMessage;
-            if (e.ApplicationMessage.Payload != null && e.ApplicationMessage.Payload.Length != 0)
+            if (e.ApplicationMessage.PayloadSegment.Array != null && e.ApplicationMessage.PayloadSegment.Count != 0)
             {
 
-                decodedMessage = AstartePayload.Deserialize(e.ApplicationMessage.Payload);
+                decodedMessage = AstartePayload.Deserialize(e.ApplicationMessage.PayloadSegment.ToArray());
                 if (decodedMessage is null)
                 {
                     AstarteLogger.Warn("Unable to get payload, decodedMessage was null ", this.GetType().Name);

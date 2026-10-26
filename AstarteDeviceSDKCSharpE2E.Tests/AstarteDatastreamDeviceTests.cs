@@ -54,9 +54,14 @@ namespace AstarteDeviceSDKCSharpE2E.Tests
 
         [Fact]
         [MyBeforeAfterTestAttribute]
-        public async void TestBeforeShouldRunBeforeTest()
+        public async Task TestBeforeShouldRunBeforeTest()
         {
             await astarteDevice.Connect();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            while (!astarteDevice.IsConnected() && !cts.IsCancellationRequested)
+            {
+                await Task.Delay(100);
+            }
         }
 
         /// <summary>
@@ -108,8 +113,8 @@ namespace AstarteDeviceSDKCSharpE2E.Tests
                 Assert.True(AstarteMockDevice.MockData.DoubleEndpoint
                 .Equals(astartePropDevice.DoubleEndpoints.value));
 
-                Assert.True(AstarteMockDevice.MockData.StringEndpoint
-                .Equals(astartePropDevice.StringEndpoints.value));
+                Assert.Equal(AstarteMockDevice.MockData.StringEndpoint
+, astartePropDevice.StringEndpoints.value);
 
                 Assert.True(AstarteMockDevice.MockData.LongintegerEndpoint
                 .Equals(astartePropDevice.LongintegerEndpoints.value));
