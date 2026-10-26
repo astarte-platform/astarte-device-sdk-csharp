@@ -52,9 +52,14 @@ namespace AstarteDeviceSDKCSharpE2E.Tests
 
         [Fact]
         [MyBeforeAfterTest]
-        public async void TestBeforeShouldRunBeforeTest()
+        public async Task TestBeforeShouldRunBeforeTest()
         {
             await astarteDevice.Connect();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            while (!astarteDevice.IsConnected() && !cts.IsCancellationRequested)
+            {
+                await Task.Delay(100);
+            }
         }
 
         /// <summary>

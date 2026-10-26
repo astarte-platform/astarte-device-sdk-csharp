@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of Astarte.
  *
  * Copyright 2023 SECO Mind Srl
@@ -61,36 +61,33 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             }
 
             MqttFactory mqttFactory = new();
-            return mqttFactory.CreateManagedMqttClient();
+            var client = mqttFactory.CreateManagedMqttClient();
+
+            client.ApplicationMessageReceivedAsync += e =>
+            {
+                OnMessageReceive(e);
+                return Task.CompletedTask;
+            };
+
+            client.ConnectedAsync += async e =>
+            {
+                await OnConnectedAsync(e);
+            };
+
+            client.ConnectingFailedAsync += e =>
+            {
+                OnConnectingFailAsync(e);
+                return Task.CompletedTask;
+            };
+
+            client.DisconnectedAsync += OnDisconnectAsync;
+            client.ApplicationMessageProcessedAsync += OnMessageProcessedAsync;
+
+            return client;
         }
 
         private async Task CompleteAstarteConnection(bool IsSessionPresent)
         {
-
-            if (_client is not null)
-            {
-                _client.ApplicationMessageReceivedAsync += e =>
-                {
-                    OnMessageReceive(e);
-                    return Task.CompletedTask;
-                };
-
-                _client.ConnectedAsync += async e =>
-                {
-                    await OnConnectedAsync(e);
-                };
-
-                _client.ConnectingFailedAsync += e =>
-                {
-                    OnConnectingFailAsync(e);
-                    return Task.CompletedTask;
-                };
-
-                _client.DisconnectedAsync += OnDisconnectAsync;
-                _client.ApplicationMessageProcessedAsync += OnMessageProcessedAsync;
-
-            }
-
             if (!IsSessionPresent || !_introspectionSent)
             {
                 await SetupSubscriptions();
@@ -118,10 +115,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
         async Task OnConnectedAsync(MqttClientConnectedEventArgs args)
         {
-            if (!args.ConnectResult.IsSessionPresent)
-            {
-                await CompleteAstarteConnection(false);
-            }
+            await CompleteAstarteConnection(args.ConnectResult.IsSessionPresent);
             if (_astarteTransportEventListener != null)
             {
                 _astarteTransportEventListener.OnTransportConnected();
@@ -184,7 +178,6 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             if (!_client.IsStarted)
             {
                 await _client.StartAsync(managedMqttClientOptions);
-                await CompleteAstarteConnection(true);
             }
 
         }
@@ -194,6 +187,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             if (_client != null)
             {
                 await _client.StopAsync();
+                _introspectionSent = false;
             }
         }
 
@@ -203,7 +197,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             {
                 return false;
             }
-            return _client.IsConnected;
+            return _client.IsConnected && _introspectionSent;
         }
 
         public IMqttConnectionInfo GetConnectionInfo()

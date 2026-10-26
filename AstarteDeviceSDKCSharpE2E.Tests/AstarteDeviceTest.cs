@@ -25,8 +25,8 @@ using AstarteDeviceSDKCSharp.Device;
 using AstarteDeviceSDKCSharpE2E.Tests.AstarteMockData;
 using AstarteDeviceSDKCSharpE2E.Tests.Utilities;
 using Xunit;
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-[assembly: TestCollectionOrderer("AstarteDeviceSDKCSharpE2E.Tests.Utilities.PriorityOrderer", "AstarteDeviceSDKCSharpE2E.Tests")]
+[assembly: CollectionBehavior(CollectionBehavior.CollectionPerAssembly, DisableTestParallelization = true)]
+[assembly: TestCaseOrderer("AstarteDeviceSDKCSharpE2E.Tests.Utilities.PriorityOrderer", "AstarteDeviceSDKCSharpE2E.Tests")]
 
 namespace AstarteDeviceSDKCSharpE2E.Tests;
 
@@ -50,18 +50,29 @@ public class AstarteDeviceTest
 
     [Fact]
     [MyBeforeAfterTestAttribute]
-    public async void TestBeforeShouldRunBeforeTest()
+    public async Task TestBeforeShouldRunBeforeTest()
     {
         await astarteDevice.Connect();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        while (!astarteDevice.IsConnected() && !cts.IsCancellationRequested)
+        {
+            await Task.Delay(100);
+        }
     }
 
     /// <summary>
     /// Test connection device to Astarte
     /// </summary>
     [Fact, TestPriority(1)]
-    public void ConnectDeviceToAstarte()
+    public async Task ConnectDeviceToAstarte()
     {
         Console.WriteLine("Test connection device to Astarte");
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        while (!astarteDevice.IsConnected() && !cts.IsCancellationRequested)
+        {
+            await Task.Delay(100);
+        }
 
         Assert.True(astarteDevice.IsConnected());
     }
