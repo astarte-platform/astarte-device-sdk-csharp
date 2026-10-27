@@ -13,9 +13,9 @@
       },
       "Microsoft.Build.Tasks.Git": {
         "type": "Direct",
-        "requested": "[10.0.111, )",
-        "resolved": "10.0.111",
-        "contentHash": "IRJmiczCoN50PaT8pCFVGXEN1erN1kqWJaink4zN/2QprrQ/4rFhuhawaOQRoxnXQQw0ZFc+Hd+WuxNwz9RqbQ=="
+        "requested": "[1.1.1, )",
+        "resolved": "1.1.1",
+        "contentHash": "AT3HlgTjsqHnWpBHSNeR0KxbLZD7bztlZVj7I8vgeYG9SYqbeFGh0TM/KVtC6fg53nrWHl3VfZFvb5BiQFcY6Q=="
       },
       "Microsoft.EntityFrameworkCore.Design": {
         "type": "Direct",
