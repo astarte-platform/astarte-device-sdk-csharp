@@ -23,32 +23,33 @@ name: Release to NuGet
 on:
   release:
     types:
-    - published
-    
+      - published
+
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '6.0.x'
-      
-    - name: Set VERSION variable from tag
-      run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
-      
-    - name: Build
-      run: dotnet build AstarteDeviceSDKCSharp/AstarteDeviceSDKCSharp.csproj -c Release /p:Version=${VERSION}
-      
-    - name: Test
-      run: dotnet test AstarteDeviceSDKCSharp.Tests/AstarteDeviceSDKCSharp.Tests.csproj -c Release /p:Version=${VERSION}
-      
-    - name: Pack nugets
-      run: dotnet pack AstarteDeviceSDKCSharp/AstarteDeviceSDKCSharp.csproj -c Release /p:Version=${VERSION} --no-build --output .
-      
-    - name: Push to NuGet
-      run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 6.0.*
+          global-json-file: "./global.json"
+
+      - name: Set VERSION variable from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      - name: Build
+        run: dotnet build AstarteDeviceSDKCSharp/AstarteDeviceSDKCSharp.csproj -c Release /p:Version=${VERSION}
+
+      - name: Test
+        run: dotnet test AstarteDeviceSDKCSharp.Tests/AstarteDeviceSDKCSharp.Tests.csproj -c Release /p:Version=${VERSION}
+
+      - name: Pack nugets
+        run: dotnet pack AstarteDeviceSDKCSharp/AstarteDeviceSDKCSharp.csproj -c Release /p:Version=${VERSION} --no-build --output .
+
+      - name: Push to NuGet
+        run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
