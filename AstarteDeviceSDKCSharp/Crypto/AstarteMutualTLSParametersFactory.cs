@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of Astarte.
  *
  * Copyright 2023 SECO Mind Srl
@@ -26,30 +26,28 @@ namespace AstarteDeviceSDKCSharp.Crypto
     public class AstarteMutualTLSParametersFactory
     {
 
-        private readonly MqttClientOptionsBuilderTlsParameters _tlsOptions;
+        private readonly MqttClientTlsOptions _tlsOptions;
 
         public AstarteMutualTLSParametersFactory(IAstarteCryptoStore cryptoStore) : base()
         {
-            _tlsOptions = new MqttClientOptionsBuilderTlsParameters
-            {
-                UseTls = true,
-                Certificates = new List<X509Certificate2?>
+            X509Certificate2? cert = cryptoStore.GetCertificate();
+            List<X509Certificate2> certs = cert is not null ? new List<X509Certificate2> { cert } : new List<X509Certificate2>();
+
+            _tlsOptions = new MqttClientTlsOptionsBuilder()
+                .UseTls(true)
+                .WithClientCertificates(certs)
+                .WithIgnoreCertificateChainErrors(cryptoStore.IgnoreSSLErrors)
+                .WithIgnoreCertificateRevocationErrors(cryptoStore.IgnoreSSLErrors)
+                .WithSslProtocols(System.Security.Authentication.SslProtocols.Tls12)
+                .WithAllowUntrustedCertificates(cryptoStore.IgnoreSSLErrors)
+                .WithCertificateValidationHandler(eventArgs =>
                 {
-                    cryptoStore.GetCertificate()
-                },
-                IgnoreCertificateChainErrors = cryptoStore.IgnoreSSLErrors,
-                IgnoreCertificateRevocationErrors = cryptoStore.IgnoreSSLErrors,
-                SslProtocol = System.Security.Authentication.SslProtocols.Tls12,
-                AllowUntrustedCertificates = cryptoStore.IgnoreSSLErrors,
-                CertificateValidationHandler = eventArgs =>
-                {
-                    eventArgs.Certificate = cryptoStore.GetCertificate();
                     return true;
-                }
-            };
+                })
+                .Build();
         }
 
-        public MqttClientOptionsBuilderTlsParameters Get() => _tlsOptions;
+        public MqttClientTlsOptions Get() => _tlsOptions;
 
     }
 }

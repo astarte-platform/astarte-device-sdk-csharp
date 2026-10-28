@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of Astarte.
  *
  * Copyright 2023 SECO Mind Srl
@@ -286,7 +286,7 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
             object? payload = null;
 
             AstarteLogger.Debug("Incoming message: "
-                + Encoding.UTF8.GetString(e.ApplicationMessage.Payload ?? new byte[0]), this.GetType().Name);
+                + Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment), this.GetType().Name);
 
             if (!e.ApplicationMessage.Topic.Contains(_connectionInfo.GetClientId())
             || _messageListener == null)
@@ -307,9 +307,9 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             if (path.StartsWith("control"))
             {
-                if (path == "control/consumer/properties" && e.ApplicationMessage.Payload != null)
+                if (path == "control/consumer/properties" && e.ApplicationMessage.PayloadSegment.Array != null)
                 {
-                    HandlePurgeProperties(e.ApplicationMessage.Payload, astarteDevice);
+                    HandlePurgeProperties(e.ApplicationMessage.PayloadSegment.ToArray(), astarteDevice);
                 }
                 else
                 {
@@ -329,10 +329,10 @@ namespace AstarteDeviceSDKCSharp.Transport.MQTT
 
             DateTime? timestamp = DateTime.MinValue;
             DecodedMessage? decodedMessage;
-            if (e.ApplicationMessage.Payload != null && e.ApplicationMessage.Payload.Length != 0)
+            if (e.ApplicationMessage.PayloadSegment.Array != null && e.ApplicationMessage.PayloadSegment.Count != 0)
             {
 
-                decodedMessage = AstartePayload.Deserialize(e.ApplicationMessage.Payload);
+                decodedMessage = AstartePayload.Deserialize(e.ApplicationMessage.PayloadSegment.ToArray());
                 if (decodedMessage is null)
                 {
                     AstarteLogger.Warn("Unable to get payload, decodedMessage was null ", this.GetType().Name);
