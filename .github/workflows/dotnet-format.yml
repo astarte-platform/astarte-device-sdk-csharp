@@ -23,8 +23,8 @@ name: Dotnet format action
 on:
   push:
     branches:
-    - 'master'
-    - 'release-*'
+      - "master"
+      - "release-*"
 
   pull_request:
 
@@ -33,16 +33,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: 6.0.*
+          global-json-file: "./global.json"
 
       - name: Install dotnet-format tool
         run: dotnet tool install -g dotnet-format
-
-      - name: Check out code
-        uses: actions/checkout@v2
 
       - name: Run dotnet format
         run: dotnet format AstarteDeviceSDKCSharp.sln  --verify-no-changes

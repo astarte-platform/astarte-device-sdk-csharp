@@ -1,0 +1,22 @@
+<!-- This file is part of Astarte.
+
+Copyright 2026 SECO Mind Srl
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<Project>
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAudit>true</NuGetAudit>
+        <NuGetAuditLevel>low</NuGetAuditLevel>
+
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(GITHUB_ACTIONS)'=='true'">
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+
+</Project>

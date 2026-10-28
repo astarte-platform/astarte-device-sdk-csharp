@@ -23,65 +23,65 @@ name: Docs generation for Github Pages
 on:
   push:
     branches:
-    # Create the docs only when it matters
-    - 'master'
-    - 'release-*'
+      # Create the docs only when it matters
+      - "master"
+      - "release-*"
 
 jobs:
   api-docs:
     runs-on: ubuntu-latest
     steps:
-    # Checkout the source
-    - uses: actions/checkout@v4
-      with:
-        path: astarte-device-sdk-csharp
-    # Checkout the docs repository
-    - uses: actions/checkout@v4
-      with:
-        repository: astarte-platform/docs
-        ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
-        path: docs
-    - name: Install doxygen
-      run: |
-        sudo apt-get update
-        sudo apt-get -y install doxygen
-    - name: Build Docs
-      working-directory: ./astarte-device-sdk-csharp/docs
-      run: doxygen doxy_config
-    - name: Copy Docs
-      run: |
-        export DOCS_DIRNAME="device-sdks/csharp/$(echo ${{ github.ref }} | sed 's,refs/heads/,,' | sed 's/master/snapshot/g' | sed 's/release-//g')/api"
-        rm -rf docs/$DOCS_DIRNAME
-        mkdir -p docs/$DOCS_DIRNAME
-        cp -r astarte-device-sdk-csharp/docs/out/html/* docs/$DOCS_DIRNAME/
-    - name: Update symlink
-      working-directory: ./docs/device-sdks/csharp
-      run: |
-        rm -f "latest"
-        latest_version=$(ls -d * | grep -v snapshot | sort -V | tail -n 1)
-        if [ -z $latest_version ]; then latest_version="snapshot"; fi
-        ln -sf "$latest_version" latest    
-    - name: Commit files
-      working-directory: ./docs
-      run: |
-        git config --local user.email "astarte-machine@ispirata.com"
-        git config --local user.name "Astarte Bot"
-        git add .
-        git diff-index --quiet HEAD || git commit -m "Update CSharp SDK documentation"
-    - name: Push changes
-      working-directory: ./docs
-      run: |
-        git push origin master
+      # Checkout the source
+      - uses: actions/checkout@v7
+        with:
+          path: astarte-device-sdk-csharp
+      # Checkout the docs repository
+      - uses: actions/checkout@v7
+        with:
+          repository: astarte-platform/docs
+          ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
+          path: docs
+      - name: Install doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install doxygen
+      - name: Build Docs
+        working-directory: ./astarte-device-sdk-csharp/docs
+        run: doxygen doxy_config
+      - name: Copy Docs
+        run: |
+          export DOCS_DIRNAME="device-sdks/csharp/$(echo ${{ github.ref }} | sed 's,refs/heads/,,' | sed 's/master/snapshot/g' | sed 's/release-//g')/api"
+          rm -rf docs/$DOCS_DIRNAME
+          mkdir -p docs/$DOCS_DIRNAME
+          cp -r astarte-device-sdk-csharp/docs/out/html/* docs/$DOCS_DIRNAME/
+      - name: Update symlink
+        working-directory: ./docs/device-sdks/csharp
+        run: |
+          rm -f "latest"
+          latest_version=$(ls -d * | grep -v snapshot | sort -V | tail -n 1)
+          if [ -z $latest_version ]; then latest_version="snapshot"; fi
+          ln -sf "$latest_version" latest
+      - name: Commit files
+        working-directory: ./docs
+        run: |
+          git config --local user.email "astarte-machine@ispirata.com"
+          git config --local user.name "Astarte Bot"
+          git add .
+          git diff-index --quiet HEAD || git commit -m "Update CSharp SDK documentation"
+      - name: Push changes
+        working-directory: ./docs
+        run: |
+          git push origin master
   get-started-docs:
     runs-on: ubuntu-latest
     steps:
       # Checkout the source
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: astarte-device-sdk-csharp
           fetch-depth: 0
       # Checkout the sdk-doc repository
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: astarte-platform/sdk-doc
           ssh-key: ${{ secrets.SDK_DOC_DEPLOY_KEY }}
