@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 -->
 <Project>
     <PropertyGroup>
-        <TargetFrameworks>net6.0</TargetFrameworks>
+        <TargetFramework>net6.0</TargetFramework>
 
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAudit>true</NuGetAudit>
