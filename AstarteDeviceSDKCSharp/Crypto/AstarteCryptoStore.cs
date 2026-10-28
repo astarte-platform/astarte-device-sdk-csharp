@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of Astarte.
  *
  * Copyright 2023 SECO Mind Srl
@@ -173,7 +173,7 @@ namespace AstarteDeviceSDKCSharp.Crypto
             return _certificate;
         }
 
-        public MqttClientOptionsBuilderTlsParameters GetMqttClientOptionsBuilderTlsParameters()
+        public MqttClientTlsOptions GetMqttClientOptionsBuilderTlsParameters()
         {
             _parametersFactory = new AstarteMutualTLSParametersFactory(this);
 
