@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0 -->
     <RootNamespace>AstarteDeviceSDKCSharp</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.8.0</Version>
+    <Version>0.8.1</Version>
     <PackageId>Astarte.Device.SDK</PackageId>
     <RepositoryType>git</RepositoryType>
     <Description>The Astarte Device SDK for C# is a ready-to-use library that provides communication and pairing primitives to an Astarte Cluster.</Description>
